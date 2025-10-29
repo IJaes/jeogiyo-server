@@ -67,6 +67,15 @@ jobs:
           check "$REMOTE_PRIVATE_KEY" REMOTE_PRIVATE_KEY
           if [ "$missing" -eq 1 ]; then exit 1; fi
 
+      - name: Copy docker-compose.yml to remote server
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.REMOTE_IP }}
+          username: ${{ secrets.REMOTE_USER }}
+          key: ${{ secrets.REMOTE_PRIVATE_KEY }}
+          source: docker-compose.yml
+          target: /home/ubuntu
+
       - name: Deploy on EC2 over SSH
         uses: appleboy/ssh-action@v0.1.6
         with:
