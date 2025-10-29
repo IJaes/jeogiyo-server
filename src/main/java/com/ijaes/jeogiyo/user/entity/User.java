@@ -9,9 +9,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.UUID;
 
 @Entity
-@Table(name = "users")
+@Table(name = "j_user")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -20,8 +21,8 @@ import java.util.Collections;
 public class User extends BaseEntity implements UserDetails {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
     @Column(nullable = false, unique = true)
     private String username;
@@ -41,7 +42,6 @@ public class User extends BaseEntity implements UserDetails {
     @Column(nullable = false)
     private boolean enabled = true;
 
-    // UserDetails 구현
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"));

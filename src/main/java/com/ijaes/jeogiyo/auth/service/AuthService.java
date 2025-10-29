@@ -21,12 +21,10 @@ public class AuthService {
     private final JwtUtil jwtUtil;
 
     public AuthResponse signUp(SignUpRequest request) {
-        // 중복 아이디 확인
         if (userRepository.existsByUsername(request.getUsername())) {
             throw new CustomException(ErrorCode.DUPLICATE_USERNAME);
         }
 
-        // 사용자 생성
         User user = User.builder()
                 .username(request.getUsername())
                 .password(passwordEncoder.encode(request.getPassword()))
@@ -44,7 +42,6 @@ public class AuthService {
     }
 
     public AuthResponse login(LoginRequest request) {
-        // 사용자 확인
         var user = userRepository.findByUsername(request.getUsername());
 
         if (user.isEmpty()) {
@@ -53,12 +50,10 @@ public class AuthService {
 
         User foundUser = user.get();
 
-        // 비밀번호 확인
         if (!passwordEncoder.matches(request.getPassword(), foundUser.getPassword())) {
             throw new CustomException(ErrorCode.WRONG_ID_PW);
         }
 
-        // JWT 토큰 생성
         String token = jwtUtil.generateToken(foundUser.getUsername());
 
         return AuthResponse.builder()
