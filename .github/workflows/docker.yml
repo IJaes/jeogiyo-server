@@ -80,7 +80,10 @@ jobs:
             sudo docker rm myapp || true
             sudo docker rmi "${{ env.IMAGE_URI }}" || true
 
-            echo "이미지 Pull (public)"
+            echo "Docker registry 로그인"
+            echo "${{ secrets.GITHUB_TOKEN }}" | sudo docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+            echo "이미지 Pull"
             sudo docker pull "${{ env.IMAGE_URI }}"
 
             echo "컨테이너 기동"
