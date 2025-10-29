@@ -4,6 +4,7 @@ import com.ijaes.jeogiyo.auth.dto.AuthResponse;
 import com.ijaes.jeogiyo.auth.dto.LoginRequest;
 import com.ijaes.jeogiyo.auth.dto.SignUpRequest;
 import com.ijaes.jeogiyo.auth.security.JwtUtil;
+import com.ijaes.jeogiyo.auth.validator.SignUpValidator;
 import com.ijaes.jeogiyo.common.exception.CustomException;
 import com.ijaes.jeogiyo.common.exception.ErrorCode;
 import com.ijaes.jeogiyo.user.entity.Role;
@@ -20,8 +21,11 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final SignUpValidator signUpValidator;
 
     public AuthResponse signUp(SignUpRequest request) {
+        signUpValidator.validateSignUpRequest(request);
+
         if (userRepository.existsByUsername(request.getUsername())) {
             throw new CustomException(ErrorCode.DUPLICATE_USERNAME);
         }
