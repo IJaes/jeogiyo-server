@@ -85,7 +85,7 @@ jobs:
             sudo docker pull "${{ env.IMAGE_URI }}"
 
             echo "Docker Compose 설정"
-            cat > docker-compose.yml << 'EOF'
+            cat > docker-compose.yml << EOF
 version: '3.8'
 
 services:
