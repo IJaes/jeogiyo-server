@@ -48,7 +48,7 @@ jobs:
       - name: Publish container image
         run: docker push "${{ env.IMAGE_URI }}"
 
-      - name: Validate required secrets (environment: deploy)
+      - name: "Validate required secrets (environment: deploy)"
         env:
           DB_URL: ${{ secrets.DB_URL }}
           DB_USERNAME: ${{ secrets.DB_USERNAME }}
