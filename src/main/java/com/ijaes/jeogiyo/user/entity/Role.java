@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 public enum Role {
     USER("ROLE_USER"),
     OWNER("ROLE_OWNER"),
+    ADMIN("ROLE_ADMIN"),
     BLOCK("ROLE_BLOCK");
 
     private final String authority;
