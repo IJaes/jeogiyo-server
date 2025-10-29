@@ -67,7 +67,7 @@ jobs:
           check "$REMOTE_PRIVATE_KEY" REMOTE_PRIVATE_KEY
           if [ "$missing" -eq 1 ]; then exit 1; fi
 
-      - name: Deploy on EC2 over SSH (public image → no login)
+      - name: Deploy on EC2 over SSH
         uses: appleboy/ssh-action@v0.1.6
         with:
           host: ${{ secrets.REMOTE_IP }}
@@ -77,61 +77,10 @@ jobs:
           script: |
             echo "배포 시작"
             cd /home/ubuntu
-
             echo "Docker registry 로그인"
             echo "${{ secrets.GITHUB_TOKEN }}" | sudo docker login ghcr.io -u "${{ github.actor }}" --password-stdin
-
             echo "이미지 Pull"
             sudo docker pull "${{ env.IMAGE_URI }}"
-
-            echo "Docker Compose 설정"
-            IMAGE_URI="${{ env.IMAGE_URI }}"
-            DB_USERNAME="${{ secrets.DB_USERNAME }}"
-            DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
-
-            cat > docker-compose.yml << 'COMPOSE_EOF'
-version: '3.8'
-
-services:
-  mysql:
-    image: mysql:8.4
-    container_name: mysql
-    environment:
-      MYSQL_ROOT_PASSWORD: 1234
-      MYSQL_DATABASE: jeogiyo
-    ports:
-      - "3306:3306"
-    volumes:
-      - mysql_data:/var/lib/mysql
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  jeogiyo:
-    image: IMAGE_URI_PLACEHOLDER
-    container_name: jeogiyo
-    depends_on:
-      mysql:
-        condition: service_healthy
-    environment:
-      DB_URL: jdbc:mysql://mysql:3306/jeogiyo?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
-      DB_USERNAME: DB_USERNAME_PLACEHOLDER
-      DB_PASSWORD: DB_PASSWORD_PLACEHOLDER
-      DB_DDL_AUTO: update
-    ports:
-      - "3000:8080"
-    restart: unless-stopped
-
-volumes:
-  mysql_data:
-COMPOSE_EOF
-
-            sed -i "s|IMAGE_URI_PLACEHOLDER|$IMAGE_URI|g" docker-compose.yml
-            sed -i "s|DB_USERNAME_PLACEHOLDER|$DB_USERNAME|g" docker-compose.yml
-            sed -i "s|DB_PASSWORD_PLACEHOLDER|$DB_PASSWORD|g" docker-compose.yml
-
             echo "컨테이너 기동"
             sudo docker-compose down || true
-            sudo docker-compose up -d
+            sudo DB_URL="jdbc:mysql://mysql:3306/jeogiyo?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul" DB_USERNAME="${{ secrets.DB_USERNAME }}" DB_PASSWORD="${{ secrets.DB_PASSWORD }}" docker-compose -f docker-compose.yml up -d
