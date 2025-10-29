@@ -84,21 +84,14 @@ jobs:
           key: ${{ secrets.REMOTE_PRIVATE_KEY }}
           port: 22
           script: |
-            echo "배포 시작"
             cd /home/ubuntu
             echo "Docker registry 로그인"
             echo "${{ secrets.GITHUB_TOKEN }}" | sudo docker login ghcr.io -u "${{ github.actor }}" --password-stdin
             echo "이미지 Pull"
             sudo docker pull "${{ env.IMAGE_URI }}"
-            echo "기존 컨테이너 정리"
-            sudo docker-compose down -v --remove-orphans || true
+            echo "컨테이너 정리 및 시작"
+            sudo docker-compose down -v || true
             sudo docker rm -f mysql jeogiyo || true
-            echo "컨테이너 기동"
-            cat > .env << 'ENVEOF'
-DB_URL=jdbc:mysql://mysql:3306/jeogiyo?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
-DB_USERNAME=PLACEHOLDER_DB_USERNAME
-DB_PASSWORD=PLACEHOLDER_DB_PASSWORD
-ENVEOF
-            sed -i "s|PLACEHOLDER_DB_USERNAME|${{ secrets.DB_USERNAME }}|g" .env
-            sed -i "s|PLACEHOLDER_DB_PASSWORD|${{ secrets.DB_PASSWORD }}|g" .env
-            sudo docker-compose -f docker-compose.yml up -d
+            echo "DB_USERNAME=${{ secrets.DB_USERNAME }}" > .env
+            echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
+            sudo docker-compose up -d
