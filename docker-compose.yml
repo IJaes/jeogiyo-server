@@ -29,7 +29,7 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       DB_DDL_AUTO: update
     ports:
-      - "3000:8080"
+      - "8080:8080"
     restart: unless-stopped
 
 volumes:
