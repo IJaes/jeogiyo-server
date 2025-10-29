@@ -94,7 +94,9 @@ jobs:
             sudo docker-compose down -v --remove-orphans || true
             sudo docker rm -f mysql jeogiyo || true
             echo "컨테이너 기동"
-            export DB_URL="jdbc:mysql://mysql:3306/jeogiyo?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul"
-            export DB_USERNAME="${{ secrets.DB_USERNAME }}"
-            export DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
-            sudo -E docker-compose -f docker-compose.yml up -d
+            cat > .env << EOF
+DB_URL=jdbc:mysql://mysql:3306/jeogiyo?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
+DB_USERNAME=${{ secrets.DB_USERNAME }}
+DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+EOF
+            sudo docker-compose -f docker-compose.yml up -d
