@@ -94,9 +94,11 @@ jobs:
             sudo docker-compose down -v --remove-orphans || true
             sudo docker rm -f mysql jeogiyo || true
             echo "컨테이너 기동"
-            cat > .env << EOF
+            cat > .env << 'ENVEOF'
 DB_URL=jdbc:mysql://mysql:3306/jeogiyo?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
-DB_USERNAME=${{ secrets.DB_USERNAME }}
-DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-EOF
+DB_USERNAME=PLACEHOLDER_DB_USERNAME
+DB_PASSWORD=PLACEHOLDER_DB_PASSWORD
+ENVEOF
+            sed -i "s|PLACEHOLDER_DB_USERNAME|${{ secrets.DB_USERNAME }}|g" .env
+            sed -i "s|PLACEHOLDER_DB_PASSWORD|${{ secrets.DB_PASSWORD }}|g" .env
             sudo docker-compose -f docker-compose.yml up -d
