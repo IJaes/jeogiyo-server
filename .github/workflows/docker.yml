@@ -1,4 +1,5 @@
 name: Deploy to Amazon EC2
+
 on:
   push:
     branches: [ "main", "develop" ]
@@ -16,6 +17,7 @@ jobs:
     permissions:
       contents: read
       packages: write
+
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
@@ -46,13 +48,25 @@ jobs:
       - name: Publish container image
         run: docker push "${{ env.IMAGE_URI }}"
 
-      - name: Validate required secrets
+      - name:
+          Validate required secrets (environment: deploy)
+        env:
+          DB_URL: ${{ secrets.DB_URL }}
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          REMOTE_IP: ${{ secrets.REMOTE_IP }}
+          REMOTE_USER: ${{ secrets.REMOTE_USER }}
+          REMOTE_PRIVATE_KEY: ${{ secrets.REMOTE_PRIVATE_KEY }}
         run: |
-          for v in DB_URL DB_USERNAME DB_PASSWORD REMOTE_IP REMOTE_USER REMOTE_PRIVATE_KEY; do
-            if [ -z "${{ secrets[$v] }}" ]; then
-              echo "::error::Missing secret: $v"; exit 1
-            fi
-          done
+          missing=0
+          check() { if [ -z "$1" ]; then echo "::error::Missing secret: $2"; missing=1; fi; }
+          check "$DB_URL" DB_URL
+          check "$DB_USERNAME" DB_USERNAME
+          check "$DB_PASSWORD" DB_PASSWORD
+          check "$REMOTE_IP" REMOTE_IP
+          check "$REMOTE_USER" REMOTE_USER
+          check "$REMOTE_PRIVATE_KEY" REMOTE_PRIVATE_KEY
+          if [ "$missing" -eq 1 ]; then exit 1; fi
 
       - name: Deploy on EC2 over SSH (public image → no login)
         uses: appleboy/ssh-action@v0.1.6
