@@ -6,6 +6,7 @@ import com.ijaes.jeogiyo.auth.dto.SignUpRequest;
 import com.ijaes.jeogiyo.auth.security.JwtUtil;
 import com.ijaes.jeogiyo.common.exception.CustomException;
 import com.ijaes.jeogiyo.common.exception.ErrorCode;
+import com.ijaes.jeogiyo.user.entity.Role;
 import com.ijaes.jeogiyo.user.entity.User;
 import com.ijaes.jeogiyo.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +33,7 @@ public class AuthService {
                 .address(request.getAddress())
                 .phoneNumber(request.getPhoneNumber())
                 .isOwner(request.isOwner())
+                .role(request.isOwner() ? Role.OWNER : Role.USER)
                 .build();
 
         userRepository.save(user);
@@ -60,6 +62,7 @@ public class AuthService {
         return AuthResponse.builder()
                 .message("로그인이 성공했습니다.")
                 .token(token)
+                .role(foundUser.getRole().getAuthority())
                 .success(true)
                 .build();
     }

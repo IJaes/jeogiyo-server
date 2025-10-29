@@ -40,14 +40,15 @@ public class User extends BaseEntity implements UserDetails {
     private String phoneNumber;
 
     @Column(nullable = false)
-    private boolean enabled = true;
+    private boolean isOwner;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private boolean isOwner = false;
+    private Role role = Role.USER;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"));
+        return Collections.singletonList(new SimpleGrantedAuthority(role.getAuthority()));
     }
 
     @Override
@@ -67,6 +68,6 @@ public class User extends BaseEntity implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return enabled;
+        return !role.equals(Role.BLOCK);
     }
 }
