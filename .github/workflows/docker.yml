@@ -83,7 +83,6 @@ jobs:
           username: ${{ secrets.REMOTE_USER }}
           key: ${{ secrets.REMOTE_PRIVATE_KEY }}
           port: 22
-          envs: DB_USERNAME,DB_PASSWORD,IMAGE_URI,GITHUB_TOKEN,GITHUB_ACTOR
           script: |
             echo "배포 시작"
             cd /home/ubuntu
@@ -93,6 +92,9 @@ jobs:
             sudo docker pull "${{ env.IMAGE_URI }}"
             echo "기존 컨테이너 정리"
             sudo docker-compose down -v --remove-orphans || true
-            sudo docker rm -f mysql || true
+            sudo docker rm -f mysql jeogiyo || true
             echo "컨테이너 기동"
-            sudo bash -c 'DB_URL="jdbc:mysql://mysql:3306/jeogiyo?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul" DB_USERNAME="${{ secrets.DB_USERNAME }}" DB_PASSWORD="${{ secrets.DB_PASSWORD }}" docker-compose -f docker-compose.yml up -d'
+            export DB_URL="jdbc:mysql://mysql:3306/jeogiyo?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul"
+            export DB_USERNAME="${{ secrets.DB_USERNAME }}"
+            export DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
+            sudo -E docker-compose -f docker-compose.yml up -d
