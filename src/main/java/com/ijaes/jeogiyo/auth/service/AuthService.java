@@ -38,7 +38,7 @@ public class AuthService {
         userRepository.save(user);
 
         return AuthResponse.builder()
-                .message("회원가입이 성공했습니다.")
+                .message("회원가입이 성공했습니다.!")
                 .success(true)
                 .build();
     }
