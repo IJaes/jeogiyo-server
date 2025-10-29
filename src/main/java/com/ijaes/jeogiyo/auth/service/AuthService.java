@@ -31,6 +31,7 @@ public class AuthService {
                 .name(request.getName())
                 .address(request.getAddress())
                 .phoneNumber(request.getPhoneNumber())
+                .isOwner(request.isOwner())
                 .build();
 
         userRepository.save(user);
