@@ -92,7 +92,7 @@ jobs:
             echo "이미지 Pull"
             sudo docker pull "${{ env.IMAGE_URI }}"
             echo "기존 컨테이너 정리"
-            sudo docker-compose down -v || true
-            sudo docker rm mysql || true
+            sudo docker-compose down -v --remove-orphans || true
+            sudo docker rm -f mysql || true
             echo "컨테이너 기동"
-            sudo DB_URL="jdbc:mysql://mysql:3306/jeogiyo?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul" DB_USERNAME="${{ secrets.DB_USERNAME }}" DB_PASSWORD="${{ secrets.DB_PASSWORD }}" docker-compose -f docker-compose.yml up -d
+            sudo bash -c 'DB_URL="jdbc:mysql://mysql:3306/jeogiyo?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul" DB_USERNAME="${{ secrets.DB_USERNAME }}" DB_PASSWORD="${{ secrets.DB_PASSWORD }}" docker-compose -f docker-compose.yml up -d'
