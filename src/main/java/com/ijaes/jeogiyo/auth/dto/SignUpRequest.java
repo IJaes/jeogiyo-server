@@ -1,5 +1,6 @@
 package com.ijaes.jeogiyo.auth.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -13,5 +14,6 @@ public class SignUpRequest {
     private String name;
     private String address;
     private String phoneNumber;
+    @JsonProperty("isOwner")
     private boolean isOwner;
 }
