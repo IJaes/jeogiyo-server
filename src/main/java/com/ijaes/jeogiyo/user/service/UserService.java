@@ -3,7 +3,11 @@ package com.ijaes.jeogiyo.user.service;
 import com.ijaes.jeogiyo.auth.validator.SignUpValidator;
 import com.ijaes.jeogiyo.common.exception.CustomException;
 import com.ijaes.jeogiyo.common.exception.ErrorCode;
-import com.ijaes.jeogiyo.user.dto.*;
+import com.ijaes.jeogiyo.user.dto.request.UpdateAddressRequest;
+import com.ijaes.jeogiyo.user.dto.request.UpdatePasswordRequest;
+import com.ijaes.jeogiyo.user.dto.request.UpdatePhoneNumberRequest;
+import com.ijaes.jeogiyo.user.dto.response.UserInfoResponse;
+import com.ijaes.jeogiyo.user.dto.response.UserUpdateResponse;
 import com.ijaes.jeogiyo.user.entity.User;
 import com.ijaes.jeogiyo.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -28,13 +32,14 @@ public class UserService {
         userRepository.save(user);
 
         return UserUpdateResponse.builder()
-                .message("주소가 수정되었습니다.")
-                .success(true)
-                .username(user.getUsername())
-                .name(user.getName())
-                .address(user.getAddress())
-                .phoneNumber(user.getPhoneNumber())
-                .build();
+            .message("주소가 수정되었습니다.")
+            .success(true)
+            .id(user.getId())
+            .username(user.getUsername())
+            .name(user.getName())
+            .address(user.getAddress())
+            .phoneNumber(user.getPhoneNumber())
+            .build();
     }
 
     public UserUpdateResponse updatePhoneNumber(Authentication authentication, UpdatePhoneNumberRequest request) {
@@ -46,13 +51,14 @@ public class UserService {
         userRepository.save(user);
 
         return UserUpdateResponse.builder()
-                .message("전화번호가 수정되었습니다.")
-                .success(true)
-                .username(user.getUsername())
-                .name(user.getName())
-                .address(user.getAddress())
-                .phoneNumber(user.getPhoneNumber())
-                .build();
+            .message("전화번호가 수정되었습니다.")
+            .success(true)
+            .id(user.getId())
+            .username(user.getUsername())
+            .name(user.getName())
+            .address(user.getAddress())
+            .phoneNumber(user.getPhoneNumber())
+            .build();
     }
 
     public UserUpdateResponse updatePassword(Authentication authentication, UpdatePasswordRequest request) {
@@ -72,12 +78,25 @@ public class UserService {
         userRepository.save(user);
 
         return UserUpdateResponse.builder()
-                .message("비밀번호가 수정되었습니다.")
-                .success(true)
-                .username(user.getUsername())
-                .name(user.getName())
-                .address(user.getAddress())
-                .phoneNumber(user.getPhoneNumber())
-                .build();
+            .message("비밀번호가 수정되었습니다.")
+            .success(true)
+            .id(user.getId())
+            .username(user.getUsername())
+            .name(user.getName())
+            .address(user.getAddress())
+            .phoneNumber(user.getPhoneNumber())
+            .build();
+    }
+
+	public UserInfoResponse getUserInfo(Authentication authentication) {
+        User user = (User)authentication.getPrincipal();
+        return UserInfoResponse.builder()
+            .name(user.getName())
+            .username(user.getUsername())
+            .id(user.getId())
+            .address(user.getAddress())
+            .phoneNumber(user.getPhoneNumber())
+            .role(String.valueOf(user.getRole()))
+            .build();
     }
 }

@@ -1,6 +1,6 @@
 package com.ijaes.jeogiyo.auth.validator;
 
-import com.ijaes.jeogiyo.auth.dto.SignUpRequest;
+import com.ijaes.jeogiyo.auth.dto.request.SignUpRequest;
 import com.ijaes.jeogiyo.common.exception.CustomException;
 import com.ijaes.jeogiyo.common.exception.ErrorCode;
 import org.springframework.stereotype.Component;

@@ -41,6 +41,7 @@ public enum ErrorCode {
     INVALID_ADDRESS(HttpStatus.BAD_REQUEST, "U-001", "주소는 100자 이내여야 합니다."),
     EMPTY_ADDRESS(HttpStatus.BAD_REQUEST, "U-002", "주소를 입력해주세요."),
     EMPTY_CURRENT_PASSWORD(HttpStatus.BAD_REQUEST, "U-003", "현재 비밀번호를 입력해주세요."),
+    INVALID_ROLE(HttpStatus.BAD_REQUEST, "U-004", "유효하지 않은 권한입니다."),
 
     // 서버 에러 (S-xxx)
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "S-001", "서버 오류가 발생했습니다. 관리자에게 문의하세요."),
