@@ -1,9 +1,11 @@
 package com.ijaes.jeogiyo.user.controller;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -28,5 +30,12 @@ public class UserAdminController {
 	public ResponseEntity<List<UserInfoResponse>> getAllUsers() {
 		List<UserInfoResponse> userInfoResponses = userAdminService.getAllUsers();
 		return ResponseEntity.ok(userInfoResponses);
+	}
+
+	@GetMapping("/users/{userId}")
+	@Operation(summary = "특정 사용자 조회", description = "관리자 권한으로 특정 사용자의 정보를 조회합니다", security = @SecurityRequirement(name = "bearer-jwt"))
+	public ResponseEntity<UserInfoResponse> getUserById(@PathVariable UUID userId) {
+		UserInfoResponse userInfoResponse = userAdminService.getUserById(userId);
+		return ResponseEntity.ok(userInfoResponse);
 	}
 }
