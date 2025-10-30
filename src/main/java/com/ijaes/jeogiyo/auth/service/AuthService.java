@@ -57,6 +57,10 @@ public class AuthService {
 
         User foundUser = user.get();
 
+        if (foundUser.getRole().equals(Role.BLOCK)) {
+            throw new CustomException(ErrorCode.BLOCKED_USER);
+        }
+
         if (!passwordEncoder.matches(request.getPassword(), foundUser.getPassword())) {
             throw new CustomException(ErrorCode.WRONG_ID_PW);
         }
