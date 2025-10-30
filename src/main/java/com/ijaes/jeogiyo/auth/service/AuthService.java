@@ -57,11 +57,6 @@ public class AuthService {
 
         User foundUser = user.get();
 
-        // BLOCK 역할을 가진 사용자는 로그인 불가
-        if (foundUser.getRole().equals(Role.BLOCK)) {
-            throw new CustomException(ErrorCode.BLOCKED_USER);
-        }
-
         if (!passwordEncoder.matches(request.getPassword(), foundUser.getPassword())) {
             throw new CustomException(ErrorCode.WRONG_ID_PW);
         }
