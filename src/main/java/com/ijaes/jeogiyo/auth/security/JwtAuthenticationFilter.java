@@ -1,6 +1,8 @@
 package com.ijaes.jeogiyo.auth.security;
 
+import com.ijaes.jeogiyo.auth.repository.TokenBlacklistRepository;
 import com.ijaes.jeogiyo.common.exception.CustomException;
+import com.ijaes.jeogiyo.common.exception.ErrorCode;
 import com.ijaes.jeogiyo.user.repository.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -23,6 +25,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
     private final UserRepository userRepository;
+    private final TokenBlacklistRepository tokenBlacklistRepository;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -34,13 +37,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
                 String token = bearerToken.substring(7);
 
-                // JWT 토큰 검증 (만료되었거나 유효하지 않으면 Exception 발생)
+                if (tokenBlacklistRepository.existsByToken(token)) {
+                    log.warn("Token is blacklisted: {}", token);
+                    request.setAttribute("exception", new CustomException(ErrorCode.BLACKLISTED_TOKEN));
+                    filterChain.doFilter(request, response);
+                    return;
+                }
+
                 jwtUtil.validateToken(token);
 
-                // 토큰에서 username 추출
                 String username = jwtUtil.extractUsername(token);
 
-                // 사용자 조회
                 var user = userRepository.findByUsername(username);
 
                 if (user.isPresent()) {
