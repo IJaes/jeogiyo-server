@@ -23,6 +23,7 @@ public enum ErrorCode {
     MALFORMED_JWT(HttpStatus.UNAUTHORIZED, "J-003", "잘못된 형식의 JWT 토큰입니다."),
     UNSUPPORTED_JWT(HttpStatus.UNAUTHORIZED, "J-004", "지원하지 않는 JWT 토큰입니다."),
     JWT_SIGNATURE_INVALID(HttpStatus.UNAUTHORIZED, "J-005", "JWT 서명이 유효하지 않습니다."),
+    BLACKLISTED_TOKEN(HttpStatus.UNAUTHORIZED, "J-006", "로그아웃된 토큰입니다."),
 
     // 인가 관련 (Z-xxx)
     ACCESS_DENIED(HttpStatus.FORBIDDEN, "Z-001", "접근 권한이 없습니다."),
