@@ -28,13 +28,13 @@ public class UserService {
         userRepository.save(user);
 
         return UserUpdateResponse.builder()
-                .message("주소가 수정되었습니다.")
-                .success(true)
-                .username(user.getUsername())
-                .name(user.getName())
-                .address(user.getAddress())
-                .phoneNumber(user.getPhoneNumber())
-                .build();
+            .message("주소가 수정되었습니다.")
+            .success(true)
+            .username(user.getUsername())
+            .name(user.getName())
+            .address(user.getAddress())
+            .phoneNumber(user.getPhoneNumber())
+            .build();
     }
 
     public UserUpdateResponse updatePhoneNumber(Authentication authentication, UpdatePhoneNumberRequest request) {
@@ -46,13 +46,13 @@ public class UserService {
         userRepository.save(user);
 
         return UserUpdateResponse.builder()
-                .message("전화번호가 수정되었습니다.")
-                .success(true)
-                .username(user.getUsername())
-                .name(user.getName())
-                .address(user.getAddress())
-                .phoneNumber(user.getPhoneNumber())
-                .build();
+            .message("전화번호가 수정되었습니다.")
+            .success(true)
+            .username(user.getUsername())
+            .name(user.getName())
+            .address(user.getAddress())
+            .phoneNumber(user.getPhoneNumber())
+            .build();
     }
 
     public UserUpdateResponse updatePassword(Authentication authentication, UpdatePasswordRequest request) {
@@ -72,12 +72,23 @@ public class UserService {
         userRepository.save(user);
 
         return UserUpdateResponse.builder()
-                .message("비밀번호가 수정되었습니다.")
-                .success(true)
-                .username(user.getUsername())
-                .name(user.getName())
-                .address(user.getAddress())
-                .phoneNumber(user.getPhoneNumber())
-                .build();
+            .message("비밀번호가 수정되었습니다.")
+            .success(true)
+            .username(user.getUsername())
+            .name(user.getName())
+            .address(user.getAddress())
+            .phoneNumber(user.getPhoneNumber())
+            .build();
+    }
+
+	public UserInfoResponse getUserInfo(Authentication authentication) {
+        User user = (User)authentication.getPrincipal();
+        return UserInfoResponse.builder()
+            .name(user.getName())
+            .username(user.getUsername())
+            .address(user.getAddress())
+            .phoneNumber(user.getPhoneNumber())
+            .role(String.valueOf(user.getRole()))
+            .build();
     }
 }
