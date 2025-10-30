@@ -68,6 +68,16 @@ public class SignUpValidator {
         }
     }
 
+    public void validateAddress(String address) {
+        if (address == null || address.isEmpty()) {
+            throw new CustomException(ErrorCode.EMPTY_ADDRESS);
+        }
+
+        if (address.length() > 100) {
+            throw new CustomException(ErrorCode.INVALID_ADDRESS);
+        }
+    }
+
     public void validateSignUpRequest(SignUpRequest request) {
         validateUsername(request.getUsername());
         validatePassword(request.getPassword());
