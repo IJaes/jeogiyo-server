@@ -7,8 +7,8 @@ import org.springframework.stereotype.Service;
 
 import com.ijaes.jeogiyo.common.exception.CustomException;
 import com.ijaes.jeogiyo.common.exception.ErrorCode;
-import com.ijaes.jeogiyo.user.dto.UpdateRoleRequest;
-import com.ijaes.jeogiyo.user.dto.UserInfoResponse;
+import com.ijaes.jeogiyo.user.dto.request.UpdateRoleRequest;
+import com.ijaes.jeogiyo.user.dto.response.UserInfoResponse;
 import com.ijaes.jeogiyo.user.entity.Role;
 import com.ijaes.jeogiyo.user.entity.User;
 import com.ijaes.jeogiyo.user.repository.UserRepository;

@@ -1,4 +1,4 @@
-package com.ijaes.jeogiyo.user.dto;
+package com.ijaes.jeogiyo.user.dto.response;
 
 import java.util.UUID;
 

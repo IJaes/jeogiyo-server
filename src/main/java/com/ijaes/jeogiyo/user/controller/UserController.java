@@ -1,6 +1,10 @@
 package com.ijaes.jeogiyo.user.controller;
 
-import com.ijaes.jeogiyo.user.dto.*;
+import com.ijaes.jeogiyo.user.dto.request.UpdateAddressRequest;
+import com.ijaes.jeogiyo.user.dto.request.UpdatePasswordRequest;
+import com.ijaes.jeogiyo.user.dto.request.UpdatePhoneNumberRequest;
+import com.ijaes.jeogiyo.user.dto.response.UserInfoResponse;
+import com.ijaes.jeogiyo.user.dto.response.UserUpdateResponse;
 import com.ijaes.jeogiyo.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;

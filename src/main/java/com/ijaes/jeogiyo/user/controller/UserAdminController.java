@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.ijaes.jeogiyo.user.dto.UpdateRoleRequest;
-import com.ijaes.jeogiyo.user.dto.UserInfoResponse;
+import com.ijaes.jeogiyo.user.dto.request.UpdateRoleRequest;
+import com.ijaes.jeogiyo.user.dto.response.UserInfoResponse;
 import com.ijaes.jeogiyo.user.service.UserAdminService;
 
 import io.swagger.v3.oas.annotations.Operation;
