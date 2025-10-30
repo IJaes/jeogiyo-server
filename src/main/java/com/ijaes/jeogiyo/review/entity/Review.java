@@ -1,8 +1,12 @@
 package com.ijaes.jeogiyo.review.entity;
 
+import java.util.UUID;
+
 import com.ijaes.jeogiyo.common.entity.BaseEntity;
 import com.ijaes.jeogiyo.user.entity.User;
 
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -25,12 +29,17 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 @EqualsAndHashCode(callSuper = false)
+@Access(AccessType.FIELD)
 public class Review extends BaseEntity {
 
 	// 리뷰 식별 ID
 	@Id
 	@GeneratedValue(strategy = GenerationType.UUID)
-	private Long reviewId;
+	private UUID reviewId;
+
+	//주문 내역 식별 ID
+	@Column(nullable = false)
+	private UUID orderId;
 
 	// 작성자 ID
 	@ManyToOne(fetch = FetchType.LAZY)
@@ -38,9 +47,8 @@ public class Review extends BaseEntity {
 	private User user;
 
 	// 가게 ID
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "store_id", nullable = false)
-	private Store store;
+	@Column(nullable = false)
+	private UUID storeId;
 
 	//리뷰 제목
 	@Column(nullable = false)
