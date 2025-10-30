@@ -92,4 +92,12 @@ public class JwtUtil {
             return true;
         }
     }
+
+    public long getTokenExpirationTime(String token) {
+        try {
+            return getClaims(token).getExpiration().getTime();
+        } catch (CustomException ex) {
+            throw ex;
+        }
+    }
 }

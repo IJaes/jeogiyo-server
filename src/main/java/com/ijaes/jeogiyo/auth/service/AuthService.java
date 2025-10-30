@@ -3,6 +3,8 @@ package com.ijaes.jeogiyo.auth.service;
 import com.ijaes.jeogiyo.auth.dto.AuthResponse;
 import com.ijaes.jeogiyo.auth.dto.LoginRequest;
 import com.ijaes.jeogiyo.auth.dto.SignUpRequest;
+import com.ijaes.jeogiyo.auth.entity.TokenBlacklist;
+import com.ijaes.jeogiyo.auth.repository.TokenBlacklistRepository;
 import com.ijaes.jeogiyo.auth.security.JwtUtil;
 import com.ijaes.jeogiyo.auth.validator.SignUpValidator;
 import com.ijaes.jeogiyo.common.exception.CustomException;
@@ -14,6 +16,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -22,6 +27,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final SignUpValidator signUpValidator;
+    private final TokenBlacklistRepository tokenBlacklistRepository;
 
     public AuthResponse signUp(SignUpRequest request) {
         signUpValidator.validateSignUpRequest(request);
@@ -73,5 +79,47 @@ public class AuthService {
                 .role(foundUser.getRole().getAuthority())
                 .success(true)
                 .build();
+    }
+
+    public AuthResponse logout(String bearerToken) {
+        String token = bearerToken.startsWith("Bearer ") ? bearerToken.substring(7) : bearerToken;
+        String username = jwtUtil.extractUsername(token);
+
+        jwtUtil.validateToken(token);
+
+        long expirationAt = jwtUtil.getTokenExpirationTime(token);
+
+        String tokenHash = hashToken(token);
+
+        TokenBlacklist tokenBlacklist = TokenBlacklist.builder()
+                .tokenHash(tokenHash)
+                .username(username)
+                .expirationAt(expirationAt)
+                .build();
+
+        tokenBlacklistRepository.save(tokenBlacklist);
+
+        return AuthResponse.builder()
+                .message("로그아웃이 성공했습니다.")
+                .success(true)
+                .build();
+    }
+
+    private String hashToken(String token) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(token.getBytes());
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : hash) {
+                String hex = Integer.toHexString(0xff & b);
+                if (hex.length() == 1) {
+                    hexString.append('0');
+                }
+                hexString.append(hex);
+            }
+            return hexString.toString();
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("SHA-256 알고리즘을 찾을 수 없습니다.", e);
+        }
     }
 }

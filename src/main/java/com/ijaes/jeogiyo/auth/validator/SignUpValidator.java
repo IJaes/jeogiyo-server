@@ -31,22 +31,18 @@ public class SignUpValidator {
             throw new CustomException(ErrorCode.INVALID_PASSWORD);
         }
 
-        // 대문자 포함 확인
         if (!password.matches(".*[A-Z].*")) {
             throw new CustomException(ErrorCode.INVALID_PASSWORD);
         }
 
-        // 소문자 포함 확인
         if (!password.matches(".*[a-z].*")) {
             throw new CustomException(ErrorCode.INVALID_PASSWORD);
         }
 
-        // 숫자 포함 확인
         if (!password.matches(".*[0-9].*")) {
             throw new CustomException(ErrorCode.INVALID_PASSWORD);
         }
 
-        // 특수문자 포함 확인
         if (!password.matches(".*[!@#$%^&*()_+\\-=\\[\\]{};:'\",.<>?/`~|\\\\].*")) {
             throw new CustomException(ErrorCode.INVALID_PASSWORD);
         }
@@ -69,6 +65,16 @@ public class SignUpValidator {
 
         if (!phoneNumber.matches("^\\d{3}-\\d{4}-\\d{4}$")) {
             throw new CustomException(ErrorCode.INVALID_PHONE_NUMBER);
+        }
+    }
+
+    public void validateAddress(String address) {
+        if (address == null || address.isEmpty()) {
+            throw new CustomException(ErrorCode.EMPTY_ADDRESS);
+        }
+
+        if (address.length() > 100) {
+            throw new CustomException(ErrorCode.INVALID_ADDRESS);
         }
     }
 

@@ -32,4 +32,12 @@ public class AuthController {
         AuthResponse response = authService.login(request);
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/logout")
+    @Operation(summary = "로그아웃", description = "로그아웃합니다")
+    public ResponseEntity<AuthResponse> logout(@RequestHeader("Authorization") String bearerToken) {
+        AuthResponse response = authService.logout(bearerToken);
+        return ResponseEntity.ok(response);
+    }
 }
+
