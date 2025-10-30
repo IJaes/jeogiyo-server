@@ -4,8 +4,10 @@ import com.ijaes.jeogiyo.auth.dto.AuthResponse;
 import com.ijaes.jeogiyo.auth.dto.LoginRequest;
 import com.ijaes.jeogiyo.auth.dto.SignUpRequest;
 import com.ijaes.jeogiyo.auth.security.JwtUtil;
+import com.ijaes.jeogiyo.auth.validator.SignUpValidator;
 import com.ijaes.jeogiyo.common.exception.CustomException;
 import com.ijaes.jeogiyo.common.exception.ErrorCode;
+import com.ijaes.jeogiyo.user.entity.Role;
 import com.ijaes.jeogiyo.user.entity.User;
 import com.ijaes.jeogiyo.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,20 +21,23 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final SignUpValidator signUpValidator;
 
     public AuthResponse signUp(SignUpRequest request) {
-        // 중복 아이디 확인
+        signUpValidator.validateSignUpRequest(request);
+
         if (userRepository.existsByUsername(request.getUsername())) {
             throw new CustomException(ErrorCode.DUPLICATE_USERNAME);
         }
 
-        // 사용자 생성
         User user = User.builder()
                 .username(request.getUsername())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .name(request.getName())
                 .address(request.getAddress())
                 .phoneNumber(request.getPhoneNumber())
+                .isOwner(request.isOwner())
+                .role(request.isOwner() ? Role.OWNER : Role.USER)
                 .build();
 
         userRepository.save(user);
@@ -44,7 +49,6 @@ public class AuthService {
     }
 
     public AuthResponse login(LoginRequest request) {
-        // 사용자 확인
         var user = userRepository.findByUsername(request.getUsername());
 
         if (user.isEmpty()) {
@@ -53,17 +57,20 @@ public class AuthService {
 
         User foundUser = user.get();
 
-        // 비밀번호 확인
+        if (foundUser.getRole().equals(Role.BLOCK)) {
+            throw new CustomException(ErrorCode.BLOCKED_USER);
+        }
+
         if (!passwordEncoder.matches(request.getPassword(), foundUser.getPassword())) {
             throw new CustomException(ErrorCode.WRONG_ID_PW);
         }
 
-        // JWT 토큰 생성
         String token = jwtUtil.generateToken(foundUser.getUsername());
 
         return AuthResponse.builder()
                 .message("로그인이 성공했습니다.")
                 .token(token)
+                .role(foundUser.getRole().getAuthority())
                 .success(true)
                 .build();
     }

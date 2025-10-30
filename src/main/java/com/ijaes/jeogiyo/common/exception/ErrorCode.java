@@ -11,6 +11,11 @@ public enum ErrorCode {
     WRONG_ID_PW(HttpStatus.UNAUTHORIZED, "A-001", "아이디 혹은 비밀번호가 올바르지 않습니다."),
     USER_NOT_FOUND(HttpStatus.UNAUTHORIZED, "A-002", "사용자를 찾을 수 없습니다."),
     DUPLICATE_USERNAME(HttpStatus.CONFLICT, "A-003", "이미 존재하는 아이디입니다."),
+    INVALID_USERNAME(HttpStatus.BAD_REQUEST, "A-004", "아이디는 소문자(a~z), 숫자(0~9)를 포함하는 4자~10자의 문자열이어야 합니다."),
+    INVALID_PASSWORD(HttpStatus.BAD_REQUEST, "A-005", "비밀번호는 대소문자(a~z, A~Z), 숫자(0~9), 특수문자를 포함하는 8~15자의 문자열이어야 합니다."),
+    INVALID_NAME(HttpStatus.BAD_REQUEST, "A-006", "이름은 3자~10자의 문자열이어야 합니다."),
+    INVALID_PHONE_NUMBER(HttpStatus.BAD_REQUEST, "A-007", "전화번호는 XXX-XXXX-XXXX 양식이어야 합니다."),
+    BLOCKED_USER(HttpStatus.FORBIDDEN, "A-008", "정지된 계정입니다. 관리자에게 문의하세요."),
 
     // JWT 관련 (J-xxx)
     JWT_EXPIRED(HttpStatus.UNAUTHORIZED, "J-001", "JWT 토큰이 만료되었습니다."),
