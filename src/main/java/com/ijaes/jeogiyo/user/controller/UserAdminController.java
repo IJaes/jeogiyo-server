@@ -6,9 +6,12 @@ import java.util.UUID;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ijaes.jeogiyo.user.dto.UpdateRoleRequest;
 import com.ijaes.jeogiyo.user.dto.UserInfoResponse;
 import com.ijaes.jeogiyo.user.service.UserAdminService;
 
@@ -36,6 +39,13 @@ public class UserAdminController {
 	@Operation(summary = "특정 사용자 조회", description = "관리자 권한으로 특정 사용자의 정보를 조회합니다", security = @SecurityRequirement(name = "bearer-jwt"))
 	public ResponseEntity<UserInfoResponse> getUserById(@PathVariable UUID userId) {
 		UserInfoResponse userInfoResponse = userAdminService.getUserById(userId);
+		return ResponseEntity.ok(userInfoResponse);
+	}
+
+	@PutMapping("/users/{userId}/role")
+	@Operation(summary = "사용자 권한 변경", description = "관리자 권한으로 특정 사용자의 권한을 변경합니다", security = @SecurityRequirement(name = "bearer-jwt"))
+	public ResponseEntity<UserInfoResponse> updateUserRole(@PathVariable UUID userId, @RequestBody UpdateRoleRequest request) {
+		UserInfoResponse userInfoResponse = userAdminService.updateUserRole(userId, request);
 		return ResponseEntity.ok(userInfoResponse);
 	}
 }

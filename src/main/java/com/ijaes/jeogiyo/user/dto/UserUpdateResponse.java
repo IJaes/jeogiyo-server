@@ -1,5 +1,7 @@
 package com.ijaes.jeogiyo.user.dto;
 
+import java.util.UUID;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,6 +20,9 @@ public class UserUpdateResponse {
 
     @Schema(description = "성공 여부", example = "true")
     private boolean success;
+
+    @Schema(description = "UUID")
+    private UUID id;
 
     @Schema(description = "사용자 아이디", example = "john123")
     private String username;

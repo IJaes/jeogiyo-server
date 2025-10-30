@@ -1,5 +1,7 @@
 package com.ijaes.jeogiyo.user.dto;
 
+import java.util.UUID;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,6 +14,9 @@ import lombok.NoArgsConstructor;
 @Builder
 @Schema(description = "사용자 정보 조회 응답")
 public class UserInfoResponse {
+
+	@Schema(description = "UUID")
+	private UUID id;
 
 	@Schema(description = "아이디", example = "john123")
 	private String username;
