@@ -19,7 +19,7 @@ public class UserUpdateResponse {
     @Schema(description = "성공 여부", example = "true")
     private boolean success;
 
-    @Schema(description = "사용자명", example = "john123")
+    @Schema(description = "사용자 아이디", example = "john123")
     private String username;
 
     @Schema(description = "이름", example = "홍길동")
