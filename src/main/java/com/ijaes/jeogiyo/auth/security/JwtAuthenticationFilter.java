@@ -1,6 +1,8 @@
 package com.ijaes.jeogiyo.auth.security;
 
+import com.ijaes.jeogiyo.auth.repository.TokenBlacklistRepository;
 import com.ijaes.jeogiyo.common.exception.CustomException;
+import com.ijaes.jeogiyo.common.exception.ErrorCode;
 import com.ijaes.jeogiyo.user.repository.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -15,6 +17,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 @Slf4j
 @Component
@@ -23,6 +27,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
     private final UserRepository userRepository;
+    private final TokenBlacklistRepository tokenBlacklistRepository;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -34,13 +39,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
                 String token = bearerToken.substring(7);
 
-                // JWT 토큰 검증 (만료되었거나 유효하지 않으면 Exception 발생)
+                String tokenHash = hashToken(token);
+                if (tokenBlacklistRepository.existsByTokenHash(tokenHash)) {
+                    log.warn("Token is blacklisted");
+                    request.setAttribute("exception", new CustomException(ErrorCode.BLACKLISTED_TOKEN));
+                    filterChain.doFilter(request, response);
+                    return;
+                }
+
                 jwtUtil.validateToken(token);
 
-                // 토큰에서 username 추출
                 String username = jwtUtil.extractUsername(token);
 
-                // 사용자 조회
                 var user = userRepository.findByUsername(username);
 
                 if (user.isPresent()) {
@@ -64,5 +74,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private String hashToken(String token) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(token.getBytes());
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : hash) {
+                String hex = Integer.toHexString(0xff & b);
+                if (hex.length() == 1) {
+                    hexString.append('0');
+                }
+                hexString.append(hex);
+            }
+            return hexString.toString();
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("SHA-256 알고리즘을 찾을 수 없습니다.", e);
+        }
     }
 }

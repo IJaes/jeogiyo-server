@@ -1,8 +1,8 @@
 package com.ijaes.jeogiyo.auth.controller;
 
-import com.ijaes.jeogiyo.auth.dto.AuthResponse;
-import com.ijaes.jeogiyo.auth.dto.LoginRequest;
-import com.ijaes.jeogiyo.auth.dto.SignUpRequest;
+import com.ijaes.jeogiyo.auth.dto.response.AuthResponse;
+import com.ijaes.jeogiyo.auth.dto.request.LoginRequest;
+import com.ijaes.jeogiyo.auth.dto.request.SignUpRequest;
 import com.ijaes.jeogiyo.auth.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -32,4 +32,12 @@ public class AuthController {
         AuthResponse response = authService.login(request);
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/logout")
+    @Operation(summary = "로그아웃", description = "로그아웃합니다")
+    public ResponseEntity<AuthResponse> logout(@RequestHeader("Authorization") String bearerToken) {
+        AuthResponse response = authService.logout(bearerToken);
+        return ResponseEntity.ok(response);
+    }
 }
+
