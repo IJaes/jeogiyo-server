@@ -10,9 +10,9 @@ import java.util.UUID;
 
 @Repository
 public interface TokenBlacklistRepository extends JpaRepository<TokenBlacklist, UUID> {
-    Optional<TokenBlacklist> findByToken(String token);
+    Optional<TokenBlacklist> findByTokenHash(String tokenHash);
 
-    boolean existsByToken(String token);
+    boolean existsByTokenHash(String tokenHash);
 
     @Query("DELETE FROM TokenBlacklist t WHERE t.expirationAt < :currentTimeMillis")
     void deleteExpiredTokens(long currentTimeMillis);

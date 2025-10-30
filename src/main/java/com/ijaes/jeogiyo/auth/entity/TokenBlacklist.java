@@ -8,7 +8,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "j_token_blacklist", indexes = {
-        @Index(name = "idx_token", columnList = "token"),
+        @Index(name = "idx_token_hash", columnList = "token_hash"),
         @Index(name = "idx_username", columnList = "username"),
         @Index(name = "idx_expiration_at", columnList = "expiration_at")
 })
@@ -23,8 +23,8 @@ public class TokenBlacklist extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(nullable = false, unique = true, length = 1000)
-    private String token;
+    @Column(nullable = false, unique = true, length = 255)
+    private String tokenHash;
 
     @Column(nullable = false)
     private String username;
