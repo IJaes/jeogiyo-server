@@ -1,6 +1,8 @@
 package com.ijaes.jeogiyo.user.entity;
 
 import com.ijaes.jeogiyo.common.entity.BaseEntity;
+import com.ijaes.jeogiyo.store.entity.Store;
+
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
@@ -41,6 +43,10 @@ public class User extends BaseEntity implements UserDetails {
 
     @Column(nullable = false)
     private boolean isOwner;
+
+    @OneToOne
+    @JoinColumn(name = "store_id", nullable = true, unique = true)
+    private Store store;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
