@@ -28,10 +28,12 @@ public enum ErrorCode {
     // 인가 관련 (Z-xxx)
     ACCESS_DENIED(HttpStatus.FORBIDDEN, "Z-001", "접근 권한이 없습니다."),
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "Z-002", "인증이 필요합니다."),
+    OWNER_ROLE_REQUIRED(HttpStatus.FORBIDDEN, "Z-003", "가게를 생성하려면 OWNER 권한이 필요합니다."),
 
     // 리소스 관련 (R-xxx)
     RESOURCE_NOT_FOUND(HttpStatus.NOT_FOUND, "R-001", "요청하신 리소스를 찾을 수 없습니다."),
     DUPLICATE_RESOURCE(HttpStatus.CONFLICT, "R-002", "이미 존재하는 리소스입니다."),
+    DUPLICATE_STORE(HttpStatus.CONFLICT, "R-003", "이미 등록한 가게가 있습니다. 한 명의 OWNER는 하나의 가게만 등록할 수 있습니다."),
 
     // 비즈니스 로직 관련 (B-xxx)
     BUSINESS_ERROR(HttpStatus.BAD_REQUEST, "B-001", "비즈니스 로직 오류가 발생했습니다."),
