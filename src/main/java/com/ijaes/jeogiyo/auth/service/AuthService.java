@@ -3,6 +3,8 @@ package com.ijaes.jeogiyo.auth.service;
 import com.ijaes.jeogiyo.auth.dto.AuthResponse;
 import com.ijaes.jeogiyo.auth.dto.LoginRequest;
 import com.ijaes.jeogiyo.auth.dto.SignUpRequest;
+import com.ijaes.jeogiyo.auth.entity.TokenBlacklist;
+import com.ijaes.jeogiyo.auth.repository.TokenBlacklistRepository;
 import com.ijaes.jeogiyo.auth.security.JwtUtil;
 import com.ijaes.jeogiyo.auth.validator.SignUpValidator;
 import com.ijaes.jeogiyo.common.exception.CustomException;
@@ -22,6 +24,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final SignUpValidator signUpValidator;
+    private final TokenBlacklistRepository tokenBlacklistRepository;
 
     public AuthResponse signUp(SignUpRequest request) {
         signUpValidator.validateSignUpRequest(request);
@@ -71,6 +74,27 @@ public class AuthService {
                 .message("로그인이 성공했습니다.")
                 .token(token)
                 .role(foundUser.getRole().getAuthority())
+                .success(true)
+                .build();
+    }
+
+    public AuthResponse logout(String token) {
+        String username = jwtUtil.extractUsername(token);
+
+        jwtUtil.validateToken(token);
+
+        long expirationAt = jwtUtil.getTokenExpirationTime(token);
+
+        TokenBlacklist tokenBlacklist = TokenBlacklist.builder()
+                .token(token)
+                .username(username)
+                .expirationAt(expirationAt)
+                .build();
+
+        tokenBlacklistRepository.save(tokenBlacklist);
+
+        return AuthResponse.builder()
+                .message("로그아웃이 성공했습니다.")
                 .success(true)
                 .build();
     }
