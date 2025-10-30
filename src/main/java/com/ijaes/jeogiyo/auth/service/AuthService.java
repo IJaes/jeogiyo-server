@@ -81,7 +81,8 @@ public class AuthService {
                 .build();
     }
 
-    public AuthResponse logout(String token) {
+    public AuthResponse logout(String bearerToken) {
+        String token = bearerToken.startsWith("Bearer ") ? bearerToken.substring(7) : bearerToken;
         String username = jwtUtil.extractUsername(token);
 
         jwtUtil.validateToken(token);

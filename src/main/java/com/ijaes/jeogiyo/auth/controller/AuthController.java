@@ -36,8 +36,7 @@ public class AuthController {
     @PostMapping("/logout")
     @Operation(summary = "로그아웃", description = "로그아웃합니다")
     public ResponseEntity<AuthResponse> logout(@RequestHeader("Authorization") String bearerToken) {
-        String token = bearerToken.startsWith("Bearer ") ? bearerToken.substring(7) : bearerToken;
-        AuthResponse response = authService.logout(token);
+        AuthResponse response = authService.logout(bearerToken);
         return ResponseEntity.ok(response);
     }
 }
