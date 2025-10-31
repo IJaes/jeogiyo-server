@@ -1,6 +1,7 @@
 package com.ijaes.jeogiyo.store.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,6 +27,7 @@ public class UpdateStoreRequest {
 	@Schema(description = "설명", example = "뜨근뜨끈한 국물 한 사발 먹고 가세요")
 	private String description;
 
+	@Pattern(regexp = "^[A-Z_]+$", message = "카테고리는 대문자와 언더스코어로만 이루어져야 합니다")
 	@Schema(description = "카테고리", example = "KOREAN")
 	private String category;
 }

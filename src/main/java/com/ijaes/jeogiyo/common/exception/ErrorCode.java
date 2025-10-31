@@ -43,6 +43,7 @@ public enum ErrorCode {
     EMPTY_ADDRESS(HttpStatus.BAD_REQUEST, "U-002", "주소를 입력해주세요."),
     EMPTY_CURRENT_PASSWORD(HttpStatus.BAD_REQUEST, "U-003", "현재 비밀번호를 입력해주세요."),
     INVALID_ROLE(HttpStatus.BAD_REQUEST, "U-004", "유효하지 않은 권한입니다."),
+    DUPLICATE_PASSWORD(HttpStatus.BAD_REQUEST, "U-005", "새 비밀번호는 현재 비밀번호와 달라야 합니다."),
 
     // 서버 에러 (X-xxx)
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "X-001", "서버 오류가 발생했습니다. 관리자에게 문의하세요."),
