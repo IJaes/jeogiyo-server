@@ -267,4 +267,174 @@ class StoreOwnerServiceTest {
 			assertEquals(category, result.getCategory());
 		}
 	}
+
+	@Test
+	@DisplayName("매장 정보 수정 - 성공 (모든 필드 수정)")
+	void updateStore_success_allFields() {
+		// given
+		when(authentication.getPrincipal()).thenReturn(ownerUser);
+		when(storeRepository.findByOwnerId(ownerId)).thenReturn(testStore);
+
+		com.ijaes.jeogiyo.store.dto.request.UpdateStoreRequest request =
+			com.ijaes.jeogiyo.store.dto.request.UpdateStoreRequest.builder()
+				.name("새로운 가게명")
+				.address("서울시 마포구 홍대")
+				.description("새로운 설명")
+				.category("JAPANESE")
+				.build();
+
+		Store updatedStore = Store.builder()
+			.id(testStore.getId())
+			.businessNumber(testStore.getBusinessNumber())
+			.name("새로운 가게명")
+			.address("서울시 마포구 홍대")
+			.description("새로운 설명")
+			.category(Category.JAPANESE)
+			.rate(testStore.getRate())
+			.ownerId(ownerId)
+			.build();
+
+		when(storeRepository.save(any(Store.class))).thenReturn(updatedStore);
+
+		// when
+		StoreResponse result = storeOwnerService.updateStore(authentication, request);
+
+		// then
+		assertNotNull(result);
+		assertEquals("새로운 가게명", result.getName());
+		assertEquals("서울시 마포구 홍대", result.getAddress());
+		assertEquals("새로운 설명", result.getDescription());
+		assertEquals("JAPANESE", result.getCategory());
+
+		verify(storeRepository, times(1)).findByOwnerId(ownerId);
+		verify(storeRepository, times(1)).save(any(Store.class));
+	}
+
+	@Test
+	@DisplayName("매장 정보 수정 - 부분 수정 (이름만)")
+	void updateStore_partialUpdate_nameOnly() {
+		// given
+		when(authentication.getPrincipal()).thenReturn(ownerUser);
+		when(storeRepository.findByOwnerId(ownerId)).thenReturn(testStore);
+
+		com.ijaes.jeogiyo.store.dto.request.UpdateStoreRequest request =
+			com.ijaes.jeogiyo.store.dto.request.UpdateStoreRequest.builder()
+				.name("변경된 이름")
+				.build();
+
+		Store updatedStore = Store.builder()
+			.id(testStore.getId())
+			.businessNumber(testStore.getBusinessNumber())
+			.name("변경된 이름")
+			.address(testStore.getAddress())
+			.description(testStore.getDescription())
+			.category(testStore.getCategory())
+			.rate(testStore.getRate())
+			.ownerId(ownerId)
+			.build();
+
+		when(storeRepository.save(any(Store.class))).thenReturn(updatedStore);
+
+		// when
+		StoreResponse result = storeOwnerService.updateStore(authentication, request);
+
+		// then
+		assertEquals("변경된 이름", result.getName());
+		assertEquals(testStore.getAddress(), result.getAddress());
+	}
+
+	@Test
+	@DisplayName("매장 정보 수정 - 권한 없음")
+	void updateStore_withoutOwnerRole() {
+		// given
+		User nonOwnerUser = User.builder()
+			.id(UUID.randomUUID())
+			.username("user123")
+			.password("password")
+			.name("일반사용자")
+			.phoneNumber("010-1234-5678")
+			.address("서울시 강남구")
+			.isOwner(false)
+			.role(Role.USER)
+			.build();
+
+		when(authentication.getPrincipal()).thenReturn(nonOwnerUser);
+
+		com.ijaes.jeogiyo.store.dto.request.UpdateStoreRequest request =
+			com.ijaes.jeogiyo.store.dto.request.UpdateStoreRequest.builder()
+				.name("새로운 이름")
+				.build();
+
+		// when & then
+		CustomException exception = assertThrows(CustomException.class, () -> {
+			storeOwnerService.updateStore(authentication, request);
+		});
+
+		assertEquals(ErrorCode.OWNER_ROLE_REQUIRED, exception.getErrorCode());
+		verify(storeRepository, times(0)).save(any(Store.class));
+	}
+
+	@Test
+	@DisplayName("매장 정보 수정 - 잘못된 카테고리")
+	void updateStore_invalidCategory() {
+		// given
+		when(authentication.getPrincipal()).thenReturn(ownerUser);
+		when(storeRepository.findByOwnerId(ownerId)).thenReturn(testStore);
+
+		com.ijaes.jeogiyo.store.dto.request.UpdateStoreRequest request =
+			com.ijaes.jeogiyo.store.dto.request.UpdateStoreRequest.builder()
+				.category("INVALID_CATEGORY")
+				.build();
+
+		// when & then
+		CustomException exception = assertThrows(CustomException.class, () -> {
+			storeOwnerService.updateStore(authentication, request);
+		});
+
+		assertEquals(ErrorCode.INVALID_REQUEST, exception.getErrorCode());
+		verify(storeRepository, times(0)).save(any(Store.class));
+	}
+
+	@Test
+	@DisplayName("매장 정보 수정 - 매장 조회 실패")
+	void updateStore_storeNotFound() {
+		// given
+		when(authentication.getPrincipal()).thenReturn(ownerUser);
+		when(storeRepository.findByOwnerId(ownerId)).thenThrow(new IllegalStateException("Store not found"));
+
+		com.ijaes.jeogiyo.store.dto.request.UpdateStoreRequest request =
+			com.ijaes.jeogiyo.store.dto.request.UpdateStoreRequest.builder()
+				.name("새로운 이름")
+				.build();
+
+		// when & then
+		CustomException exception = assertThrows(CustomException.class, () -> {
+			storeOwnerService.updateStore(authentication, request);
+		});
+
+		assertEquals(ErrorCode.INVALID_ADDRESS, exception.getErrorCode());
+	}
+
+	@Test
+	@DisplayName("매장 정보 수정 - 모든 필드 null (요청)")
+	void updateStore_allFieldsNull() {
+		// given
+		when(authentication.getPrincipal()).thenReturn(ownerUser);
+		when(storeRepository.findByOwnerId(ownerId)).thenReturn(testStore);
+
+		com.ijaes.jeogiyo.store.dto.request.UpdateStoreRequest request =
+			com.ijaes.jeogiyo.store.dto.request.UpdateStoreRequest.builder()
+				.build();
+
+		when(storeRepository.save(any(Store.class))).thenReturn(testStore);
+
+		// when
+		StoreResponse result = storeOwnerService.updateStore(authentication, request);
+
+		// then
+		assertNotNull(result);
+		assertEquals(testStore.getName(), result.getName());
+		assertEquals(testStore.getAddress(), result.getAddress());
+		assertEquals(testStore.getDescription(), result.getDescription());
+	}
 }
