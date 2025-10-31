@@ -3,12 +3,14 @@ package com.ijaes.jeogiyo.store.controller;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ijaes.jeogiyo.store.dto.request.CreateStoreRequest;
+import com.ijaes.jeogiyo.store.dto.request.UpdateStoreRequest;
 import com.ijaes.jeogiyo.store.dto.response.StoreResponse;
 import com.ijaes.jeogiyo.store.service.StoreOwnerService;
 
@@ -36,6 +38,13 @@ public class StoreOwnerController {
 	@Operation(summary = "매장 조회", description = "본인의 매장을 조회합니다", security = @SecurityRequirement(name = "bearer-jwt"))
 	public ResponseEntity<StoreResponse> myStore(Authentication authentication) {
 		StoreResponse storeResponse = storeService.myStore(authentication);
+		return ResponseEntity.ok(storeResponse);
+	}
+
+	@PatchMapping
+	@Operation(summary = "매장 정보 수정", description = "본인의 매장 정보를 부분적으로 수정합니다", security = @SecurityRequirement(name = "bearer-jwt"))
+	public ResponseEntity<StoreResponse> updateStore(Authentication authentication, @RequestBody UpdateStoreRequest request) {
+		StoreResponse storeResponse = storeService.updateStore(authentication, request);
 		return ResponseEntity.ok(storeResponse);
 	}
 }

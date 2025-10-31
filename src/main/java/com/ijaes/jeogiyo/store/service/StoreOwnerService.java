@@ -1,11 +1,14 @@
 package com.ijaes.jeogiyo.store.service;
 
+import java.util.UUID;
+
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import com.ijaes.jeogiyo.common.exception.CustomException;
 import com.ijaes.jeogiyo.common.exception.ErrorCode;
 import com.ijaes.jeogiyo.store.dto.request.CreateStoreRequest;
+import com.ijaes.jeogiyo.store.dto.request.UpdateStoreRequest;
 import com.ijaes.jeogiyo.store.dto.response.StoreResponse;
 import com.ijaes.jeogiyo.store.entity.Category;
 import com.ijaes.jeogiyo.store.entity.Store;
@@ -83,6 +86,61 @@ public class StoreOwnerService {
 				.ownerId(user.getId())
 				.build();
 
+		} catch (IllegalStateException e) {
+			throw new CustomException(ErrorCode.INVALID_ADDRESS);
+		}
+	}
+
+	public StoreResponse updateStore(Authentication authentication, UpdateStoreRequest request) {
+		User owner = (User) authentication.getPrincipal();
+
+		if (!owner.getRole().equals(Role.OWNER)) {
+			throw new CustomException(ErrorCode.OWNER_ROLE_REQUIRED);
+		}
+
+		try {
+			Store store = storeRepository.findByOwnerId(owner.getId());
+
+			if (request.getCategory() != null) {
+				Category category = Category.valueOf(request.getCategory());
+				store = Store.builder()
+					.id(store.getId())
+					.businessNumber(store.getBusinessNumber())
+					.name(request.getName() != null ? request.getName() : store.getName())
+					.address(request.getAddress() != null ? request.getAddress() : store.getAddress())
+					.description(request.getDescription() != null ? request.getDescription() : store.getDescription())
+					.category(category)
+					.rate(store.getRate())
+					.ownerId(store.getOwnerId())
+					.build();
+			} else {
+				store = Store.builder()
+					.id(store.getId())
+					.businessNumber(store.getBusinessNumber())
+					.name(request.getName() != null ? request.getName() : store.getName())
+					.address(request.getAddress() != null ? request.getAddress() : store.getAddress())
+					.description(request.getDescription() != null ? request.getDescription() : store.getDescription())
+					.category(store.getCategory())
+					.rate(store.getRate())
+					.ownerId(store.getOwnerId())
+					.build();
+			}
+
+			Store updatedStore = storeRepository.save(store);
+
+			return StoreResponse.builder()
+				.id(updatedStore.getId())
+				.businessNumber(updatedStore.getBusinessNumber())
+				.name(updatedStore.getName())
+				.address(updatedStore.getAddress())
+				.description(updatedStore.getDescription())
+				.category(updatedStore.getCategory().name())
+				.rate(updatedStore.getRate())
+				.ownerId(owner.getId())
+				.build();
+
+		} catch (IllegalArgumentException e) {
+			throw new CustomException(ErrorCode.INVALID_REQUEST);
 		} catch (IllegalStateException e) {
 			throw new CustomException(ErrorCode.INVALID_ADDRESS);
 		}
