@@ -20,22 +20,52 @@ import lombok.RequiredArgsConstructor;
 public class ReviewRepositoryCustomImpl implements ReviewRepositoryCustom {
 	private final JPAQueryFactory queryFactory;
 
-	// @Override
-	// public Page<Review> findAll(UUID storeId, int page, int size) {
-	//
-	// 	return null;
-	// }
-
+	//1. 작성된 리뷰 전체 조회 - 관리자
 	@Override
 	public Page<Review> findAllReviewsByPaging(int page, int size) {
-		return null;
+		long offset = (long)page * size;
+		QReview review = QReview.review;
+
+		// 전체 조회
+		List<Review> content = queryFactory
+			.selectFrom(review)
+			.orderBy(review.reviewId.desc())
+			.offset(offset)
+			.limit(size)
+			.fetch();
+
+		Long totalCount = queryFactory
+			.select(review.count())
+			.from(review)
+			.fetchOne();
+
+		return new PageImpl<>(content, PageRequest.of(page, size), totalCount);
 	}
 
+	//2. 사용자 아이디 기준으로 리뷰 전체 조회
 	@Override
 	public Page<Review> findReviewsByUserId(UUID userId, int page, int size) {
-		return null;
+		long offset = (long)page * size;
+		QReview review = QReview.review;
+
+		List<Review> content = queryFactory
+			.selectFrom(review)
+			.where(review.userId.eq(userId))
+			.orderBy(review.reviewId.desc())
+			.offset(offset)
+			.limit(size)
+			.fetch();
+
+		Long totalCount = queryFactory
+			.select(review.count())
+			.from(review)
+			.where(review.userId.eq(userId))
+			.fetchOne();
+
+		return new PageImpl<>(content, PageRequest.of(page, size), totalCount);
 	}
 
+	//3. 가게 아이디 기준으로 리뷰 전체 조회
 	@Override
 	public Page<Review> findReviewsByStoreID(UUID storeId, int page, int size) {
 		long offset = (long)page * size;

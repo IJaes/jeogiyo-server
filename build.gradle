@@ -36,6 +36,7 @@ dependencies {
     testImplementation 'org.springframework.security:spring-security-test'
     runtimeOnly 'com.mysql:mysql-connector-j'
 
+    //QueryDSL
     implementation 'com.querydsl:querydsl-jpa:5.1.0:jakarta'
     annotationProcessor 'com.querydsl:querydsl-apt:5.1.0:jakarta'
 
