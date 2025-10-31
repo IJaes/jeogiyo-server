@@ -53,6 +53,10 @@ public enum ErrorCode {
 	DUPLICATE_STORE(HttpStatus.CONFLICT, "S-001", "이미 등록한 매장이 있습니다. 한 명의 OWNER는 하나의 매장만 등록할 수 있습니다."),
 	STORE_NOT_FOUND(HttpStatus.NOT_FOUND, "S-002", "매장을 찾을 수 없습니다. 먼저 매장을 등록해주세요."),
 	INVALID_CATEGORY(HttpStatus.BAD_REQUEST, "S-003", "유효하지 않은 카테고리입니다. (KOREAN, JAPANESE, CHINESE, ITALIAN)"),
+
+	//리뷰 관련 (W-xxx)
+	REVIEW_ALREADY_EXISTS(HttpStatus.CONFLICT, "W-001", "이미 해당 주문에 대한 리뷰가 작성되었습니다."),
+
 	;
 
 	private final HttpStatus httpStatus;
