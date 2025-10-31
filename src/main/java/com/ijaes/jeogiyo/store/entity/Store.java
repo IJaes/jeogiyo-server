@@ -17,7 +17,6 @@ import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.ToString;
 
 @Entity
 @Table(name = "j_store")
@@ -53,4 +52,24 @@ public class Store extends BaseEntity {
 
 	@Column(nullable = false)
 	private UUID ownerId;
+
+	public void updateName(String newName) {
+		this.name = newName;
+	}
+
+	public void updateAddress(String newAddress) {
+		this.address = newAddress;
+	}
+
+	public void updateDescription(String newDescription) {
+		this.description = newDescription;
+	}
+
+	public void updateCategory(Category newCategory) {
+		this.category = newCategory;
+	}
+
+	public void updateRate(Double newRate) {
+		this.rate = newRate;
+	}
 }
