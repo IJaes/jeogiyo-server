@@ -17,15 +17,15 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/v1/stores")
+@RequestMapping("/v1/owner/stores")
 @RequiredArgsConstructor
-@Tag(name = "가게", description = "가게 관리 API")
-public class StoreController {
+@Tag(name = "매장", description = "매장 관리 API")
+public class StoreOwnerController {
 
 	private final StoreService storeService;
 
 	@PostMapping
-	@Operation(summary = "가게 생성", description = "가게를 생성합니다", security = @SecurityRequirement(name = "bearer-jwt"))
+	@Operation(summary = "매장 생성", description = "매장을 생성합니다", security = @SecurityRequirement(name = "bearer-jwt"))
 	public ResponseEntity<StoreResponse> createStore(Authentication authentication, @RequestBody CreateStoreRequest request) {
 		StoreResponse storeResponse = storeService.createStore(authentication, request);
 		return ResponseEntity.ok(storeResponse);
