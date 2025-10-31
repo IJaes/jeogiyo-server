@@ -2,6 +2,8 @@ package com.ijaes.jeogiyo.store.dto.response;
 
 import java.util.UUID;
 
+import com.ijaes.jeogiyo.store.entity.Store;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -38,4 +40,17 @@ public class StoreResponse {
 
 	@Schema(description = "사장님 ID")
 	private UUID ownerId;
+
+	public static StoreResponse fromEntity(Store store) {
+		return StoreResponse.builder()
+			.id(store.getId())
+			.businessNumber(store.getBusinessNumber())
+			.name(store.getName())
+			.address(store.getAddress())
+			.description(store.getDescription())
+			.category(store.getCategory().name())
+			.rate(store.getRate())
+			.ownerId(store.getOwnerId())
+			.build();
+	}
 }

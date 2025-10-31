@@ -183,7 +183,7 @@ class StoreUserServiceTest {
 			storeUserService.getStoreDetail(nonExistentId);
 		});
 
-		assertEquals(ErrorCode.RESOURCE_NOT_FOUND, exception.getErrorCode());
+		assertEquals(ErrorCode.STORE_NOT_FOUND, exception.getErrorCode());
 	}
 
 	@Test

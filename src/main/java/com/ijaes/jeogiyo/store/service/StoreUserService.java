@@ -29,20 +29,11 @@ public class StoreUserService {
 
 		Page<Store> stores = storeRepository.findAll(pageable);
 
-		return stores.map(store -> StoreResponse.builder()
-			.id(store.getId())
-			.businessNumber(store.getBusinessNumber())
-			.name(store.getName())
-			.address(store.getAddress())
-			.description(store.getDescription())
-			.category(store.getCategory().name())
-			.rate(store.getRate())
-			.ownerId(store.getOwnerId())
-			.build());
+		return stores.map(StoreResponse::fromEntity);
 	}
 
 	public StoreDetailResponse getStoreDetail(UUID storeId) {
 		return storeRepository.findStoreDetailById(storeId)
-			.orElseThrow(() -> new CustomException(ErrorCode.RESOURCE_NOT_FOUND));
+			.orElseThrow(() -> new CustomException(ErrorCode.STORE_NOT_FOUND));
 	}
 }
