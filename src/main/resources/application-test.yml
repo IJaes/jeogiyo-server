@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: jeogiyo-test
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  h2:
+    console:
+      enabled: true
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.H2Dialect
+
+# JWT
+jwt:
+  secret: test-secret-key-for-jwt-token-encryption-security
+  expiration: 86400000
