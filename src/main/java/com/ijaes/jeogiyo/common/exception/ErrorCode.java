@@ -33,7 +33,6 @@ public enum ErrorCode {
     // 리소스 관련 (R-xxx)
     RESOURCE_NOT_FOUND(HttpStatus.NOT_FOUND, "R-001", "요청하신 리소스를 찾을 수 없습니다."),
     DUPLICATE_RESOURCE(HttpStatus.CONFLICT, "R-002", "이미 존재하는 리소스입니다."),
-    DUPLICATE_STORE(HttpStatus.CONFLICT, "R-003", "이미 등록한 매장이 있습니다. 한 명의 OWNER는 하나의 매장만 등록할 수 있습니다."),
 
     // 비즈니스 로직 관련 (B-xxx)
     BUSINESS_ERROR(HttpStatus.BAD_REQUEST, "B-001", "비즈니스 로직 오류가 발생했습니다."),
@@ -45,8 +44,12 @@ public enum ErrorCode {
     EMPTY_CURRENT_PASSWORD(HttpStatus.BAD_REQUEST, "U-003", "현재 비밀번호를 입력해주세요."),
     INVALID_ROLE(HttpStatus.BAD_REQUEST, "U-004", "유효하지 않은 권한입니다."),
 
-    // 서버 에러 (S-xxx)
-    INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "S-001", "서버 오류가 발생했습니다. 관리자에게 문의하세요."),
+    // 서버 에러 (X-xxx)
+    INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "X-001", "서버 오류가 발생했습니다. 관리자에게 문의하세요."),
+
+    // 매장 관련 (S-xxx)
+    DUPLICATE_STORE(HttpStatus.CONFLICT, "S-001", "이미 등록한 매장이 있습니다. 한 명의 OWNER는 하나의 매장만 등록할 수 있습니다."),
+    STORE_NOT_FOUND(HttpStatus.NOT_FOUND, "S-002", "매장을 찾을 수 없습니다. 먼저 매장을 등록해주세요."),
     ;
 
     private final HttpStatus httpStatus;
