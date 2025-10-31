@@ -1,4 +1,4 @@
-package com.ijaes.jeogiyo.store.dto;
+package com.ijaes.jeogiyo.store.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;

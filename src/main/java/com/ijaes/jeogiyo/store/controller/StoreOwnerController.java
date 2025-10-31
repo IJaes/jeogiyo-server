@@ -8,9 +8,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.ijaes.jeogiyo.store.dto.CreateStoreRequest;
-import com.ijaes.jeogiyo.store.dto.StoreResponse;
-import com.ijaes.jeogiyo.store.service.StoreService;
+import com.ijaes.jeogiyo.store.dto.request.CreateStoreRequest;
+import com.ijaes.jeogiyo.store.dto.response.StoreResponse;
+import com.ijaes.jeogiyo.store.service.StoreOwnerService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -23,7 +23,7 @@ import lombok.RequiredArgsConstructor;
 @Tag(name = "사장님", description = "매장 관리 API")
 public class StoreOwnerController {
 
-	private final StoreService storeService;
+	private final StoreOwnerService storeService;
 
 	@PostMapping
 	@Operation(summary = "매장 생성", description = "매장을 생성합니다", security = @SecurityRequirement(name = "bearer-jwt"))

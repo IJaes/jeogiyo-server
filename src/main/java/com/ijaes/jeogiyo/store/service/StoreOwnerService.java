@@ -5,8 +5,8 @@ import org.springframework.stereotype.Service;
 
 import com.ijaes.jeogiyo.common.exception.CustomException;
 import com.ijaes.jeogiyo.common.exception.ErrorCode;
-import com.ijaes.jeogiyo.store.dto.CreateStoreRequest;
-import com.ijaes.jeogiyo.store.dto.StoreResponse;
+import com.ijaes.jeogiyo.store.dto.request.CreateStoreRequest;
+import com.ijaes.jeogiyo.store.dto.response.StoreResponse;
 import com.ijaes.jeogiyo.store.entity.Category;
 import com.ijaes.jeogiyo.store.entity.Store;
 import com.ijaes.jeogiyo.store.repository.StoreRepository;
@@ -17,7 +17,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class StoreService {
+public class StoreOwnerService {
 
 	private final StoreRepository storeRepository;
 
