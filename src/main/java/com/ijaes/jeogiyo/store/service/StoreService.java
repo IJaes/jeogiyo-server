@@ -28,7 +28,7 @@ public class StoreService {
 			throw new CustomException(ErrorCode.OWNER_ROLE_REQUIRED);
 		}
 
-		if (owner.getStore() != null) {
+		if (storeRepository.existsByOwnerId(owner.getId())) {
 			throw new CustomException(ErrorCode.DUPLICATE_STORE);
 		}
 
@@ -42,9 +42,8 @@ public class StoreService {
 				.description(request.getDescription())
 				.category(category)
 				.rate(0.0)
+				.ownerId(owner.getId())
 				.build();
-
-			owner.registerStore(store);
 
 			Store savedStore = storeRepository.save(store);
 

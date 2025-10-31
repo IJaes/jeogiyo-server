@@ -1,7 +1,6 @@
 package com.ijaes.jeogiyo.user.entity;
 
 import com.ijaes.jeogiyo.common.entity.BaseEntity;
-import com.ijaes.jeogiyo.store.entity.Store;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -44,9 +43,6 @@ public class User extends BaseEntity implements UserDetails {
     @Column(nullable = false)
     private boolean isOwner;
 
-    @OneToOne(mappedBy = "owner")
-    private Store store;
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role = Role.USER;
@@ -74,11 +70,6 @@ public class User extends BaseEntity implements UserDetails {
     @Override
     public boolean isEnabled() {
         return !role.equals(Role.BLOCK);
-    }
-
-    public void registerStore(Store store) {
-        this.store = store;
-        store.setOwner(this);
     }
 
     public void updateAddress(String newAddress) {

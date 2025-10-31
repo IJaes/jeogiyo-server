@@ -11,11 +11,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-
-import com.ijaes.jeogiyo.user.entity.User;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -55,11 +51,6 @@ public class Store extends BaseEntity {
 	@Column(nullable = false)
 	private Double rate;
 
-	@OneToOne
-	@JoinColumn(name = "owner_id", nullable = false)
-	private User owner;
-
-	public void setOwner(User owner) {
-		this.owner = owner;
-	}
+	@Column(nullable = false)
+	private UUID ownerId;
 }
