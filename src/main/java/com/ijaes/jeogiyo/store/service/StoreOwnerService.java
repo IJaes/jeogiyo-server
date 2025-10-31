@@ -66,29 +66,25 @@ public class StoreOwnerService {
 	}
 
 	public StoreResponse myStore(Authentication authentication) {
-		User user = (User)authentication.getPrincipal();
+		User user = (User) authentication.getPrincipal();
 
 		if (!user.getRole().equals(Role.OWNER)) {
 			throw new CustomException(ErrorCode.OWNER_ROLE_REQUIRED);
 		}
 
-		try {
-			Store myStore = storeRepository.findByOwnerId(user.getId());
+		Store myStore = storeRepository.findByOwnerId(user.getId())
+			.orElseThrow(() -> new CustomException(ErrorCode.STORE_NOT_FOUND));
 
-			return StoreResponse.builder()
-				.id(myStore.getId())
-				.businessNumber(myStore.getBusinessNumber())
-				.name(myStore.getName())
-				.address(myStore.getAddress())
-				.description(myStore.getDescription())
-				.category(myStore.getCategory().name())
-				.rate(myStore.getRate())
-				.ownerId(user.getId())
-				.build();
-
-		} catch (IllegalStateException e) {
-			throw new CustomException(ErrorCode.INVALID_ADDRESS);
-		}
+		return StoreResponse.builder()
+			.id(myStore.getId())
+			.businessNumber(myStore.getBusinessNumber())
+			.name(myStore.getName())
+			.address(myStore.getAddress())
+			.description(myStore.getDescription())
+			.category(myStore.getCategory().name())
+			.rate(myStore.getRate())
+			.ownerId(user.getId())
+			.build();
 	}
 
 	public StoreResponse updateStore(Authentication authentication, UpdateStoreRequest request) {
@@ -98,33 +94,24 @@ public class StoreOwnerService {
 			throw new CustomException(ErrorCode.OWNER_ROLE_REQUIRED);
 		}
 
-		try {
-			Store store = storeRepository.findByOwnerId(owner.getId());
+		Store store = storeRepository.findByOwnerId(owner.getId())
+			.orElseThrow(() -> new CustomException(ErrorCode.STORE_NOT_FOUND));
 
-			if (request.getCategory() != null) {
-				Category category = Category.valueOf(request.getCategory());
-				store = Store.builder()
-					.id(store.getId())
-					.businessNumber(store.getBusinessNumber())
-					.name(request.getName() != null ? request.getName() : store.getName())
-					.address(request.getAddress() != null ? request.getAddress() : store.getAddress())
-					.description(request.getDescription() != null ? request.getDescription() : store.getDescription())
-					.category(category)
-					.rate(store.getRate())
-					.ownerId(store.getOwnerId())
-					.build();
-			} else {
-				store = Store.builder()
-					.id(store.getId())
-					.businessNumber(store.getBusinessNumber())
-					.name(request.getName() != null ? request.getName() : store.getName())
-					.address(request.getAddress() != null ? request.getAddress() : store.getAddress())
-					.description(request.getDescription() != null ? request.getDescription() : store.getDescription())
-					.category(store.getCategory())
-					.rate(store.getRate())
-					.ownerId(store.getOwnerId())
-					.build();
-			}
+		try {
+			Category category = request.getCategory() != null
+				? Category.valueOf(request.getCategory())
+				: store.getCategory();
+
+			store = Store.builder()
+				.id(store.getId())
+				.businessNumber(store.getBusinessNumber())
+				.name(request.getName() != null ? request.getName() : store.getName())
+				.address(request.getAddress() != null ? request.getAddress() : store.getAddress())
+				.description(request.getDescription() != null ? request.getDescription() : store.getDescription())
+				.category(category)
+				.rate(store.getRate())
+				.ownerId(store.getOwnerId())
+				.build();
 
 			Store updatedStore = storeRepository.save(store);
 
@@ -141,8 +128,6 @@ public class StoreOwnerService {
 
 		} catch (IllegalArgumentException e) {
 			throw new CustomException(ErrorCode.INVALID_REQUEST);
-		} catch (IllegalStateException e) {
-			throw new CustomException(ErrorCode.INVALID_ADDRESS);
 		}
 	}
 }

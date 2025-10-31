@@ -6,6 +6,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -173,7 +174,7 @@ class StoreOwnerServiceTest {
 	void myStore_success() {
 		// given
 		when(authentication.getPrincipal()).thenReturn(ownerUser);
-		when(storeRepository.findByOwnerId(ownerId)).thenReturn(testStore);
+		when(storeRepository.findByOwnerId(ownerId)).thenReturn(Optional.of(testStore));
 
 		// when
 		StoreResponse result = storeOwnerService.myStore(authentication);
@@ -214,18 +215,18 @@ class StoreOwnerServiceTest {
 	}
 
 	@Test
-	@DisplayName("본인의 매장 조회 - 매장 조회 실패")
-	void myStore_queryFailure() {
+	@DisplayName("본인의 매장 조회 - 매장이 없음")
+	void myStore_storeNotFound() {
 		// given
 		when(authentication.getPrincipal()).thenReturn(ownerUser);
-		when(storeRepository.findByOwnerId(ownerId)).thenThrow(new IllegalStateException("Query failed"));
+		when(storeRepository.findByOwnerId(ownerId)).thenReturn(Optional.empty());
 
 		// when & then
 		CustomException exception = assertThrows(CustomException.class, () -> {
 			storeOwnerService.myStore(authentication);
 		});
 
-		assertEquals(ErrorCode.INVALID_ADDRESS, exception.getErrorCode());
+		assertEquals(ErrorCode.STORE_NOT_FOUND, exception.getErrorCode());
 	}
 
 	@Test
@@ -273,7 +274,7 @@ class StoreOwnerServiceTest {
 	void updateStore_success_allFields() {
 		// given
 		when(authentication.getPrincipal()).thenReturn(ownerUser);
-		when(storeRepository.findByOwnerId(ownerId)).thenReturn(testStore);
+		when(storeRepository.findByOwnerId(ownerId)).thenReturn(Optional.of(testStore));
 
 		com.ijaes.jeogiyo.store.dto.request.UpdateStoreRequest request =
 			com.ijaes.jeogiyo.store.dto.request.UpdateStoreRequest.builder()
@@ -315,7 +316,7 @@ class StoreOwnerServiceTest {
 	void updateStore_partialUpdate_nameOnly() {
 		// given
 		when(authentication.getPrincipal()).thenReturn(ownerUser);
-		when(storeRepository.findByOwnerId(ownerId)).thenReturn(testStore);
+		when(storeRepository.findByOwnerId(ownerId)).thenReturn(Optional.of(testStore));
 
 		com.ijaes.jeogiyo.store.dto.request.UpdateStoreRequest request =
 			com.ijaes.jeogiyo.store.dto.request.UpdateStoreRequest.builder()
@@ -379,7 +380,7 @@ class StoreOwnerServiceTest {
 	void updateStore_invalidCategory() {
 		// given
 		when(authentication.getPrincipal()).thenReturn(ownerUser);
-		when(storeRepository.findByOwnerId(ownerId)).thenReturn(testStore);
+		when(storeRepository.findByOwnerId(ownerId)).thenReturn(Optional.of(testStore));
 
 		com.ijaes.jeogiyo.store.dto.request.UpdateStoreRequest request =
 			com.ijaes.jeogiyo.store.dto.request.UpdateStoreRequest.builder()
@@ -396,11 +397,11 @@ class StoreOwnerServiceTest {
 	}
 
 	@Test
-	@DisplayName("매장 정보 수정 - 매장 조회 실패")
+	@DisplayName("매장 정보 수정 - 매장이 없음")
 	void updateStore_storeNotFound() {
 		// given
 		when(authentication.getPrincipal()).thenReturn(ownerUser);
-		when(storeRepository.findByOwnerId(ownerId)).thenThrow(new IllegalStateException("Store not found"));
+		when(storeRepository.findByOwnerId(ownerId)).thenReturn(Optional.empty());
 
 		com.ijaes.jeogiyo.store.dto.request.UpdateStoreRequest request =
 			com.ijaes.jeogiyo.store.dto.request.UpdateStoreRequest.builder()
@@ -412,7 +413,7 @@ class StoreOwnerServiceTest {
 			storeOwnerService.updateStore(authentication, request);
 		});
 
-		assertEquals(ErrorCode.INVALID_ADDRESS, exception.getErrorCode());
+		assertEquals(ErrorCode.STORE_NOT_FOUND, exception.getErrorCode());
 	}
 
 	@Test
@@ -420,7 +421,7 @@ class StoreOwnerServiceTest {
 	void updateStore_allFieldsNull() {
 		// given
 		when(authentication.getPrincipal()).thenReturn(ownerUser);
-		when(storeRepository.findByOwnerId(ownerId)).thenReturn(testStore);
+		when(storeRepository.findByOwnerId(ownerId)).thenReturn(Optional.of(testStore));
 
 		com.ijaes.jeogiyo.store.dto.request.UpdateStoreRequest request =
 			com.ijaes.jeogiyo.store.dto.request.UpdateStoreRequest.builder()

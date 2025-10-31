@@ -1,5 +1,6 @@
 package com.ijaes.jeogiyo.store.repository;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -14,7 +15,7 @@ public interface StoreRepository extends JpaRepository<Store, UUID>, StoreReposi
 
 	boolean existsByOwnerId(UUID ownerId);
 
-	Store findByOwnerId(UUID id);
+	Optional<Store> findByOwnerId(UUID id);
 
 	Page<Store> findAll(Pageable pageable);
 }
