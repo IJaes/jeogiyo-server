@@ -55,7 +55,7 @@ public class UserAdminService {
 
 		try {
 			Role newRole = Role.valueOf(request.getRole());
-			user.setRole(newRole);
+			user.updateRole(newRole);
 			userRepository.save(user);
 		} catch (IllegalArgumentException e) {
 			throw new CustomException(ErrorCode.INVALID_ROLE);

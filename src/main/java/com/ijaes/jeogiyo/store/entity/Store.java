@@ -11,21 +11,25 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
 import com.ijaes.jeogiyo.user.entity.User;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @Entity
 @Table(name = "j_store")
-@Data
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@EqualsAndHashCode(callSuper = false)
 public class Store extends BaseEntity {
 
 	@Id
@@ -51,6 +55,11 @@ public class Store extends BaseEntity {
 	@Column(nullable = false)
 	private Double rate;
 
-	@OneToOne(mappedBy = "store")
+	@OneToOne
+	@JoinColumn(name = "owner_id", nullable = false)
 	private User owner;
+
+	public void setOwner(User owner) {
+		this.owner = owner;
+	}
 }

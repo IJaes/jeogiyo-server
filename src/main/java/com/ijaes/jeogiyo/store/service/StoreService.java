@@ -44,8 +44,7 @@ public class StoreService {
 				.rate(0.0)
 				.build();
 
-			store.setOwner(owner);
-			owner.setStore(store);
+			owner.registerStore(store);
 
 			Store savedStore = storeRepository.save(store);
 
@@ -57,7 +56,7 @@ public class StoreService {
 				.description(savedStore.getDescription())
 				.category(savedStore.getCategory().name())
 				.rate(savedStore.getRate())
-				.ownerId(savedStore.getOwner().getId())
+				.ownerId(owner.getId())
 				.build();
 		} catch (IllegalArgumentException e) {
 			throw new CustomException(ErrorCode.INVALID_REQUEST);

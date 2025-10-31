@@ -28,7 +28,7 @@ public class UserService {
 
         signUpValidator.validateAddress(request.getAddress());
 
-        user.setAddress(request.getAddress());
+        user.updateAddress(request.getAddress());
         userRepository.save(user);
 
         return UserUpdateResponse.builder()
@@ -47,7 +47,7 @@ public class UserService {
 
         signUpValidator.validatePhoneNumber(request.getPhoneNumber());
 
-        user.setPhoneNumber(request.getPhoneNumber());
+        user.updatePhoneNumber(request.getPhoneNumber());
         userRepository.save(user);
 
         return UserUpdateResponse.builder()
@@ -74,7 +74,7 @@ public class UserService {
 
         signUpValidator.validatePassword(request.getNewPassword());
 
-        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        user.updatePassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
 
         return UserUpdateResponse.builder()

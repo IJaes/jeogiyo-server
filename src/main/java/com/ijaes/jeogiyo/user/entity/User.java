@@ -15,7 +15,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "j_user")
-@Data
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -44,8 +44,7 @@ public class User extends BaseEntity implements UserDetails {
     @Column(nullable = false)
     private boolean isOwner;
 
-    @OneToOne
-    @JoinColumn(name = "store_id", nullable = true, unique = true)
+    @OneToOne(mappedBy = "owner")
     private Store store;
 
     @Enumerated(EnumType.STRING)
@@ -75,5 +74,26 @@ public class User extends BaseEntity implements UserDetails {
     @Override
     public boolean isEnabled() {
         return !role.equals(Role.BLOCK);
+    }
+
+    public void registerStore(Store store) {
+        this.store = store;
+        store.setOwner(this);
+    }
+
+    public void updateAddress(String newAddress) {
+        this.address = newAddress;
+    }
+
+    public void updatePhoneNumber(String newPhoneNumber) {
+        this.phoneNumber = newPhoneNumber;
+    }
+
+    public void updatePassword(String newPassword) {
+        this.password = newPassword;
+    }
+
+    public void updateRole(Role newRole) {
+        this.role = newRole;
     }
 }
