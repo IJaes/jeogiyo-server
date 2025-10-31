@@ -1,5 +1,6 @@
 package com.ijaes.jeogiyo.store.entity;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import com.ijaes.jeogiyo.common.entity.BaseEntity;
@@ -53,6 +54,12 @@ public class Store extends BaseEntity {
 	@Column(nullable = false)
 	private UUID ownerId;
 
+	@Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
+	private Boolean isDeleted = false;
+
+	@Column
+	private LocalDateTime deletedAt;
+
 	public void updateName(String newName) {
 		this.name = newName;
 	}
@@ -71,5 +78,10 @@ public class Store extends BaseEntity {
 
 	public void updateRate(Double newRate) {
 		this.rate = newRate;
+	}
+
+	public void softDelete() {
+		this.isDeleted = true;
+		this.deletedAt = LocalDateTime.now();
 	}
 }

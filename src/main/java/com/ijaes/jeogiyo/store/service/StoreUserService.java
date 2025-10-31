@@ -27,7 +27,7 @@ public class StoreUserService {
 		Sort.Direction sortDirection = Sort.Direction.fromString(direction.toUpperCase());
 		Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sortBy));
 
-		Page<Store> stores = storeRepository.findAll(pageable);
+		Page<Store> stores = storeRepository.findAllNotDeleted(pageable);
 
 		return stores.map(StoreResponse::fromEntity);
 	}

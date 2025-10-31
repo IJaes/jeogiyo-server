@@ -72,7 +72,7 @@ class StoreUserServiceTest {
 		Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, sortBy));
 		Page<Store> storePage = new PageImpl<>(List.of(testStore), pageable, 1);
 
-		when(storeRepository.findAll(any(Pageable.class))).thenReturn(storePage);
+		when(storeRepository.findAllNotDeleted(any(Pageable.class))).thenReturn(storePage);
 
 		// when
 		Page<StoreResponse> result = storeUserService.getAllStores(page, size, sortBy, direction);
@@ -96,7 +96,7 @@ class StoreUserServiceTest {
 		Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, sortBy));
 		Page<Store> storePage = new PageImpl<>(List.of(testStore), pageable, 1);
 
-		when(storeRepository.findAll(any(Pageable.class))).thenReturn(storePage);
+		when(storeRepository.findAllNotDeleted(any(Pageable.class))).thenReturn(storePage);
 
 		// when
 		Page<StoreResponse> result = storeUserService.getAllStores(page, size, sortBy, direction);
@@ -114,7 +114,7 @@ class StoreUserServiceTest {
 		Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "rate"));
 		Page<Store> emptyPage = new PageImpl<>(List.of(), pageable, 0);
 
-		when(storeRepository.findAll(any(Pageable.class))).thenReturn(emptyPage);
+		when(storeRepository.findAllNotDeleted(any(Pageable.class))).thenReturn(emptyPage);
 
 		// when
 		Page<StoreResponse> result = storeUserService.getAllStores(0, 10, "rate", "DESC");
@@ -204,7 +204,7 @@ class StoreUserServiceTest {
 		Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "rate"));
 		Page<Store> storePage = new PageImpl<>(List.of(testStore, store2), pageable, 2);
 
-		when(storeRepository.findAll(any(Pageable.class))).thenReturn(storePage);
+		when(storeRepository.findAllNotDeleted(any(Pageable.class))).thenReturn(storePage);
 
 		// when
 		Page<StoreResponse> result = storeUserService.getAllStores(0, 10, "rate", "DESC");

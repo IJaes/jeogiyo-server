@@ -2,10 +2,14 @@ package com.ijaes.jeogiyo.store.service;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -16,6 +20,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import com.ijaes.jeogiyo.common.exception.CustomException;
 import com.ijaes.jeogiyo.common.exception.ErrorCode;
@@ -78,7 +86,7 @@ class StoreAdminServiceTest {
 			.ownerId(ownerId)
 			.build();
 
-		when(storeRepository.findById(storeId)).thenReturn(Optional.of(testStore));
+		when(storeRepository.findByIdNotDeleted(storeId)).thenReturn(Optional.of(testStore));
 		when(storeRepository.save(any(Store.class))).thenReturn(updatedStore);
 
 		// when
@@ -91,7 +99,7 @@ class StoreAdminServiceTest {
 		assertEquals("새로운 설명", result.getDescription());
 		assertEquals("JAPANESE", result.getCategory());
 
-		verify(storeRepository, times(1)).findById(storeId);
+		verify(storeRepository, times(1)).findByIdNotDeleted(storeId);
 		verify(storeRepository, times(1)).save(any(Store.class));
 	}
 
@@ -114,7 +122,7 @@ class StoreAdminServiceTest {
 			.ownerId(ownerId)
 			.build();
 
-		when(storeRepository.findById(storeId)).thenReturn(Optional.of(testStore));
+		when(storeRepository.findByIdNotDeleted(storeId)).thenReturn(Optional.of(testStore));
 		when(storeRepository.save(any(Store.class))).thenReturn(updatedStore);
 
 		// when
@@ -126,7 +134,7 @@ class StoreAdminServiceTest {
 		assertEquals(testStore.getAddress(), result.getAddress());
 		assertEquals(testStore.getDescription(), result.getDescription());
 
-		verify(storeRepository, times(1)).findById(storeId);
+		verify(storeRepository, times(1)).findByIdNotDeleted(storeId);
 		verify(storeRepository, times(1)).save(any(Store.class));
 	}
 
@@ -149,7 +157,7 @@ class StoreAdminServiceTest {
 			.ownerId(ownerId)
 			.build();
 
-		when(storeRepository.findById(storeId)).thenReturn(Optional.of(testStore));
+		when(storeRepository.findByIdNotDeleted(storeId)).thenReturn(Optional.of(testStore));
 		when(storeRepository.save(any(Store.class))).thenReturn(updatedStore);
 
 		// when
@@ -160,7 +168,7 @@ class StoreAdminServiceTest {
 		assertEquals(testStore.getName(), result.getName());
 		assertEquals("서울시 서초구", result.getAddress());
 
-		verify(storeRepository, times(1)).findById(storeId);
+		verify(storeRepository, times(1)).findByIdNotDeleted(storeId);
 	}
 
 	@Test
@@ -182,7 +190,7 @@ class StoreAdminServiceTest {
 			.ownerId(ownerId)
 			.build();
 
-		when(storeRepository.findById(storeId)).thenReturn(Optional.of(testStore));
+		when(storeRepository.findByIdNotDeleted(storeId)).thenReturn(Optional.of(testStore));
 		when(storeRepository.save(any(Store.class))).thenReturn(updatedStore);
 
 		// when
@@ -193,7 +201,7 @@ class StoreAdminServiceTest {
 		assertEquals("새로운 설명", result.getDescription());
 		assertEquals(testStore.getName(), result.getName());
 
-		verify(storeRepository, times(1)).findById(storeId);
+		verify(storeRepository, times(1)).findByIdNotDeleted(storeId);
 	}
 
 	@Test
@@ -215,7 +223,7 @@ class StoreAdminServiceTest {
 			.ownerId(ownerId)
 			.build();
 
-		when(storeRepository.findById(storeId)).thenReturn(Optional.of(testStore));
+		when(storeRepository.findByIdNotDeleted(storeId)).thenReturn(Optional.of(testStore));
 		when(storeRepository.save(any(Store.class))).thenReturn(updatedStore);
 
 		// when
@@ -226,7 +234,7 @@ class StoreAdminServiceTest {
 		assertEquals("CHINESE", result.getCategory());
 		assertEquals(testStore.getName(), result.getName());
 
-		verify(storeRepository, times(1)).findById(storeId);
+		verify(storeRepository, times(1)).findByIdNotDeleted(storeId);
 	}
 
 	@Test
@@ -237,7 +245,7 @@ class StoreAdminServiceTest {
 			.name("새로운 이름")
 			.build();
 
-		when(storeRepository.findById(storeId)).thenReturn(Optional.empty());
+		when(storeRepository.findByIdNotDeleted(storeId)).thenReturn(Optional.empty());
 
 		// when & then
 		CustomException exception = assertThrows(CustomException.class, () -> {
@@ -256,7 +264,7 @@ class StoreAdminServiceTest {
 			.category("INVALID_CATEGORY")
 			.build();
 
-		when(storeRepository.findById(storeId)).thenReturn(Optional.of(testStore));
+		when(storeRepository.findByIdNotDeleted(storeId)).thenReturn(Optional.of(testStore));
 
 		// when & then
 		CustomException exception = assertThrows(CustomException.class, () -> {
@@ -274,7 +282,7 @@ class StoreAdminServiceTest {
 		UpdateStoreRequest request = UpdateStoreRequest.builder()
 			.build();
 
-		when(storeRepository.findById(storeId)).thenReturn(Optional.of(testStore));
+		when(storeRepository.findByIdNotDeleted(storeId)).thenReturn(Optional.of(testStore));
 		when(storeRepository.save(any(Store.class))).thenReturn(testStore);
 
 		// when
@@ -287,7 +295,7 @@ class StoreAdminServiceTest {
 		assertEquals(testStore.getDescription(), result.getDescription());
 		assertEquals("KOREAN", result.getCategory());
 
-		verify(storeRepository, times(1)).findById(storeId);
+		verify(storeRepository, times(1)).findByIdNotDeleted(storeId);
 		verify(storeRepository, times(1)).save(any(Store.class));
 	}
 
@@ -313,7 +321,7 @@ class StoreAdminServiceTest {
 				.ownerId(ownerId)
 				.build();
 
-			when(storeRepository.findById(storeId)).thenReturn(Optional.of(testStore));
+			when(storeRepository.findByIdNotDeleted(storeId)).thenReturn(Optional.of(testStore));
 			when(storeRepository.save(any(Store.class))).thenReturn(updatedStore);
 
 			// when
@@ -344,7 +352,7 @@ class StoreAdminServiceTest {
 			.ownerId(ownerId)
 			.build();
 
-		when(storeRepository.findById(storeId)).thenReturn(Optional.of(testStore));
+		when(storeRepository.findByIdNotDeleted(storeId)).thenReturn(Optional.of(testStore));
 		when(storeRepository.save(any(Store.class))).thenReturn(updatedStore);
 
 		// when
@@ -354,7 +362,7 @@ class StoreAdminServiceTest {
 		assertNotNull(result);
 		assertEquals("KOREAN", result.getCategory());
 
-		verify(storeRepository, times(1)).findById(storeId);
+		verify(storeRepository, times(1)).findByIdNotDeleted(storeId);
 		verify(storeRepository, times(1)).save(any(Store.class));
 	}
 
@@ -366,7 +374,7 @@ class StoreAdminServiceTest {
 			.name("")
 			.build();
 
-		when(storeRepository.findById(storeId)).thenReturn(Optional.of(testStore));
+		when(storeRepository.findByIdNotDeleted(storeId)).thenReturn(Optional.of(testStore));
 		when(storeRepository.save(any(Store.class))).thenReturn(testStore);
 
 		// when
@@ -376,7 +384,7 @@ class StoreAdminServiceTest {
 		assertNotNull(result);
 		assertEquals(testStore.getName(), result.getName());
 
-		verify(storeRepository, times(1)).findById(storeId);
+		verify(storeRepository, times(1)).findByIdNotDeleted(storeId);
 	}
 
 	@Test
@@ -387,7 +395,7 @@ class StoreAdminServiceTest {
 			.address("   ")
 			.build();
 
-		when(storeRepository.findById(storeId)).thenReturn(Optional.of(testStore));
+		when(storeRepository.findByIdNotDeleted(storeId)).thenReturn(Optional.of(testStore));
 		when(storeRepository.save(any(Store.class))).thenReturn(testStore);
 
 		// when
@@ -397,6 +405,146 @@ class StoreAdminServiceTest {
 		assertNotNull(result);
 		assertEquals(testStore.getAddress(), result.getAddress());
 
-		verify(storeRepository, times(1)).findById(storeId);
+		verify(storeRepository, times(1)).findByIdNotDeleted(storeId);
+	}
+
+	// ==================== 소프트 삭제 테스트 ====================
+
+	@Test
+	@DisplayName("매장 소프트 삭제 - 성공")
+	void deleteStore_success() {
+		// given
+		when(storeRepository.findByIdNotDeleted(storeId)).thenReturn(Optional.of(testStore));
+		when(storeRepository.save(any(Store.class))).thenReturn(testStore);
+
+		// when
+		storeAdminService.deleteStore(storeId);
+
+		// then
+		verify(storeRepository, times(1)).findByIdNotDeleted(storeId);
+		verify(storeRepository, times(1)).save(any(Store.class));
+		assertTrue(testStore.getIsDeleted());
+		assertNotNull(testStore.getDeletedAt());
+	}
+
+	@Test
+	@DisplayName("매장 소프트 삭제 - 매장이 없음")
+	void deleteStore_storeNotFound() {
+		// given
+		when(storeRepository.findByIdNotDeleted(storeId)).thenReturn(Optional.empty());
+
+		// when & then
+		CustomException exception = assertThrows(CustomException.class, () -> {
+			storeAdminService.deleteStore(storeId);
+		});
+
+		assertEquals(ErrorCode.STORE_NOT_FOUND, exception.getErrorCode());
+		verify(storeRepository, times(0)).save(any(Store.class));
+	}
+
+	@Test
+	@DisplayName("매장 소프트 삭제 - isDeleted 플래그 확인")
+	void deleteStore_verifyDeletedFlag() {
+		// given
+		Store deletedStore = Store.builder()
+			.id(storeId)
+			.businessNumber(testStore.getBusinessNumber())
+			.name(testStore.getName())
+			.address(testStore.getAddress())
+			.description(testStore.getDescription())
+			.category(testStore.getCategory())
+			.rate(testStore.getRate())
+			.ownerId(ownerId)
+			.isDeleted(false)
+			.deletedAt(null)
+			.build();
+
+		when(storeRepository.findByIdNotDeleted(storeId)).thenReturn(Optional.of(deletedStore));
+		when(storeRepository.save(any(Store.class))).thenReturn(deletedStore);
+
+		// when
+		storeAdminService.deleteStore(storeId);
+
+		// then
+		assertTrue(deletedStore.getIsDeleted());
+		assertNotNull(deletedStore.getDeletedAt());
+
+		verify(storeRepository, times(1)).findByIdNotDeleted(storeId);
+		verify(storeRepository, times(1)).save(any(Store.class));
+	}
+
+	// ==================== 전체 매장 조회 테스트 ====================
+
+	@Test
+	@DisplayName("전체 매장 조회 - 성공 (삭제된 매장 포함)")
+	void getAllStores_success() {
+		// given
+		Pageable pageable = PageRequest.of(0, 10);
+		Store deletedStore = Store.builder()
+			.id(UUID.randomUUID())
+			.businessNumber("987-65-43210")
+			.name("폐점한 매장")
+			.address("서울시 성동구")
+			.description("이미 폐점함")
+			.category(Category.JAPANESE)
+			.rate(3.0)
+			.ownerId(UUID.randomUUID())
+			.isDeleted(true)
+			.deletedAt(LocalDateTime.now())
+			.build();
+
+		List<Store> stores = List.of(testStore, deletedStore);
+		Page<Store> storePage = new PageImpl<>(stores, pageable, 2);
+
+		when(storeRepository.findAllIncludingDeleted(any(Pageable.class))).thenReturn(storePage);
+
+		// when
+		Page<StoreResponse> result = storeAdminService.getAllStores(0, 10, "createdAt", "DESC");
+
+		// then
+		assertNotNull(result);
+		assertEquals(2, result.getTotalElements());
+		assertEquals(1, result.getTotalPages());
+		verify(storeRepository, times(1)).findAllIncludingDeleted(any(Pageable.class));
+	}
+
+	@Test
+	@DisplayName("전체 매장 조회 - 빈 결과")
+	void getAllStores_empty() {
+		// given
+		Pageable pageable = PageRequest.of(0, 10);
+		Page<Store> emptyPage = new PageImpl<>(List.of(), pageable, 0);
+
+		when(storeRepository.findAllIncludingDeleted(any(Pageable.class))).thenReturn(emptyPage);
+
+		// when
+		Page<StoreResponse> result = storeAdminService.getAllStores(0, 10, "createdAt", "DESC");
+
+		// then
+		assertNotNull(result);
+		assertEquals(0, result.getTotalElements());
+		verify(storeRepository, times(1)).findAllIncludingDeleted(any(Pageable.class));
+	}
+
+	@Test
+	@DisplayName("전체 매장 조회 - 페이지네이션")
+	void getAllStores_pagination() {
+		// given
+		Pageable pageable = PageRequest.of(1, 5);
+		List<Store> storeList = List.of(testStore);
+		Page<Store> storePage = new PageImpl<>(storeList, pageable, 15);
+
+		when(storeRepository.findAllIncludingDeleted(any(Pageable.class))).thenReturn(storePage);
+
+		// when
+		Page<StoreResponse> result = storeAdminService.getAllStores(1, 5, "createdAt", "DESC");
+
+		// then
+		assertNotNull(result);
+		assertEquals(15, result.getTotalElements());
+		assertEquals(3, result.getTotalPages());
+		assertEquals(1, result.getNumber());
+		assertEquals(5, result.getSize());
+		verify(storeRepository, times(1)).findAllIncludingDeleted(any(Pageable.class));
 	}
 }

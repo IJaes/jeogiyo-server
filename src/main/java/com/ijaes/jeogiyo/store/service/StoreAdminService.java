@@ -2,6 +2,10 @@ package com.ijaes.jeogiyo.store.service;
 
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,7 +27,7 @@ public class StoreAdminService {
 	private final StoreRepository storeRepository;
 
 	public StoreResponse updateStore(UUID storeId, UpdateStoreRequest request) {
-		Store store = storeRepository.findById(storeId)
+		Store store = storeRepository.findByIdNotDeleted(storeId)
 			.orElseThrow(() -> new CustomException(ErrorCode.STORE_NOT_FOUND));
 
 		if (request.getName() != null && !request.getName().isBlank()) {
@@ -49,6 +53,24 @@ public class StoreAdminService {
 
 		storeRepository.save(store);
 		return StoreResponse.fromEntity(store);
+	}
+
+	public void deleteStore(UUID storeId) {
+		Store store = storeRepository.findByIdNotDeleted(storeId)
+			.orElseThrow(() -> new CustomException(ErrorCode.STORE_NOT_FOUND));
+
+		store.softDelete();
+		storeRepository.save(store);
+	}
+
+	@Transactional(readOnly = true)
+	public Page<StoreResponse> getAllStores(int page, int size, String sortBy, String direction) {
+		Sort.Direction sortDirection = Sort.Direction.fromString(direction.toUpperCase());
+		Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sortBy));
+
+		Page<Store> stores = storeRepository.findAllIncludingDeleted(pageable);
+
+		return stores.map(StoreResponse::fromEntity);
 	}
 }
 
