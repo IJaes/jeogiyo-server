@@ -26,7 +26,9 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build and Test
-        run: ./gradlew clean build -Dspring.profiles.active=test
+        env:
+          SPRING_PROFILES_ACTIVE: test
+        run: ./gradlew clean build
 
       - name: Upload test results
         if: always()
