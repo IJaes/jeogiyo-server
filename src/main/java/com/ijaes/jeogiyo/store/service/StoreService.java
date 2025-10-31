@@ -61,4 +61,30 @@ public class StoreService {
 			throw new CustomException(ErrorCode.INVALID_REQUEST);
 		}
 	}
+
+	public StoreResponse myStore(Authentication authentication) {
+		User user = (User)authentication.getPrincipal();
+
+		if (!user.getRole().equals(Role.OWNER)) {
+			throw new CustomException(ErrorCode.OWNER_ROLE_REQUIRED);
+		}
+
+		try {
+			Store myStore = storeRepository.findByOwnerId(user.getId());
+
+			return StoreResponse.builder()
+				.id(myStore.getId())
+				.businessNumber(myStore.getBusinessNumber())
+				.name(myStore.getName())
+				.address(myStore.getAddress())
+				.description(myStore.getDescription())
+				.category(myStore.getCategory().name())
+				.rate(myStore.getRate())
+				.ownerId(user.getId())
+				.build();
+
+		} catch (IllegalStateException e) {
+			throw new CustomException(ErrorCode.INVALID_ADDRESS);
+		}
+	}
 }

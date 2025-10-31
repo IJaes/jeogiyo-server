@@ -2,6 +2,7 @@ package com.ijaes.jeogiyo.store.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,7 +20,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/v1/owner/stores")
 @RequiredArgsConstructor
-@Tag(name = "매장", description = "매장 관리 API")
+@Tag(name = "사장님", description = "매장 관리 API")
 public class StoreOwnerController {
 
 	private final StoreService storeService;
@@ -28,6 +29,13 @@ public class StoreOwnerController {
 	@Operation(summary = "매장 생성", description = "매장을 생성합니다", security = @SecurityRequirement(name = "bearer-jwt"))
 	public ResponseEntity<StoreResponse> createStore(Authentication authentication, @RequestBody CreateStoreRequest request) {
 		StoreResponse storeResponse = storeService.createStore(authentication, request);
+		return ResponseEntity.ok(storeResponse);
+	}
+
+	@GetMapping
+	@Operation(summary = "매장 조회", description = "본인의 매장을 조회합니다", security = @SecurityRequirement(name = "bearer-jwt"))
+	public ResponseEntity<StoreResponse> myStore(Authentication authentication) {
+		StoreResponse storeResponse = storeService.myStore(authentication);
 		return ResponseEntity.ok(storeResponse);
 	}
 }

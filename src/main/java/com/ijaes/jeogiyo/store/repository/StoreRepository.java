@@ -11,4 +11,6 @@ import com.ijaes.jeogiyo.store.entity.Store;
 public interface StoreRepository extends JpaRepository<Store, UUID> {
 
 	boolean existsByOwnerId(UUID ownerId);
+
+	Store findByOwnerId(UUID id);
 }
