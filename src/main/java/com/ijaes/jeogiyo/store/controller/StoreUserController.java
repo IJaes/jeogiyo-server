@@ -1,12 +1,16 @@
 package com.ijaes.jeogiyo.store.controller;
 
+import java.util.UUID;
+
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ijaes.jeogiyo.store.dto.response.StoreDetailResponse;
 import com.ijaes.jeogiyo.store.dto.response.StoreResponse;
 import com.ijaes.jeogiyo.store.service.StoreUserService;
 
@@ -33,5 +37,13 @@ public class StoreUserController {
 		@Parameter(description = "정렬 방향 (ASC 또는 DESC)") @RequestParam(defaultValue = "DESC") String direction) {
 		Page<StoreResponse> stores = storeUserService.getAllStores(page, size, sortBy, direction);
 		return ResponseEntity.ok(stores);
+	}
+
+	@GetMapping("/{storeId}")
+	@Operation(summary = "매장 상세 조회", description = "특정 매장의 상세 정보와 사장님 정보를 조회합니다", security = @SecurityRequirement(name = "bearer-jwt"))
+	public ResponseEntity<StoreDetailResponse> getStoreDetail(
+		@Parameter(description = "매장 ID") @PathVariable UUID storeId) {
+		StoreDetailResponse storeDetail = storeUserService.getStoreDetail(storeId);
+		return ResponseEntity.ok(storeDetail);
 	}
 }

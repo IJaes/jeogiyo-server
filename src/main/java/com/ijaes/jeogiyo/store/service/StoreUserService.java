@@ -1,11 +1,16 @@
 package com.ijaes.jeogiyo.store.service;
 
+import java.util.UUID;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import com.ijaes.jeogiyo.common.exception.CustomException;
+import com.ijaes.jeogiyo.common.exception.ErrorCode;
+import com.ijaes.jeogiyo.store.dto.response.StoreDetailResponse;
 import com.ijaes.jeogiyo.store.dto.response.StoreResponse;
 import com.ijaes.jeogiyo.store.entity.Store;
 import com.ijaes.jeogiyo.store.repository.StoreRepository;
@@ -34,5 +39,10 @@ public class StoreUserService {
 			.rate(store.getRate())
 			.ownerId(store.getOwnerId())
 			.build());
+	}
+
+	public StoreDetailResponse getStoreDetail(UUID storeId) {
+		return storeRepository.findStoreDetailById(storeId)
+			.orElseThrow(() -> new CustomException(ErrorCode.RESOURCE_NOT_FOUND));
 	}
 }

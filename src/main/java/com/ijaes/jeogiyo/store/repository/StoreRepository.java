@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 import com.ijaes.jeogiyo.store.entity.Store;
 
 @Repository
-public interface StoreRepository extends JpaRepository<Store, UUID> {
+public interface StoreRepository extends JpaRepository<Store, UUID>, StoreRepositoryCustom {
 
 	boolean existsByOwnerId(UUID ownerId);
 
