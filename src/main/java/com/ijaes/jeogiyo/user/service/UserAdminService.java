@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.ijaes.jeogiyo.common.exception.CustomException;
 import com.ijaes.jeogiyo.common.exception.ErrorCode;
@@ -21,6 +22,7 @@ public class UserAdminService {
 
 	private final UserRepository userRepository;
 
+	@Transactional(readOnly = true)
 	public List<UserInfoResponse> getAllUsers() {
 		return userRepository.findAll()
 			.stream()
@@ -35,6 +37,7 @@ public class UserAdminService {
 			.toList();
 	}
 
+	@Transactional(readOnly = true)
 	public UserInfoResponse getUserById(UUID userId) {
 		var user = userRepository.findById(userId)
 			.orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
@@ -49,6 +52,7 @@ public class UserAdminService {
 			.build();
 	}
 
+	@Transactional
 	public UserInfoResponse updateUserRole(UUID userId, UpdateRoleRequest request) {
 		User user = userRepository.findById(userId)
 			.orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));

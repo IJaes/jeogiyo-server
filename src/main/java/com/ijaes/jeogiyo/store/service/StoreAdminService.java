@@ -21,11 +21,11 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class StoreAdminService {
 
 	private final StoreRepository storeRepository;
 
+	@Transactional
 	public StoreResponse updateStore(UUID storeId, UpdateStoreRequest request) {
 		Store store = storeRepository.findByIdNotDeleted(storeId)
 			.orElseThrow(() -> new CustomException(ErrorCode.STORE_NOT_FOUND));
@@ -55,6 +55,7 @@ public class StoreAdminService {
 		return StoreResponse.fromEntity(store);
 	}
 
+	@Transactional
 	public void deleteStore(UUID storeId) {
 		Store store = storeRepository.findByIdNotDeleted(storeId)
 			.orElseThrow(() -> new CustomException(ErrorCode.STORE_NOT_FOUND));

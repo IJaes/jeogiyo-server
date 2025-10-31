@@ -7,6 +7,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.ijaes.jeogiyo.common.exception.CustomException;
 import com.ijaes.jeogiyo.common.exception.ErrorCode;
@@ -23,6 +24,7 @@ public class StoreUserService {
 
 	private final StoreRepository storeRepository;
 
+	@Transactional(readOnly = true)
 	public Page<StoreResponse> getAllStores(int page, int size, String sortBy, String direction) {
 		Sort.Direction sortDirection = Sort.Direction.fromString(direction.toUpperCase());
 		Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sortBy));
@@ -32,6 +34,7 @@ public class StoreUserService {
 		return stores.map(StoreResponse::fromEntity);
 	}
 
+	@Transactional(readOnly = true)
 	public StoreDetailResponse getStoreDetail(UUID storeId) {
 		return storeRepository.findStoreDetailById(storeId)
 			.orElseThrow(() -> new CustomException(ErrorCode.STORE_NOT_FOUND));

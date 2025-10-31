@@ -6,7 +6,7 @@ import com.ijaes.jeogiyo.common.exception.ErrorCode;
 import com.ijaes.jeogiyo.user.dto.request.UpdateAddressRequest;
 import com.ijaes.jeogiyo.user.dto.request.UpdatePasswordRequest;
 import com.ijaes.jeogiyo.user.dto.request.UpdatePhoneNumberRequest;
-import com.ijaes.jeogiyo.user.dto.response.SimpleUpdateResponse;
+import com.ijaes.jeogiyo.user.dto.response.UserUpdateResponse;
 import com.ijaes.jeogiyo.user.dto.response.UserInfoResponse;
 import com.ijaes.jeogiyo.user.entity.User;
 import com.ijaes.jeogiyo.user.repository.UserRepository;
@@ -18,34 +18,36 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final SignUpValidator signUpValidator;
 
-    public SimpleUpdateResponse updateAddress(Authentication authentication, UpdateAddressRequest request) {
+    @Transactional
+    public UserUpdateResponse updateAddress(Authentication authentication, UpdateAddressRequest request) {
         User user = getAuthenticatedUser(authentication);
         user.updateAddress(request.getAddress());
         userRepository.save(user);
-        return SimpleUpdateResponse.builder()
+        return UserUpdateResponse.builder()
             .message("주소가 수정되었습니다.")
             .success(true)
             .build();
     }
 
-    public SimpleUpdateResponse updatePhoneNumber(Authentication authentication, UpdatePhoneNumberRequest request) {
+    @Transactional
+    public UserUpdateResponse updatePhoneNumber(Authentication authentication, UpdatePhoneNumberRequest request) {
         User user = getAuthenticatedUser(authentication);
         user.updatePhoneNumber(request.getPhoneNumber());
         userRepository.save(user);
-        return SimpleUpdateResponse.builder()
+        return UserUpdateResponse.builder()
             .message("전화번호가 수정되었습니다.")
             .success(true)
             .build();
     }
 
-    public SimpleUpdateResponse updatePassword(Authentication authentication, UpdatePasswordRequest request) {
+    @Transactional
+    public UserUpdateResponse updatePassword(Authentication authentication, UpdatePasswordRequest request) {
         User user = getAuthenticatedUser(authentication);
 
         if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
@@ -58,7 +60,7 @@ public class UserService {
 
         user.updatePassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
-        return SimpleUpdateResponse.builder()
+        return UserUpdateResponse.builder()
             .message("비밀번호가 수정되었습니다.")
             .success(true)
             .build();

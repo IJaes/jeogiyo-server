@@ -2,6 +2,7 @@ package com.ijaes.jeogiyo.store.service;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.ijaes.jeogiyo.common.exception.CustomException;
 import com.ijaes.jeogiyo.common.exception.ErrorCode;
@@ -22,6 +23,7 @@ public class StoreOwnerService {
 
 	private final StoreRepository storeRepository;
 
+	@Transactional
 	public StoreResponse createStore(Authentication authentication, CreateStoreRequest request) {
 		User owner = getOwnerFromAuthentication(authentication);
 		validateOwnerRole(owner);
@@ -51,6 +53,7 @@ public class StoreOwnerService {
 		}
 	}
 
+	@Transactional(readOnly = true)
 	public StoreResponse myStore(Authentication authentication) {
 		User owner = getOwnerFromAuthentication(authentication);
 		validateOwnerRole(owner);
@@ -61,6 +64,7 @@ public class StoreOwnerService {
 		return toStoreResponse(myStore);
 	}
 
+	@Transactional
 	public StoreResponse updateStore(Authentication authentication, UpdateStoreRequest request) {
 		User owner = getOwnerFromAuthentication(authentication);
 		validateOwnerRole(owner);

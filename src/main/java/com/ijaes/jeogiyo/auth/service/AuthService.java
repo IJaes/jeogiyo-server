@@ -15,6 +15,7 @@ import com.ijaes.jeogiyo.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -30,6 +31,7 @@ public class AuthService {
     private final SignUpValidator signUpValidator;
     private final TokenBlacklistRepository tokenBlacklistRepository;
 
+    @Transactional
     public AuthResponse signUp(SignUpRequest request) {
         signUpValidator.validateSignUpRequest(request);
 
@@ -55,6 +57,7 @@ public class AuthService {
                 .build();
     }
 
+    @Transactional(readOnly = true)
     public AuthResponse login(LoginRequest request) {
         var user = userRepository.findByUsername(request.getUsername());
 
@@ -82,6 +85,7 @@ public class AuthService {
                 .build();
     }
 
+    @Transactional
     public AuthResponse logout(String bearerToken) {
         String token = bearerToken.startsWith("Bearer ") ? bearerToken.substring(7) : bearerToken;
         String username = jwtUtil.extractUsername(token);
