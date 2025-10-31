@@ -31,7 +31,7 @@ public class StoreOwnerService {
 		}
 
 		try {
-			Category category = Category.valueOf(request.getCategory());
+			Category category = Category.valueOf(request.getCategory().toUpperCase());
 
 			Store store = Store.builder()
 				.businessNumber(request.getBusinessNumber())
@@ -47,7 +47,7 @@ public class StoreOwnerService {
 
 			return toStoreResponse(savedStore);
 		} catch (IllegalArgumentException e) {
-			throw new CustomException(ErrorCode.INVALID_REQUEST);
+			throw new CustomException(ErrorCode.INVALID_CATEGORY);
 		}
 	}
 
@@ -68,29 +68,29 @@ public class StoreOwnerService {
 		Store store = storeRepository.findByOwnerId(owner.getId())
 			.orElseThrow(() -> new CustomException(ErrorCode.STORE_NOT_FOUND));
 
-		try {
-			Category category = request.getCategory() != null
-				? Category.valueOf(request.getCategory())
-				: store.getCategory();
-
-			store = Store.builder()
-				.id(store.getId())
-				.businessNumber(store.getBusinessNumber())
-				.name(request.getName() != null ? request.getName() : store.getName())
-				.address(request.getAddress() != null ? request.getAddress() : store.getAddress())
-				.description(request.getDescription() != null ? request.getDescription() : store.getDescription())
-				.category(category)
-				.rate(store.getRate())
-				.ownerId(store.getOwnerId())
-				.build();
-
-			Store updatedStore = storeRepository.save(store);
-
-			return toStoreResponse(updatedStore);
-
-		} catch (IllegalArgumentException e) {
-			throw new CustomException(ErrorCode.INVALID_REQUEST);
+		if (request.getName() != null && !request.getName().isBlank()) {
+			store.updateName(request.getName());
 		}
+
+		if (request.getAddress() != null && !request.getAddress().isBlank()) {
+			store.updateAddress(request.getAddress());
+		}
+
+		if (request.getDescription() != null && !request.getDescription().isBlank()) {
+			store.updateDescription(request.getDescription());
+		}
+
+		if (request.getCategory() != null && !request.getCategory().isBlank()) {
+			try {
+				Category category = Category.valueOf(request.getCategory().toUpperCase());
+				store.updateCategory(category);
+			} catch (IllegalArgumentException e) {
+				throw new CustomException(ErrorCode.INVALID_CATEGORY);
+			}
+		}
+
+		storeRepository.save(store);
+		return toStoreResponse(store);
 	}
 
 	private User getOwnerFromAuthentication(Authentication authentication) {

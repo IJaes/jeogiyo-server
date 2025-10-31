@@ -165,7 +165,7 @@ class StoreOwnerServiceTest {
 			storeOwnerService.createStore(authentication, invalidRequest);
 		});
 
-		assertEquals(ErrorCode.INVALID_REQUEST, exception.getErrorCode());
+		assertEquals(ErrorCode.INVALID_CATEGORY, exception.getErrorCode());
 		verify(storeRepository, times(0)).save(any(Store.class));
 	}
 
@@ -392,7 +392,7 @@ class StoreOwnerServiceTest {
 			storeOwnerService.updateStore(authentication, request);
 		});
 
-		assertEquals(ErrorCode.INVALID_REQUEST, exception.getErrorCode());
+		assertEquals(ErrorCode.INVALID_CATEGORY, exception.getErrorCode());
 		verify(storeRepository, times(0)).save(any(Store.class));
 	}
 
