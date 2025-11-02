@@ -39,7 +39,6 @@ public class StoreAdminController {
 		@RequestParam(defaultValue = "10") int size,
 		@RequestParam(defaultValue = "createdAt") String sortBy,
 		@RequestParam(defaultValue = "DESC") String direction) {
-
 		Page<StoreResponse> response = storeAdminService.getAllStores(page, size, sortBy, direction);
 		return ResponseEntity.ok(response);
 	}
