@@ -3,7 +3,7 @@ package com.ijaes.jeogiyo.menu.dto.request;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -21,7 +21,7 @@ public class CreateMenuRequest {
 	private String description;
 
 	@NotNull(message = "가격은 필수입니다.")
-	@Positive(message = "가격은 0보다 커야 합니다.")
+	@PositiveOrZero(message = "가격은 0 이상이어야 합니다.")
 	@Schema(description = "메뉴 가격", example = "12000")
 	private Integer price;
 }

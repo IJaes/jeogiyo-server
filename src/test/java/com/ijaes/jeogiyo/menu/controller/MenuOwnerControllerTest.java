@@ -262,4 +262,33 @@ class MenuOwnerControllerTest {
 		// then
 		assertTrue(true);
 	}
+
+	@Test
+	@DisplayName("메뉴 등록 API - 0원 가격 허용")
+	void createMenu_zeroPriceAllowed() {
+		// given
+		CreateMenuRequest request = CreateMenuRequest.builder()
+			.name("무료 메뉴")
+			.description("무료로 제공하는 메뉴")
+			.price(0)
+			.build();
+
+		MenuResponse expectedResponse = MenuResponse.builder()
+			.id(menuId)
+			.storeId(storeId)
+			.name("무료 메뉴")
+			.description("무료로 제공하는 메뉴")
+			.price(0)
+			.build();
+
+		when(menuOwnerService.createMenu(request, authentication))
+			.thenReturn(expectedResponse);
+
+		// when
+		MenuResponse result = menuOwnerController.createMenu(request, authentication);
+
+		// then
+		assertNotNull(result);
+		assertEquals(0, result.getPrice());
+	}
 }

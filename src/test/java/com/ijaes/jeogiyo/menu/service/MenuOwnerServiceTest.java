@@ -265,4 +265,34 @@ class MenuOwnerServiceTest {
 		assertEquals(menuId, result.getId());
 		assertEquals(storeId, result.getStoreId());
 	}
+
+	@Test
+	@DisplayName("메뉴 등록 - 0원 가격")
+	void createMenu_zeroPrice() {
+		// given
+		CreateMenuRequest request = CreateMenuRequest.builder()
+			.name("무료 메뉴")
+			.description("무료로 제공하는 메뉴")
+			.price(0)
+			.build();
+
+		Menu savedMenu = Menu.builder()
+			.id(UUID.randomUUID())
+			.store(testStore)
+			.name(request.getName())
+			.description(request.getDescription())
+			.price(request.getPrice())
+			.build();
+
+		when(authentication.getPrincipal()).thenReturn(testOwner);
+		when(storeRepository.findByOwnerId(ownerId)).thenReturn(Optional.of(testStore));
+		when(menuRepository.save(any(Menu.class))).thenReturn(savedMenu);
+
+		// when
+		MenuResponse result = menuOwnerService.createMenu(request, authentication);
+
+		// then
+		assertNotNull(result);
+		assertEquals(0, result.getPrice());
+	}
 }

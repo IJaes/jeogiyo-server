@@ -14,6 +14,7 @@ import com.ijaes.jeogiyo.menu.service.MenuOwnerService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -26,7 +27,7 @@ public class MenuOwnerController {
 
 	@PostMapping("/menus")
 	@Operation(summary = "메뉴 등록", description = "메뉴를 등록합니다", security = @SecurityRequirement(name = "bearer-jwt"))
-	public MenuResponse createMenu(@RequestBody CreateMenuRequest request, Authentication authentication) {
+	public MenuResponse createMenu(@Valid @RequestBody CreateMenuRequest request, Authentication authentication) {
 		return menuOwnerService.createMenu(request, authentication);
 	}
 }
