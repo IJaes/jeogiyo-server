@@ -57,6 +57,8 @@ jobs:
           REMOTE_USER: ${{ secrets.REMOTE_USER }}
           REMOTE_PRIVATE_KEY: ${{ secrets.REMOTE_PRIVATE_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          JWT_EXPIRATION: ${{ secrets.JWT_EXPIRATION }}
         run: |
           missing=0
           check() { if [ -z "$1" ]; then echo "::error::Missing secret: $2"; missing=1; fi; }
@@ -67,6 +69,8 @@ jobs:
           check "$REMOTE_USER" REMOTE_USER
           check "$REMOTE_PRIVATE_KEY" REMOTE_PRIVATE_KEY
           check "$GEMINI_API_KEY" GEMINI_API_KEY
+          check "$JWT_SECRET" JWT_SECRET
+          check "$JWT_EXPIRATION" JWT_EXPIRATION
           if [ "$missing" -eq 1 ]; then exit 1; fi
 
       - name: Copy docker-compose.yml to remote server
@@ -97,4 +101,6 @@ jobs:
             echo "DB_USERNAME=${{ secrets.DB_USERNAME }}" > .env
             echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
             echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}" >> .env
+            echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
+            echo "JWT_EXPIRATION=${{ secrets.JWT_EXPIRATION }}" >> .env
             sudo docker-compose up -d
