@@ -47,7 +47,7 @@ public class StoreRepositoryCustomImpl implements StoreRepositoryCustom {
 			))
 			.from(store)
 			.innerJoin(user).on(store.ownerId.eq(user.id))
-			.where(store.id.eq(storeId), store.isDeleted.eq(false))
+			.where(store.id.eq(storeId), store.deletedAt.isNull())
 			.fetchOne();
 
 		return Optional.ofNullable(result);
@@ -61,7 +61,7 @@ public class StoreRepositoryCustomImpl implements StoreRepositoryCustom {
 			.selectFrom(store)
 			.where(
 				store.ownerId.eq(ownerId),
-				store.isDeleted.eq(false)
+				store.deletedAt.isNull()
 			)
 			.limit(1)
 			.fetchFirst();
@@ -78,7 +78,7 @@ public class StoreRepositoryCustomImpl implements StoreRepositoryCustom {
 			.from(store)
 			.where(
 				store.ownerId.eq(ownerId),
-				store.isDeleted.eq(false)
+				store.deletedAt.isNull()
 			)
 			.limit(1)
 			.fetchFirst();
@@ -94,7 +94,7 @@ public class StoreRepositoryCustomImpl implements StoreRepositoryCustom {
 			.selectFrom(store)
 			.where(
 				store.id.eq(id),
-				store.isDeleted.eq(false)
+				store.deletedAt.isNull()
 			)
 			.fetchOne();
 
@@ -108,12 +108,12 @@ public class StoreRepositoryCustomImpl implements StoreRepositoryCustom {
 		Long total = queryFactory
 			.select(store.count())
 			.from(store)
-			.where(store.isDeleted.eq(false))
+			.where(store.deletedAt.isNull())
 			.fetchOne();
 
 		var content = queryFactory
 			.selectFrom(store)
-			.where(store.isDeleted.eq(false))
+			.where(store.deletedAt.isNull())
 			.orderBy(store.createdAt.desc())
 			.offset(pageable.getOffset())
 			.limit(pageable.getPageSize())

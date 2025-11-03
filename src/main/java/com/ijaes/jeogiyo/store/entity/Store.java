@@ -54,12 +54,6 @@ public class Store extends BaseEntity {
 	@Column(nullable = false)
 	private UUID ownerId;
 
-	@Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
-	private Boolean isDeleted = false;
-
-	@Column
-	private LocalDateTime deletedAt;
-
 	public void updateName(String newName) {
 		this.name = newName;
 	}
@@ -81,7 +75,6 @@ public class Store extends BaseEntity {
 	}
 
 	public void softDelete() {
-		this.isDeleted = true;
-		this.deletedAt = LocalDateTime.now();
+		this.setDeletedAt(LocalDateTime.now());
 	}
 }

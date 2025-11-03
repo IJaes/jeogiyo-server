@@ -423,7 +423,7 @@ class StoreAdminServiceTest {
 		// then
 		verify(storeRepository, times(1)).findByIdNotDeleted(storeId);
 		verify(storeRepository, times(1)).save(any(Store.class));
-		assertTrue(testStore.getIsDeleted());
+		assertTrue(testStore.isDeleted());
 		assertNotNull(testStore.getDeletedAt());
 	}
 
@@ -443,7 +443,7 @@ class StoreAdminServiceTest {
 	}
 
 	@Test
-	@DisplayName("매장 소프트 삭제 - isDeleted 플래그 확인")
+	@DisplayName("매장 소프트 삭제 - deletedAt 필드 확인")
 	void deleteStore_verifyDeletedFlag() {
 		// given
 		Store deletedStore = Store.builder()
@@ -455,8 +455,6 @@ class StoreAdminServiceTest {
 			.category(testStore.getCategory())
 			.rate(testStore.getRate())
 			.ownerId(ownerId)
-			.isDeleted(false)
-			.deletedAt(null)
 			.build();
 
 		when(storeRepository.findByIdNotDeleted(storeId)).thenReturn(Optional.of(deletedStore));
@@ -466,7 +464,7 @@ class StoreAdminServiceTest {
 		storeAdminService.deleteStore(storeId);
 
 		// then
-		assertTrue(deletedStore.getIsDeleted());
+		assertTrue(deletedStore.isDeleted());
 		assertNotNull(deletedStore.getDeletedAt());
 
 		verify(storeRepository, times(1)).findByIdNotDeleted(storeId);
@@ -489,9 +487,8 @@ class StoreAdminServiceTest {
 			.category(Category.JAPANESE)
 			.rate(3.0)
 			.ownerId(UUID.randomUUID())
-			.isDeleted(true)
-			.deletedAt(LocalDateTime.now())
 			.build();
+		deletedStore.softDelete();
 
 		List<Store> stores = List.of(testStore, deletedStore);
 		Page<Store> storePage = new PageImpl<>(stores, pageable, 2);
