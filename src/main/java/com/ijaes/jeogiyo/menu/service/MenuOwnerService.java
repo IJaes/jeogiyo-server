@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.ijaes.jeogiyo.common.exception.CustomException;
 import com.ijaes.jeogiyo.common.exception.ErrorCode;
+import com.ijaes.jeogiyo.gemini.service.GeminiService;
 import com.ijaes.jeogiyo.menu.dto.request.CreateMenuRequest;
 import com.ijaes.jeogiyo.menu.dto.response.MenuResponse;
 import com.ijaes.jeogiyo.menu.entity.Menu;
@@ -22,6 +23,7 @@ public class MenuOwnerService {
 
 	private final StoreRepository storeRepository;
 	private final MenuRepository menuRepository;
+	private final GeminiService geminiService;
 
 	@Transactional
 	public MenuResponse createMenu(CreateMenuRequest request, Authentication authentication) {
@@ -29,10 +31,15 @@ public class MenuOwnerService {
 		Store store = storeRepository.findByOwnerId(owner.getId())
 			.orElseThrow(() -> new CustomException(ErrorCode.STORE_NOT_FOUND));
 
+		String description = request.getDescription();
+		if (request.isAiDescription() && description == null) {
+			description = geminiService.generateMenuDescription(request.getName());
+		}
+
 		Menu menu = Menu.builder()
 			.store(store)
 			.name(request.getName())
-			.description(request.getDescription())
+			.description(description)
 			.price(request.getPrice())
 			.build();
 

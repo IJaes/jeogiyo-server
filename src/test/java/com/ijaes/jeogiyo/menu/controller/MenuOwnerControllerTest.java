@@ -291,4 +291,34 @@ class MenuOwnerControllerTest {
 		assertNotNull(result);
 		assertEquals(0, result.getPrice());
 	}
+
+	@Test
+	@DisplayName("메뉴 등록 API - 설명 없음 (선택사항)")
+	void createMenu_noDescription() {
+		// given
+		CreateMenuRequest request = CreateMenuRequest.builder()
+			.name("순대국밥")
+			.price(12000)
+			.build();
+
+		MenuResponse expectedResponse = MenuResponse.builder()
+			.id(menuId)
+			.storeId(storeId)
+			.name("순대국밥")
+			.description(null)
+			.price(12000)
+			.build();
+
+		when(menuOwnerService.createMenu(request, authentication))
+			.thenReturn(expectedResponse);
+
+		// when
+		MenuResponse result = menuOwnerController.createMenu(request, authentication);
+
+		// then
+		assertNotNull(result);
+		assertEquals("순대국밥", result.getName());
+		assertNull(result.getDescription());
+		assertEquals(12000, result.getPrice());
+	}
 }

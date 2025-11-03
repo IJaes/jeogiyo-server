@@ -295,4 +295,35 @@ class MenuOwnerServiceTest {
 		assertNotNull(result);
 		assertEquals(0, result.getPrice());
 	}
+
+	@Test
+	@DisplayName("메뉴 등록 - 설명 없음 (선택사항)")
+	void createMenu_noDescription() {
+		// given
+		CreateMenuRequest request = CreateMenuRequest.builder()
+			.name("순대국밥")
+			.price(12000)
+			.build();
+
+		Menu savedMenu = Menu.builder()
+			.id(UUID.randomUUID())
+			.store(testStore)
+			.name(request.getName())
+			.description(null)
+			.price(request.getPrice())
+			.build();
+
+		when(authentication.getPrincipal()).thenReturn(testOwner);
+		when(storeRepository.findByOwnerId(ownerId)).thenReturn(Optional.of(testStore));
+		when(menuRepository.save(any(Menu.class))).thenReturn(savedMenu);
+
+		// when
+		MenuResponse result = menuOwnerService.createMenu(request, authentication);
+
+		// then
+		assertNotNull(result);
+		assertEquals("순대국밥", result.getName());
+		assertNull(result.getDescription());
+		assertEquals(12000, result.getPrice());
+	}
 }
