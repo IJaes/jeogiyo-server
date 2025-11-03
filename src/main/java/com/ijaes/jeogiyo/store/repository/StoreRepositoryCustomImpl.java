@@ -46,7 +46,7 @@ public class StoreRepositoryCustomImpl implements StoreRepositoryCustom {
 				)
 			))
 			.from(store)
-			.innerJoin(user).on(store.ownerId.eq(user.id))
+			.innerJoin(user).on(store.owner.id.eq(user.id))
 			.where(store.id.eq(storeId), store.deletedAt.isNull())
 			.fetchOne();
 
@@ -60,7 +60,7 @@ public class StoreRepositoryCustomImpl implements StoreRepositoryCustom {
 		Store result = queryFactory
 			.selectFrom(store)
 			.where(
-				store.ownerId.eq(ownerId),
+				store.owner.id.eq(ownerId),
 				store.deletedAt.isNull()
 			)
 			.limit(1)
@@ -77,7 +77,7 @@ public class StoreRepositoryCustomImpl implements StoreRepositoryCustom {
 			.select(store.id)
 			.from(store)
 			.where(
-				store.ownerId.eq(ownerId),
+				store.owner.id.eq(ownerId),
 				store.deletedAt.isNull()
 			)
 			.limit(1)
