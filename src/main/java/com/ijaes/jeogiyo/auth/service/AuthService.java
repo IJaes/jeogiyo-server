@@ -15,9 +15,11 @@ import com.ijaes.jeogiyo.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.HexFormat;
 
 @Service
 @RequiredArgsConstructor
@@ -29,6 +31,7 @@ public class AuthService {
     private final SignUpValidator signUpValidator;
     private final TokenBlacklistRepository tokenBlacklistRepository;
 
+    @Transactional
     public AuthResponse signUp(SignUpRequest request) {
         signUpValidator.validateSignUpRequest(request);
 
@@ -54,6 +57,7 @@ public class AuthService {
                 .build();
     }
 
+    @Transactional(readOnly = true)
     public AuthResponse login(LoginRequest request) {
         var user = userRepository.findByUsername(request.getUsername());
 
@@ -81,6 +85,7 @@ public class AuthService {
                 .build();
     }
 
+    @Transactional
     public AuthResponse logout(String bearerToken) {
         String token = bearerToken.startsWith("Bearer ") ? bearerToken.substring(7) : bearerToken;
         String username = jwtUtil.extractUsername(token);
@@ -109,15 +114,7 @@ public class AuthService {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] hash = digest.digest(token.getBytes());
-            StringBuilder hexString = new StringBuilder();
-            for (byte b : hash) {
-                String hex = Integer.toHexString(0xff & b);
-                if (hex.length() == 1) {
-                    hexString.append('0');
-                }
-                hexString.append(hex);
-            }
-            return hexString.toString();
+            return HexFormat.of().formatHex(hash);
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException("SHA-256 알고리즘을 찾을 수 없습니다.", e);
         }

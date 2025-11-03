@@ -29,6 +29,7 @@ public enum ErrorCode {
 	// 인가 관련 (Z-xxx)
 	ACCESS_DENIED(HttpStatus.FORBIDDEN, "Z-001", "접근 권한이 없습니다."),
 	UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "Z-002", "인증이 필요합니다."),
+	OWNER_ROLE_REQUIRED(HttpStatus.FORBIDDEN, "Z-003", "OWNER 권한이 필요합니다."),
 
 	// 리소스 관련 (R-xxx)
 	RESOURCE_NOT_FOUND(HttpStatus.NOT_FOUND, "R-001", "요청하신 리소스를 찾을 수 없습니다."),
@@ -43,8 +44,19 @@ public enum ErrorCode {
 	EMPTY_ADDRESS(HttpStatus.BAD_REQUEST, "U-002", "주소를 입력해주세요."),
 	EMPTY_CURRENT_PASSWORD(HttpStatus.BAD_REQUEST, "U-003", "현재 비밀번호를 입력해주세요."),
 	INVALID_ROLE(HttpStatus.BAD_REQUEST, "U-004", "유효하지 않은 권한입니다."),
+	DUPLICATE_PASSWORD(HttpStatus.BAD_REQUEST, "U-005", "새 비밀번호는 현재 비밀번호와 달라야 합니다."),
 
-	// 결제 처리 관련 (P-xxx)
+	// 서버 에러 (X-xxx)
+	INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "X-001", "서버 오류가 발생했습니다. 관리자에게 문의하세요."),
+
+	// 매장 관련 (S-xxx)
+	DUPLICATE_STORE(HttpStatus.CONFLICT, "S-001", "이미 등록한 매장이 있습니다. 한 명의 OWNER는 하나의 매장만 등록할 수 있습니다."),
+	STORE_NOT_FOUND(HttpStatus.NOT_FOUND, "S-002", "매장을 찾을 수 없습니다. 먼저 매장을 등록해주세요."),
+	INVALID_CATEGORY(HttpStatus.BAD_REQUEST, "S-003", "유효하지 않은 카테고리입니다. (KOREAN, JAPANESE, CHINESE, ITALIAN)"),
+
+	//리뷰 관련 (W-xxx)
+	REVIEW_ALREADY_EXISTS(HttpStatus.CONFLICT, "W-001", "이미 해당 주문에 대한 리뷰가 작성되었습니다."),
+
 	// 결제 관련 (P-xxx)
 	PAYMENT_KEY_GENERATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "P-001", "결제 키 발급 중 오류가 발생했습니다."),
 	INVALID_PAYMENT_REQUEST(HttpStatus.BAD_REQUEST, "P-002", "잘못된 결제 요청입니다."),
@@ -52,8 +64,6 @@ public enum ErrorCode {
 	PAYMENT_VERIFICATION_FAILED(HttpStatus.BAD_REQUEST, "P-004", "결제 검증에 실패했습니다."),
 	PAYMENT_CANCEL_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "P-005", "결제 취소 중 오류가 발생했습니다."),
 
-	// 서버 에러 (S-xxx)
-	INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "S-001", "서버 오류가 발생했습니다. 관리자에게 문의하세요."),
 	;
 
 	private final HttpStatus httpStatus;
