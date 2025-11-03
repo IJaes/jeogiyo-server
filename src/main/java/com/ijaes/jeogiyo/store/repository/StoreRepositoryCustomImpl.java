@@ -63,7 +63,8 @@ public class StoreRepositoryCustomImpl implements StoreRepositoryCustom {
 				store.ownerId.eq(ownerId),
 				store.isDeleted.eq(false)
 			)
-			.fetchOne();
+			.limit(1)
+			.fetchFirst();
 
 		return Optional.ofNullable(result);
 	}
@@ -72,14 +73,17 @@ public class StoreRepositoryCustomImpl implements StoreRepositoryCustom {
 	public boolean existsByOwnerId(UUID ownerId) {
 		QStore store = QStore.store;
 
-		return queryFactory
-			.selectOne()
+		UUID firstId = queryFactory
+			.select(store.id)
 			.from(store)
 			.where(
 				store.ownerId.eq(ownerId),
 				store.isDeleted.eq(false)
 			)
-			.fetchFirst() != null;
+			.limit(1)
+			.fetchFirst();
+
+		return firstId != null;
 	}
 
 	@Override
@@ -101,39 +105,39 @@ public class StoreRepositoryCustomImpl implements StoreRepositoryCustom {
 	public Page<Store> findAllNotDeleted(Pageable pageable) {
 		QStore store = QStore.store;
 
-		var query = queryFactory
-			.selectFrom(store)
-			.where(store.isDeleted.eq(false));
+		Long total = queryFactory
+			.select(store.count())
+			.from(store)
+			.where(store.isDeleted.eq(false))
+			.fetchOne();
 
-		long total = query.fetch().size();
-
-		var stores = queryFactory
+		var content = queryFactory
 			.selectFrom(store)
 			.where(store.isDeleted.eq(false))
+			.orderBy(store.createdAt.desc())
 			.offset(pageable.getOffset())
 			.limit(pageable.getPageSize())
-			.orderBy(store.createdAt.desc())
 			.fetch();
 
-		return new PageImpl<>(stores, pageable, total);
+		return new PageImpl<>(content, pageable, total == null ? 0 : total);
 	}
 
 	@Override
 	public Page<Store> findAllIncludingDeleted(Pageable pageable) {
 		QStore store = QStore.store;
 
-		var query = queryFactory
-			.selectFrom(store);
+		Long total = queryFactory
+			.select(store.count())
+			.from(store)
+			.fetchOne();
 
-		long total = query.fetch().size();
-
-		var stores = queryFactory
+		var content = queryFactory
 			.selectFrom(store)
+			.orderBy(store.createdAt.desc())
 			.offset(pageable.getOffset())
 			.limit(pageable.getPageSize())
-			.orderBy(store.createdAt.desc())
 			.fetch();
 
-		return new PageImpl<>(stores, pageable, total);
+		return new PageImpl<>(content, pageable, total == null ? 0 : total);
 	}
 }
