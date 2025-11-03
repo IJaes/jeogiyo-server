@@ -1,9 +1,11 @@
-package com.ijaes.jeogiyo.review.domain;
+package com.ijaes.jeogiyo.review.repository;
 
 import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.ijaes.jeogiyo.review.entity.Review;
 
 public interface ReviewRepository extends JpaRepository<Review, UUID> {
 	//crud 및 단순 조회

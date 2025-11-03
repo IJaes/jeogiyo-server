@@ -1,4 +1,4 @@
-package com.ijaes.jeogiyo.review.infrastructure.persistence.dto.response;
+package com.ijaes.jeogiyo.review.dto.response;
 
 import java.time.LocalDateTime;
 import java.util.UUID;

@@ -56,6 +56,7 @@ public enum ErrorCode {
 
 	//리뷰 관련 (W-xxx)
 	REVIEW_ALREADY_EXISTS(HttpStatus.CONFLICT, "W-001", "이미 해당 주문에 대한 리뷰가 작성되었습니다."),
+	REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "W-002", "리뷰를 찾을 수 없습니다. 먼저 리뷰를 등록해주세요."),
 
 	;
 
