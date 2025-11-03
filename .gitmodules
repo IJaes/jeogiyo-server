@@ -1,0 +1,3 @@
+[submodule "jeogiyo-submodule"]
+	path = jeogiyo-submodule
+	url = https://github.com/IJaes/jeogiyo-submodule.git

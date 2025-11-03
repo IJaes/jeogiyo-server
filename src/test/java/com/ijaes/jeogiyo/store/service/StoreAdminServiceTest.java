@@ -32,6 +32,8 @@ import com.ijaes.jeogiyo.store.dto.response.StoreResponse;
 import com.ijaes.jeogiyo.store.entity.Category;
 import com.ijaes.jeogiyo.store.entity.Store;
 import com.ijaes.jeogiyo.store.repository.StoreRepository;
+import com.ijaes.jeogiyo.user.entity.User;
+import com.ijaes.jeogiyo.user.entity.Role;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("StoreAdminService 테스트")
@@ -46,11 +48,23 @@ class StoreAdminServiceTest {
 	private UUID storeId;
 	private UUID ownerId;
 	private Store testStore;
+	private User testOwner;
 
 	@BeforeEach
 	void setUp() {
 		storeId = UUID.randomUUID();
 		ownerId = UUID.randomUUID();
+
+		testOwner = User.builder()
+			.id(ownerId)
+			.username("owner@test.com")
+			.password("password")
+			.name("사장님")
+			.address("서울시 강남구")
+			.phoneNumber("010-1234-5678")
+			.isOwner(true)
+			.role(Role.OWNER)
+			.build();
 
 		testStore = Store.builder()
 			.id(storeId)
@@ -60,7 +74,7 @@ class StoreAdminServiceTest {
 			.description("뜨근뜨끈한 국물 한 사발 먹고 가세요")
 			.category(Category.KOREAN)
 			.rate(4.5)
-			.ownerId(ownerId)
+			.owner(testOwner)
 			.build();
 	}
 
@@ -83,7 +97,8 @@ class StoreAdminServiceTest {
 			.description("새로운 설명")
 			.category(Category.JAPANESE)
 			.rate(testStore.getRate())
-			.ownerId(ownerId)
+			.owner(testOwner)
+			
 			.build();
 
 		when(storeRepository.findByIdNotDeleted(storeId)).thenReturn(Optional.of(testStore));
@@ -119,7 +134,8 @@ class StoreAdminServiceTest {
 			.description(testStore.getDescription())
 			.category(testStore.getCategory())
 			.rate(testStore.getRate())
-			.ownerId(ownerId)
+			.owner(testOwner)
+			
 			.build();
 
 		when(storeRepository.findByIdNotDeleted(storeId)).thenReturn(Optional.of(testStore));
@@ -154,7 +170,8 @@ class StoreAdminServiceTest {
 			.description(testStore.getDescription())
 			.category(testStore.getCategory())
 			.rate(testStore.getRate())
-			.ownerId(ownerId)
+			.owner(testOwner)
+			
 			.build();
 
 		when(storeRepository.findByIdNotDeleted(storeId)).thenReturn(Optional.of(testStore));
@@ -187,7 +204,8 @@ class StoreAdminServiceTest {
 			.description("새로운 설명")
 			.category(testStore.getCategory())
 			.rate(testStore.getRate())
-			.ownerId(ownerId)
+			.owner(testOwner)
+			
 			.build();
 
 		when(storeRepository.findByIdNotDeleted(storeId)).thenReturn(Optional.of(testStore));
@@ -220,7 +238,8 @@ class StoreAdminServiceTest {
 			.description(testStore.getDescription())
 			.category(Category.CHINESE)
 			.rate(testStore.getRate())
-			.ownerId(ownerId)
+			.owner(testOwner)
+			
 			.build();
 
 		when(storeRepository.findByIdNotDeleted(storeId)).thenReturn(Optional.of(testStore));
@@ -318,7 +337,8 @@ class StoreAdminServiceTest {
 				.description(testStore.getDescription())
 				.category(Category.valueOf(category))
 				.rate(testStore.getRate())
-				.ownerId(ownerId)
+			.owner(testOwner)
+				
 				.build();
 
 			when(storeRepository.findByIdNotDeleted(storeId)).thenReturn(Optional.of(testStore));
@@ -349,7 +369,8 @@ class StoreAdminServiceTest {
 			.description(testStore.getDescription())
 			.category(Category.KOREAN)
 			.rate(testStore.getRate())
-			.ownerId(ownerId)
+			.owner(testOwner)
+			
 			.build();
 
 		when(storeRepository.findByIdNotDeleted(storeId)).thenReturn(Optional.of(testStore));
@@ -423,7 +444,7 @@ class StoreAdminServiceTest {
 		// then
 		verify(storeRepository, times(1)).findByIdNotDeleted(storeId);
 		verify(storeRepository, times(1)).save(any(Store.class));
-		assertTrue(testStore.getIsDeleted());
+		assertTrue(testStore.isDeleted());
 		assertNotNull(testStore.getDeletedAt());
 	}
 
@@ -443,7 +464,7 @@ class StoreAdminServiceTest {
 	}
 
 	@Test
-	@DisplayName("매장 소프트 삭제 - isDeleted 플래그 확인")
+	@DisplayName("매장 소프트 삭제 - deletedAt 필드 확인")
 	void deleteStore_verifyDeletedFlag() {
 		// given
 		Store deletedStore = Store.builder()
@@ -454,9 +475,8 @@ class StoreAdminServiceTest {
 			.description(testStore.getDescription())
 			.category(testStore.getCategory())
 			.rate(testStore.getRate())
-			.ownerId(ownerId)
-			.isDeleted(false)
-			.deletedAt(null)
+			.owner(testOwner)
+			
 			.build();
 
 		when(storeRepository.findByIdNotDeleted(storeId)).thenReturn(Optional.of(deletedStore));
@@ -466,7 +486,7 @@ class StoreAdminServiceTest {
 		storeAdminService.deleteStore(storeId);
 
 		// then
-		assertTrue(deletedStore.getIsDeleted());
+		assertTrue(deletedStore.isDeleted());
 		assertNotNull(deletedStore.getDeletedAt());
 
 		verify(storeRepository, times(1)).findByIdNotDeleted(storeId);
@@ -480,6 +500,17 @@ class StoreAdminServiceTest {
 	void getAllStores_success() {
 		// given
 		Pageable pageable = PageRequest.of(0, 10);
+		User anotherOwner = User.builder()
+			.id(UUID.randomUUID())
+			.username("owner2@test.com")
+			.password("password")
+			.name("다른사장님")
+			.address("서울시 성동구")
+			.phoneNumber("010-9876-5432")
+			.isOwner(true)
+			.role(Role.OWNER)
+			.build();
+
 		Store deletedStore = Store.builder()
 			.id(UUID.randomUUID())
 			.businessNumber("987-65-43210")
@@ -488,10 +519,9 @@ class StoreAdminServiceTest {
 			.description("이미 폐점함")
 			.category(Category.JAPANESE)
 			.rate(3.0)
-			.ownerId(UUID.randomUUID())
-			.isDeleted(true)
-			.deletedAt(LocalDateTime.now())
+			.owner(anotherOwner)
 			.build();
+		deletedStore.softDelete();
 
 		List<Store> stores = List.of(testStore, deletedStore);
 		Page<Store> storePage = new PageImpl<>(stores, pageable, 2);
