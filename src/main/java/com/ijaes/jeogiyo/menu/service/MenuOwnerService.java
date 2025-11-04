@@ -1,5 +1,8 @@
 package com.ijaes.jeogiyo.menu.service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,6 +14,7 @@ import com.ijaes.jeogiyo.menu.dto.request.CreateMenuRequest;
 import com.ijaes.jeogiyo.menu.dto.response.MenuResponse;
 import com.ijaes.jeogiyo.menu.entity.Menu;
 import com.ijaes.jeogiyo.menu.repository.MenuRepository;
+import com.ijaes.jeogiyo.menu.repository.MenuRepositoryCustom;
 import com.ijaes.jeogiyo.store.entity.Store;
 import com.ijaes.jeogiyo.store.repository.StoreRepository;
 import com.ijaes.jeogiyo.user.entity.User;
@@ -46,6 +50,17 @@ public class MenuOwnerService {
 		Menu savedMenu = menuRepository.save(menu);
 
 		return toMenuResponse(savedMenu);
+	}
+
+	@Transactional(readOnly = true)
+	public List<MenuResponse> getMyMenus(Authentication authentication) {
+		User owner = (User)authentication.getPrincipal();
+
+		List<Menu> menus = menuRepository.findByOwnerId(owner.getId());
+
+		return menus.stream()
+			.map(this::toMenuResponse)
+			.toList();
 	}
 
 	private MenuResponse toMenuResponse(Menu menu) {
