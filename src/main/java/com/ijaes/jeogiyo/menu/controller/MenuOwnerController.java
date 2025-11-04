@@ -3,9 +3,12 @@ package com.ijaes.jeogiyo.menu.controller;
 import java.util.List;
 import java.util.UUID;
 
+import org.apache.coyote.Response;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.parameters.P;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -50,8 +53,16 @@ public class MenuOwnerController {
 
 	@PatchMapping("/{menuId}")
 	@Operation(summary = "메뉴 수정", description = "메뉴 정보를 수정합니다", security = @SecurityRequirement(name = "bearer-jwt"))
-	public ResponseEntity<MenuResponse> updateMenu(@PathVariable UUID menuId, @Valid @RequestBody UpdateMenuRequest request, Authentication authentication) {
+	public ResponseEntity<MenuResponse> updateMenu(@PathVariable UUID menuId,
+		@Valid @RequestBody UpdateMenuRequest request, Authentication authentication) {
 		MenuResponse menuResponse = menuOwnerService.updateMenu(menuId, request, authentication);
 		return ResponseEntity.ok(menuResponse);
+	}
+
+	@DeleteMapping("/{menuId}")
+	@Operation(summary = "메뉴 삭제", description = "메뉴를 삭제합니다", security = @SecurityRequirement(name = "bearer-jwt"))
+	public ResponseEntity<Void> deleteMenu(@PathVariable UUID menuId, Authentication authentication) {
+		menuOwnerService.deleteMenu(menuId, authentication);
+		return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
 	}
 }
