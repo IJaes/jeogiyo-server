@@ -1,10 +1,12 @@
 package com.ijaes.jeogiyo.menu.entity;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import com.ijaes.jeogiyo.common.entity.BaseEntity;
 import com.ijaes.jeogiyo.store.entity.Store;
 
+import ch.qos.logback.core.spi.LogbackLock;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -54,5 +56,9 @@ public class Menu extends BaseEntity {
 		if (price != null) {
 			this.price = price;
 		}
+	}
+
+	public void delete() {
+		this.setDeletedAt(LocalDateTime.now());
 	}
 }
