@@ -537,6 +537,83 @@ class MenuOwnerControllerTest {
 	}
 
 	@Test
+	@DisplayName("특정 메뉴 조회 API - 성공")
+	void getMenu_success() {
+		// given
+		UUID targetMenuId = UUID.randomUUID();
+		MenuResponse expectedResponse = MenuResponse.builder()
+			.id(targetMenuId)
+			.storeId(storeId)
+			.name("순대국밥")
+			.description("뜨끈한 국밥")
+			.price(12000)
+			.build();
+
+		when(menuOwnerService.getMyMenu(targetMenuId, authentication))
+			.thenReturn(expectedResponse);
+
+		// when
+		MenuResponse result = menuOwnerController.getMenu(targetMenuId, authentication).getBody();
+
+		// then
+		assertNotNull(result);
+		assertEquals(targetMenuId, result.getId());
+		assertEquals("순대국밥", result.getName());
+		assertEquals("뜨끈한 국밥", result.getDescription());
+		assertEquals(12000, result.getPrice());
+		assertEquals(storeId, result.getStoreId());
+
+		verify(menuOwnerService, times(1)).getMyMenu(targetMenuId, authentication);
+	}
+
+	@Test
+	@DisplayName("특정 메뉴 조회 API - 응답 상태 코드 200 OK")
+	void getMenu_responseStatusOk() {
+		// given
+		UUID targetMenuId = UUID.randomUUID();
+		MenuResponse expectedResponse = MenuResponse.builder()
+			.id(targetMenuId)
+			.storeId(storeId)
+			.name("순대국밥")
+			.description("뜨끈한 국밥")
+			.price(12000)
+			.build();
+
+		when(menuOwnerService.getMyMenu(targetMenuId, authentication))
+			.thenReturn(expectedResponse);
+
+		// when
+		var response = menuOwnerController.getMenu(targetMenuId, authentication);
+
+		// then
+		assertEquals(200, response.getStatusCodeValue());
+		assertNotNull(response.getBody());
+	}
+
+	@Test
+	@DisplayName("특정 메뉴 조회 API - 서비스 호출 확인")
+	void getMenu_serviceInvocation() {
+		// given
+		UUID targetMenuId = UUID.randomUUID();
+		MenuResponse expectedResponse = MenuResponse.builder()
+			.id(targetMenuId)
+			.storeId(storeId)
+			.name("순대국밥")
+			.description("뜨끈한 국밥")
+			.price(12000)
+			.build();
+
+		when(menuOwnerService.getMyMenu(any(UUID.class), any(Authentication.class)))
+			.thenReturn(expectedResponse);
+
+		// when
+		menuOwnerController.getMenu(targetMenuId, authentication);
+
+		// then
+		verify(menuOwnerService, times(1)).getMyMenu(targetMenuId, authentication);
+	}
+
+	@Test
 	@DisplayName("메뉴 수정 API - 성공")
 	void updateMenu_success() {
 		// given
