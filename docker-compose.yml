@@ -31,6 +31,7 @@ services:
       GEMINI_API_KEY: ${GEMINI_API_KEY}
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRATION: ${JWT_EXPIRATION}
+      SECRET_KEY: ${SECRET_KEY}
     ports:
       - "8080:8080"
     restart: unless-stopped
