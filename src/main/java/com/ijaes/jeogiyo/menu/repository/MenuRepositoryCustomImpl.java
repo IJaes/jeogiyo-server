@@ -45,23 +45,15 @@ public class MenuRepositoryCustomImpl implements MenuRepositoryCustom {
 	}
 
 	@Override
-	public Page<Menu> findAllNotDeleted(Pageable pageable) {
+	public List<Menu> findAllNotDeleted(UUID storeId) {
 		QMenu menu = QMenu.menu;
 
-		Long total = queryFactory
-			.select(menu.count())
-			.from(menu)
-			.where(menu.deletedAt.isNull())
-			.fetchOne();
-
-		var content = queryFactory
+		return queryFactory
 			.selectFrom(menu)
-			.where(menu.deletedAt.isNull())
-			.orderBy(menu.createdAt.desc())
-			.offset(pageable.getOffset())
-			.limit(pageable.getPageSize())
+			.where(
+				menu.store.id.eq(storeId),
+				menu.deletedAt.isNull()
+			)
 			.fetch();
-
-		return new PageImpl<>(content, pageable, total == null ? 0 : total);
 	}
 }

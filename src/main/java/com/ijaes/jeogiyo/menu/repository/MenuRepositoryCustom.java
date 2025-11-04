@@ -15,5 +15,5 @@ public interface MenuRepositoryCustom {
 
 	Optional<Menu> findByIdAndOwnerId(UUID menuId, UUID ownerId);
 
-	Page<Menu> findAllNotDeleted(Pageable pageable);
+	List<Menu> findAllNotDeleted(UUID storeId);
 }
