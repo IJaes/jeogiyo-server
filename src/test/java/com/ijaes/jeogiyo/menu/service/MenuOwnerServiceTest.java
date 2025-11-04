@@ -554,4 +554,76 @@ class MenuOwnerServiceTest {
 		assertEquals(ErrorCode.MENU_NOT_FOUND, exception.getErrorCode());
 		verify(menuRepository, times(1)).findByIdAndOwnerId(menuId, ownerId);
 	}
+
+	@Test
+	@DisplayName("메뉴 삭제 - 성공")
+	void deleteMenu_success() {
+		// given
+		UUID menuId = UUID.randomUUID();
+		Menu menu = Menu.builder()
+			.id(menuId)
+			.store(testStore)
+			.name("순대국밥")
+			.description("맛있는 국밥")
+			.price(12000)
+			.build();
+
+		when(authentication.getPrincipal()).thenReturn(testOwner);
+		when(menuRepository.findByIdAndOwnerId(menuId, ownerId))
+			.thenReturn(Optional.of(menu));
+
+		// when
+		menuOwnerService.deleteMenu(menuId, authentication);
+
+		// then
+		assertTrue(menu.isDeleted());
+		assertNotNull(menu.getDeletedAt());
+		verify(menuRepository, times(1)).findByIdAndOwnerId(menuId, ownerId);
+	}
+
+	@Test
+	@DisplayName("메뉴 삭제 - 실패 (메뉴 없음)")
+	void deleteMenu_fail_menuNotFound() {
+		// given
+		UUID menuId = UUID.randomUUID();
+
+		when(authentication.getPrincipal()).thenReturn(testOwner);
+		when(menuRepository.findByIdAndOwnerId(menuId, ownerId))
+			.thenReturn(Optional.empty());
+
+		// when & then
+		CustomException exception = assertThrows(CustomException.class, () -> {
+			menuOwnerService.deleteMenu(menuId, authentication);
+		});
+
+		assertEquals(ErrorCode.MENU_NOT_FOUND, exception.getErrorCode());
+		verify(menuRepository, times(1)).findByIdAndOwnerId(menuId, ownerId);
+	}
+
+	@Test
+	@DisplayName("메뉴 삭제 - 실패 (이미 삭제된 메뉴)")
+	void deleteMenu_fail_alreadyDeleted() {
+		// given
+		UUID menuId = UUID.randomUUID();
+		Menu menu = Menu.builder()
+			.id(menuId)
+			.store(testStore)
+			.name("순대국밥")
+			.description("맛있는 국밥")
+			.price(12000)
+			.build();
+		menu.delete();
+
+		when(authentication.getPrincipal()).thenReturn(testOwner);
+		when(menuRepository.findByIdAndOwnerId(menuId, ownerId))
+			.thenReturn(Optional.of(menu));
+
+		// when & then
+		CustomException exception = assertThrows(CustomException.class, () -> {
+			menuOwnerService.deleteMenu(menuId, authentication);
+		});
+
+		assertEquals(ErrorCode.MENU_ALREADY_DELETED, exception.getErrorCode());
+		verify(menuRepository, times(1)).findByIdAndOwnerId(menuId, ownerId);
+	}
 }
