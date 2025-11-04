@@ -42,7 +42,7 @@ public class StoreOwnerService {
 				.description(request.getDescription())
 				.category(category)
 				.rate(0.0)
-				.ownerId(owner.getId())
+				.owner(owner)
 				.build();
 
 			Store savedStore = storeRepository.save(store);

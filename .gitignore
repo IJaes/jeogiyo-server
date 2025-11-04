@@ -37,3 +37,9 @@ out/
 .vscode/
 
 generated/
+
+### Local Configuration ###
+.env
+.env.local
+application-local.properties
+config-local/

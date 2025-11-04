@@ -50,7 +50,7 @@ public class StoreResponse {
 			.description(store.getDescription())
 			.category(store.getCategory().name())
 			.rate(store.getRate())
-			.ownerId(store.getOwnerId())
+			.ownerId(store.getOwner().getId())
 			.build();
 	}
 }

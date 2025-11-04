@@ -53,18 +53,26 @@ jobs:
           DB_URL: ${{ secrets.DB_URL }}
           DB_USERNAME: ${{ secrets.DB_USERNAME }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_DDL_AUTO: ${{ secrets.DB_DDL_AUTO }}
           REMOTE_IP: ${{ secrets.REMOTE_IP }}
           REMOTE_USER: ${{ secrets.REMOTE_USER }}
           REMOTE_PRIVATE_KEY: ${{ secrets.REMOTE_PRIVATE_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          JWT_EXPIRATION: ${{ secrets.JWT_EXPIRATION }}
         run: |
           missing=0
           check() { if [ -z "$1" ]; then echo "::error::Missing secret: $2"; missing=1; fi; }
           check "$DB_URL" DB_URL
           check "$DB_USERNAME" DB_USERNAME
           check "$DB_PASSWORD" DB_PASSWORD
+          check "$DB_DDL_AUTO" DB_DDL_AUTO
           check "$REMOTE_IP" REMOTE_IP
           check "$REMOTE_USER" REMOTE_USER
           check "$REMOTE_PRIVATE_KEY" REMOTE_PRIVATE_KEY
+          check "$GEMINI_API_KEY" GEMINI_API_KEY
+          check "$JWT_SECRET" JWT_SECRET
+          check "$JWT_EXPIRATION" JWT_EXPIRATION
           if [ "$missing" -eq 1 ]; then exit 1; fi
 
       - name: Copy docker-compose.yml to remote server
@@ -92,6 +100,11 @@ jobs:
             echo "컨테이너 정리 및 시작"
             sudo docker-compose down -v || true
             sudo docker rm -f mysql jeogiyo || true
-            echo "DB_USERNAME=${{ secrets.DB_USERNAME }}" > .env
+            echo "DB_URL=${{ secrets.DB_URL }}" > .env
+            echo "DB_USERNAME=${{ secrets.DB_USERNAME }}" >> .env
             echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
+            echo "DB_DDL_AUTO=${{ secrets.DB_DDL_AUTO }}" >> .env
+            echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
+            echo "JWT_EXPIRATION=${{ secrets.JWT_EXPIRATION }}" >> .env
+            echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}" >> .env
             sudo docker-compose up -d

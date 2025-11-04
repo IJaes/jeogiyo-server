@@ -29,6 +29,8 @@ import com.ijaes.jeogiyo.store.dto.response.StoreResponse;
 import com.ijaes.jeogiyo.store.entity.Category;
 import com.ijaes.jeogiyo.store.entity.Store;
 import com.ijaes.jeogiyo.store.repository.StoreRepository;
+import com.ijaes.jeogiyo.user.entity.User;
+import com.ijaes.jeogiyo.user.entity.Role;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("StoreUserService 테스트")
@@ -43,11 +45,24 @@ class StoreUserServiceTest {
 	private Store testStore;
 	private UUID storeId;
 	private UUID ownerId;
+	private User testOwner;
 
 	@BeforeEach
 	void setUp() {
 		storeId = UUID.randomUUID();
 		ownerId = UUID.randomUUID();
+
+		testOwner = User.builder()
+			.id(ownerId)
+			.username("owner@test.com")
+			.password("password")
+			.name("사장님")
+			.address("서울시 강남구")
+			.phoneNumber("010-1234-5678")
+			.isOwner(true)
+			.role(Role.OWNER)
+			.build();
+
 		testStore = Store.builder()
 			.id(storeId)
 			.businessNumber("123-45-67890")
@@ -56,7 +71,7 @@ class StoreUserServiceTest {
 			.description("뜨근뜨끈한 국물 한 사발 먹고 가세요")
 			.category(Category.KOREAN)
 			.rate(4.5)
-			.ownerId(ownerId)
+			.owner(testOwner)
 			.build();
 	}
 
@@ -190,6 +205,17 @@ class StoreUserServiceTest {
 	@DisplayName("모든 매장 조회 - 여러 매장")
 	void getAllStores_multipleStores() {
 		// given
+		User owner2 = User.builder()
+			.id(UUID.randomUUID())
+			.username("owner2@test.com")
+			.password("password")
+			.name("사장님2")
+			.address("서울시 마포구")
+			.phoneNumber("010-9876-5432")
+			.isOwner(true)
+			.role(Role.OWNER)
+			.build();
+
 		Store store2 = Store.builder()
 			.id(UUID.randomUUID())
 			.businessNumber("456-78-90123")
@@ -198,7 +224,7 @@ class StoreUserServiceTest {
 			.description("맛있는 라면")
 			.category(Category.JAPANESE)
 			.rate(4.2)
-			.ownerId(UUID.randomUUID())
+			.owner(owner2)
 			.build();
 
 		Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "rate"));

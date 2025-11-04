@@ -1,11 +1,10 @@
-package com.ijaes.jeogiyo.review.domain;
+package com.ijaes.jeogiyo.review.entity;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import com.ijaes.jeogiyo.common.entity.BaseEntity;
 
-import jakarta.persistence.Access;
-import jakarta.persistence.AccessType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -14,18 +13,17 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "j_review")
-@Data
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @EqualsAndHashCode(callSuper = false)
-@Access(AccessType.FIELD)
 public class Review extends BaseEntity {
 
 	// 리뷰 식별 ID
@@ -56,4 +54,45 @@ public class Review extends BaseEntity {
 	// 평점
 	@Column(nullable = false)
 	private Integer rate;
+
+	//리뷰 숨김처리 여부
+	@Column(nullable = false)
+	private boolean isHidden = false;
+
+	//삭제 여부
+	@Column(nullable = false)
+	private Boolean isDeleted = false;
+
+	@Column
+	private LocalDateTime deletedAt;
+
+	//제목 업데이트
+	public void updateTitle(String title) {
+		this.title = title;
+	}
+
+	//내용 업데이트
+	public void updateContent(String content) {
+		this.content = content;
+	}
+
+	//평점 업데이트
+	public void updateRate(Integer rate) {
+		this.rate = rate;
+	}
+
+	//리뷰 숨김 처리
+	public void hide() {
+		this.isHidden = true;
+	}
+
+	//리뷰 숨김 해제 처리
+	public void show() {
+		this.isHidden = false;
+	}
+
+	public void softDelete() {
+		this.isDeleted = true;
+		this.deletedAt = LocalDateTime.now();
+	}
 }
