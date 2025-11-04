@@ -43,4 +43,16 @@ public class Menu extends BaseEntity {
 
 	@Column(nullable = false)
 	private Integer price;
+
+	public void update(String name, String description, Integer price) {
+		if (name != null) {
+			this.name = name;
+		}
+		if (description != null) {
+			this.description = description;
+		}
+		if (price != null) {
+			this.price = price;
+		}
+	}
 }
