@@ -58,7 +58,8 @@ public enum ErrorCode {
 	REVIEW_ALREADY_EXISTS(HttpStatus.CONFLICT, "W-001", "이미 해당 주문에 대한 리뷰가 작성되었습니다."),
 
 	// 메뉴 관련 (M-xxx)
-	MENU_NOT_FOUND(HttpStatus.NOT_FOUND, "M-001", "메뉴를 찾을 수 없습니다.");
+	MENU_NOT_FOUND(HttpStatus.NOT_FOUND, "M-001", "메뉴를 찾을 수 없습니다."),
+	MENU_ALREADY_DELETED(HttpStatus.BAD_REQUEST, "M-002", "이미 삭제된 메뉴입니다.");
 
 	private final HttpStatus httpStatus;
 	private final String code;
