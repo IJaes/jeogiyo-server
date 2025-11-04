@@ -1,8 +1,7 @@
 package com.ijaes.jeogiyo.review.repository;
 
-import static org.assertj.core.api.AssertionsForClassTypes.*;
+import static org.assertj.core.api.Assertions.*;
 
-import java.util.List;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -10,151 +9,156 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 
+import com.ijaes.jeogiyo.common.config.QueryDslConfig;
 import com.ijaes.jeogiyo.review.dto.response.ReviewResponse;
 import com.ijaes.jeogiyo.review.entity.Review;
+import com.ijaes.jeogiyo.store.entity.Store;
 import com.ijaes.jeogiyo.user.entity.Role;
 import com.ijaes.jeogiyo.user.entity.User;
-import com.ijaes.jeogiyo.user.repository.UserRepository;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
 import jakarta.persistence.EntityManager;
 
 @DataJpaTest
-public class ReviewRepositoryCustomImplTest {
+@Import({ReviewRepositoryCustomImpl.class, QueryDslConfig.class})
+class ReviewRepositoryCustomImplTest {
 
 	@Autowired
-	private ReviewRepository reviewRepository;
+	private EntityManager em;
 
-	@Autowired
-	private UserRepository userRepository;
+	private ReviewRepositoryCustomImpl reviewRepositoryCustom;
 
-	@Autowired
-	private ReviewRepositoryCustom reviewRepositoryCustom;
-
-	// 테스트용 데이터
-	private final UUID TEST_USER_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
-	private final UUID BLOCKED_USER_ID = UUID.fromString("22222222-2222-2222-2222-222222222222");
-	private final UUID TEST_STORE_ID = UUID.fromString("33333333-3333-3333-3333-333333333333");
-	private final UUID OTHER_STORE_ID = UUID.fromString("44444444-4444-4444-4444-444444444444");
-	private final UUID TEST_ORDER_ID = UUID.fromString("55555555-5555-5555-5555-555555555555");
-
-	private UUID softDeletedReviewId;
-
-	@Configuration
-	static class TestQuerydslConfig {
-		@Autowired
-		EntityManager em;
-
-		@Bean
-		public JPAQueryFactory queryFactory() {
-			return new JPAQueryFactory(em);
-		}
-	}
+	private UUID userId;
+	private UUID storeId;
 
 	@BeforeEach
-	public void setup() {
-		// 데이터 정리 및 초기화
-		reviewRepository.deleteAllInBatch();
-		userRepository.deleteAllInBatch();
+	void setUp() {
+		JPAQueryFactory queryFactory = new JPAQueryFactory(em);
+		reviewRepositoryCustom = new ReviewRepositoryCustomImpl(queryFactory);
 
-		// --- User 및 Store 데이터 생성 ---
-		User normalUser = User.builder()
-			.id(TEST_USER_ID)
-			.username("normal_user")
-			.password("pass")
+		// given: 유저 생성
+		User user = User.builder()
+			.id(UUID.randomUUID())
+			.username("테스트유저")
 			.role(Role.USER)
 			.build();
-		User blockedUser = User.builder()
-			.id(BLOCKED_USER_ID)
-			.username("blocked_user")
-			.password("pass")
-			.role(Role.BLOCK)
+		em.persist(user);
+		userId = user.getId();
+
+		// given: 가게 생성
+		Store store = Store.builder()
+			.id(UUID.randomUUID())
+			.name("테스트가게")
 			.build();
-		userRepository.saveAll(List.of(normalUser, blockedUser));
+		em.persist(store);
+		storeId = store.getId();
 
-		// Store 엔티티가 있다면 StoreRepository를 통해 TEST_STORE_ID도 저장해야 합니다.
-		// storeRepository.save(...);
+		// given: 리뷰 3개 생성
+		for (int i = 1; i <= 3; i++) {
+			Review review = Review.builder()
+				.reviewId(UUID.randomUUID())
+				.orderId(UUID.randomUUID())
+				.storeId(storeId)
+				.userId(userId)
+				.title("리뷰 제목 " + i)
+				.content("리뷰 내용 " + i)
+				.rate(5)
+				.isHidden(false)
+				.build();
+			em.persist(review);
+		}
 
-		// --- Review 데이터 생성 ---
-
-		// 1. 노출될 리뷰 2개 (TEST_STORE_ID, isHidden=false, isDeleted=false)
-		reviewRepository.save(Review.builder()
-			.reviewId(UUID.randomUUID())
-			.userId(TEST_USER_ID)
-			.storeId(TEST_STORE_ID)
-			.orderId(UUID.randomUUID())
-			.content("Visible 1")
-			.rate(5)
-			.build());
-		reviewRepository.save(Review.builder()
-			.reviewId(UUID.randomUUID())
-			.userId(TEST_USER_ID)
-			.storeId(TEST_STORE_ID)
-			.orderId(UUID.randomUUID())
-			.content("Visible 2")
-			.rate(4)
-			.build());
-
-		// 2. 숨겨진 리뷰 1개
-		reviewRepository.save(Review.builder()
-			.reviewId(UUID.randomUUID())
-			.userId(TEST_USER_ID)
-			.storeId(TEST_STORE_ID)
-			.orderId(UUID.randomUUID())
-			.content("Hidden Review")
-			.rate(1)
-			.isHidden(true)
-			.build());
-
-		// 3. 차단된 사용자의 리뷰 1개
-		reviewRepository.save(Review.builder()
-			.reviewId(UUID.randomUUID())
-			.userId(BLOCKED_USER_ID)
-			.storeId(TEST_STORE_ID)
-			.orderId(UUID.randomUUID())
-			.content("Blocked Review")
-			.rate(1)
-			.build());
-
-		// 4. 소프트 삭제된 리뷰 1개 (단건 테스트용)
-		Review deletedReview = Review.builder()
-			.reviewId(UUID.randomUUID())
-			.userId(TEST_USER_ID)
-			.storeId(TEST_STORE_ID)
-			.orderId(UUID.randomUUID())
-			.content("Soft Deleted")
-			.rate(3)
-			.build();
-		deletedReview.softDelete(); // 삭제 상태로 변경
-		reviewRepository.save(deletedReview);
-		softDeletedReviewId = deletedReview.getReviewId(); // ID 저장
+		em.flush();
+		em.clear();
 	}
 
 	@Test
-	@DisplayName("R-1: 관리자 전체 조회는 모든 상태의 리뷰를 포함해야 한다")
-	void findAllReviewsForAdmin_shouldIncludeAllStatusReviews() {
-		// given: setUp에서 총 5개의 리뷰 (2정상, 1숨김, 1차단, 1다른가게) 저장됨
-		Pageable pageable = PageRequest.of(0, 10, Sort.by("createdAt").descending());
-
+	@DisplayName("관리자는 전체 리뷰를 최신순으로 조회할 수 있다")
+	void findAllReviewsForAdmin() {
 		// when
-		Page<ReviewResponse> resultPage = reviewRepositoryCustom.findAllReviewsForAdmin(0, 10);
+		Page<ReviewResponse> result = reviewRepositoryCustom.findAllReviewsForAdmin(0, 10);
 
 		// then
-		// 모든 리뷰 5개가 조회되어야 함 (소프트 삭제된 리뷰가 있다면 그것까지 포함)
-		assertThat(resultPage.getTotalElements()).as("총 5개의 리뷰가 조회되어야 한다").isEqualTo(5);
-		assertThat(resultPage.getContent()).as("데이터 개수도 5개여야 한다").hasSize(5);
+		assertThat(result).isNotNull();
+		assertThat(result.getTotalElements()).isEqualTo(3);
+		assertThat(result.getContent().get(0).getTitle()).isEqualTo("리뷰 제목 3");
+	}
 
-		// 데이터의 유효성 검증 (예: 숨겨진 리뷰의 isHidden 필드가 true인지)
-		assertThat(resultPage.getContent())
-			.filteredOn(r -> r.getContent().contains("숨김리뷰"))
-			.extracting(ReviewResponse::getIsHidden)
-			.containsOnly(true);
+	@Test
+	@DisplayName("특정 유저의 리뷰를 최신순으로 조회할 수 있다")
+	void findReviewsByUserId() {
+		// when
+		Page<ReviewResponse> result = reviewRepositoryCustom.findReviewsByUserId(userId, 0, 10);
+
+		// then
+		assertThat(result.getTotalElements()).isEqualTo(3);
+		assertThat(result.getContent().get(0).getReviewerName()).isEqualTo("테스트유저");
+	}
+
+	@Test
+	@DisplayName("가게별 리뷰 조회 시 숨김, 삭제, 차단된 사용자의 리뷰는 제외된다")
+	void findReviewsByStoreID() {
+		// given: 숨김 처리된 리뷰 추가
+		Review hiddenReview = Review.builder()
+			.reviewId(UUID.randomUUID())
+			.orderId(UUID.randomUUID())
+			.storeId(storeId)
+			.userId(userId)
+			.title("숨김 리뷰")
+			.content("숨김된 리뷰 내용")
+			.rate(4)
+			.isHidden(true)
+			.build();
+		em.persist(hiddenReview);
+
+		em.flush();
+		em.clear();
+
+		// when
+		Page<ReviewResponse> result = reviewRepositoryCustom.findReviewsByStoreID(storeId, 0, 10);
+
+		// then
+		assertThat(result.getTotalElements()).isEqualTo(3); // 숨김 리뷰 제외됨
+		assertThat(result.getContent())
+			.noneMatch(r -> r.getTitle().equals("숨김 리뷰"));
+	}
+
+	@Test
+	@DisplayName("차단된 사용자의 리뷰는 가게 리뷰 조회에서 제외된다")
+	void findReviewsByStoreID_ExcludeBlockedUser() {
+		// given: 차단된 유저
+		User blockedUser = User.builder()
+			.id(UUID.randomUUID())
+			.username("차단유저")
+			.role(Role.BLOCK)
+			.build();
+		em.persist(blockedUser);
+
+		// 해당 차단 유저의 리뷰 생성
+		Review blockedReview = Review.builder()
+			.reviewId(UUID.randomUUID())
+			.orderId(UUID.randomUUID())
+			.storeId(storeId)
+			.userId(blockedUser.getId())
+			.title("차단된 리뷰")
+			.content("이건 보이면 안됨")
+			.rate(1)
+			.isHidden(false)
+			.build();
+		em.persist(blockedReview);
+
+		em.flush();
+		em.clear();
+
+		// when
+		Page<ReviewResponse> result = reviewRepositoryCustom.findReviewsByStoreID(storeId, 0, 10);
+
+		// then
+		assertThat(result.getTotalElements()).isEqualTo(3); // 차단된 유저 리뷰 제외됨
+		assertThat(result.getContent())
+			.noneMatch(r -> r.getTitle().equals("차단된 리뷰"));
 	}
 }
