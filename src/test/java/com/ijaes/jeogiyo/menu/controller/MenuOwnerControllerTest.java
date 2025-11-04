@@ -2,6 +2,7 @@ package com.ijaes.jeogiyo.menu.controller;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -566,5 +567,38 @@ class MenuOwnerControllerTest {
 		assertEquals(15000, result.getPrice());
 
 		verify(menuOwnerService, times(1)).updateMenu(targetMenuId, request, authentication);
+	}
+
+	@Test
+	@DisplayName("메뉴 삭제 API - 성공")
+	void deleteMenu_success() {
+		// given
+		UUID targetMenuId = UUID.randomUUID();
+
+		doNothing().when(menuOwnerService).deleteMenu(targetMenuId, authentication);
+
+		// when
+		var response = menuOwnerController.deleteMenu(targetMenuId, authentication);
+
+		// then
+		assertEquals(204, response.getStatusCodeValue());
+		assertNull(response.getBody());
+
+		verify(menuOwnerService, times(1)).deleteMenu(targetMenuId, authentication);
+	}
+
+	@Test
+	@DisplayName("메뉴 삭제 API - 서비스 호출 확인")
+	void deleteMenu_serviceInvocation() {
+		// given
+		UUID targetMenuId = UUID.randomUUID();
+
+		doNothing().when(menuOwnerService).deleteMenu(any(UUID.class), any(Authentication.class));
+
+		// when
+		menuOwnerController.deleteMenu(targetMenuId, authentication);
+
+		// then
+		verify(menuOwnerService, times(1)).deleteMenu(targetMenuId, authentication);
 	}
 }
