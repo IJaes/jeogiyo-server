@@ -1,4 +1,6 @@
-package com.ijaes.jeogiyo.review.infrastructure.persistence;
+package com.ijaes.jeogiyo.review.repository;
+
+import static com.ijaes.jeogiyo.user.entity.QUser.*;
 
 import java.util.List;
 import java.util.UUID;
@@ -8,9 +10,9 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
 
-import com.ijaes.jeogiyo.review.domain.QReview;
-import com.ijaes.jeogiyo.review.domain.Review;
-import com.ijaes.jeogiyo.review.domain.ReviewRepositoryCustom;
+import com.ijaes.jeogiyo.review.entity.QReview;
+import com.ijaes.jeogiyo.review.entity.Review;
+import com.ijaes.jeogiyo.user.entity.Role;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
 import lombok.RequiredArgsConstructor;
@@ -72,9 +74,15 @@ public class ReviewRepositoryCustomImpl implements ReviewRepositoryCustom {
 		QReview review = QReview.review;
 
 		// 1. 해당 페이지에서 보여줄 데이터만 조회
+		// 숨김 처리된 리뷰, BLOCK된 사용자의 리뷰는 조회되지 않게 처리
 		List<Review> content = queryFactory
 			.selectFrom(review)
-			.where(review.storeId.eq(storeId))
+			.join(user).on(review.userId.eq(user.id))
+			.where(
+				review.storeId.eq(storeId),
+				review.isHidden.eq(false),
+				user.role.ne(Role.BLOCK)
+			)
 			.orderBy(review.reviewId.desc()) //최신순
 			.offset(offset)
 			.limit(size)
@@ -84,7 +92,12 @@ public class ReviewRepositoryCustomImpl implements ReviewRepositoryCustom {
 		Long totalCount = queryFactory
 			.select(review.count())
 			.from(review)
-			.where(review.storeId.eq(storeId))
+			.join(user).on(review.userId.eq(user.id))
+			.where(
+				review.storeId.eq(storeId),
+				review.isHidden.eq(false),
+				user.role.ne(Role.BLOCK)
+			)
 			.fetchOne();
 
 		// 3. Page 객체로 반환

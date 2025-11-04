@@ -1,4 +1,4 @@
-package com.ijaes.jeogiyo.review.infrastructure.persistence.dto.request;
+package com.ijaes.jeogiyo.review.dto.request;
 
 import java.util.UUID;
 
