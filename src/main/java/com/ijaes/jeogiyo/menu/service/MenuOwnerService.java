@@ -1,6 +1,7 @@
 package com.ijaes.jeogiyo.menu.service;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
@@ -10,6 +11,7 @@ import com.ijaes.jeogiyo.common.exception.CustomException;
 import com.ijaes.jeogiyo.common.exception.ErrorCode;
 import com.ijaes.jeogiyo.gemini.service.GeminiService;
 import com.ijaes.jeogiyo.menu.dto.request.CreateMenuRequest;
+import com.ijaes.jeogiyo.menu.dto.request.UpdateMenuRequest;
 import com.ijaes.jeogiyo.menu.dto.response.MenuResponse;
 import com.ijaes.jeogiyo.menu.entity.Menu;
 import com.ijaes.jeogiyo.menu.repository.MenuRepository;
@@ -60,6 +62,18 @@ public class MenuOwnerService {
 		return menus.stream()
 			.map(this::toMenuResponse)
 			.toList();
+	}
+
+	@Transactional
+	public MenuResponse updateMenu(UUID menuId, UpdateMenuRequest request, Authentication authentication) {
+		User owner = (User)authentication.getPrincipal();
+
+		Menu menu = menuRepository.findByIdAndOwnerId(menuId, owner.getId())
+			.orElseThrow(() -> new CustomException(ErrorCode.MENU_NOT_FOUND));
+
+		menu.update(request.getName(), request.getDescription(), request.getPrice());
+
+		return toMenuResponse(menu);
 	}
 
 	private MenuResponse toMenuResponse(Menu menu) {
