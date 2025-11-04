@@ -12,7 +12,7 @@ import com.ijaes.jeogiyo.common.exception.ErrorCode;
 import com.ijaes.jeogiyo.gemini.service.GeminiService;
 import com.ijaes.jeogiyo.menu.dto.request.CreateMenuRequest;
 import com.ijaes.jeogiyo.menu.dto.request.UpdateMenuRequest;
-import com.ijaes.jeogiyo.menu.dto.response.MenuResponse;
+import com.ijaes.jeogiyo.menu.dto.response.MenuDetailResponse;
 import com.ijaes.jeogiyo.menu.entity.Menu;
 import com.ijaes.jeogiyo.menu.repository.MenuRepository;
 import com.ijaes.jeogiyo.store.entity.Store;
@@ -30,12 +30,14 @@ public class MenuOwnerService {
 	private final GeminiService geminiService;
 
 	@Transactional
-	public MenuResponse createMenu(CreateMenuRequest request, Authentication authentication) {
+	public MenuDetailResponse createMenu(CreateMenuRequest request, Authentication authentication) {
 		User owner = (User)authentication.getPrincipal();
+
 		Store store = storeRepository.findByOwnerId(owner.getId())
 			.orElseThrow(() -> new CustomException(ErrorCode.STORE_NOT_FOUND));
 
 		String description = request.getDescription();
+
 		if (request.isAiDescription() && description == null) {
 			description = geminiService.generateMenuDescription(request.getName());
 		}
@@ -53,26 +55,26 @@ public class MenuOwnerService {
 	}
 
 	@Transactional(readOnly = true)
-	public List<MenuResponse> getMyMenus(Authentication authentication) {
+	public List<MenuDetailResponse> getMyMenus(Authentication authentication) {
 		User owner = (User)authentication.getPrincipal();
 
 		List<Menu> menus = menuRepository.findByOwnerId(owner.getId());
 
-		return menus.stream()
-			.map(this::toMenuResponse)
-			.toList();
+		return menus.stream().map(this::toMenuResponse).toList();
 	}
 
 	@Transactional(readOnly = true)
-	public MenuResponse getMyMenu(UUID menuId, Authentication authentication) {
+	public MenuDetailResponse getMyMenu(UUID menuId, Authentication authentication) {
 		User owner = (User)authentication.getPrincipal();
+
 		Menu menu = menuRepository.findByIdAndOwnerId(menuId, owner.getId())
 			.orElseThrow(() -> new CustomException(ErrorCode.MENU_NOT_FOUND));
+
 		return toMenuResponse(menu);
 	}
 
 	@Transactional
-	public MenuResponse updateMenu(UUID menuId, UpdateMenuRequest request, Authentication authentication) {
+	public MenuDetailResponse updateMenu(UUID menuId, UpdateMenuRequest request, Authentication authentication) {
 		User owner = (User)authentication.getPrincipal();
 
 		Menu menu = menuRepository.findByIdAndOwnerId(menuId, owner.getId())
@@ -97,8 +99,8 @@ public class MenuOwnerService {
 		menu.delete();
 	}
 
-	private MenuResponse toMenuResponse(Menu menu) {
-		return MenuResponse.builder()
+	private MenuDetailResponse toMenuResponse(Menu menu) {
+		return MenuDetailResponse.builder()
 			.id(menu.getId())
 			.storeId(menu.getStore().getId())
 			.name(menu.getName())

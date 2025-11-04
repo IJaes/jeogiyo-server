@@ -1,6 +1,5 @@
 package com.ijaes.jeogiyo.menu.dto.response;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -10,8 +9,7 @@ import lombok.Getter;
 @Getter
 @Builder
 @Schema(description = "메뉴 정보 응답")
-public class MenuResponse {
-
+public class MenuUserResponse {
 	@Schema(description = "메뉴 ID")
 	private UUID id;
 
@@ -26,8 +24,4 @@ public class MenuResponse {
 
 	@Schema(description = "메뉴 가격", example = "12000")
 	private Integer price;
-
-	private LocalDateTime createdAt;
-	private LocalDateTime updatedAt;
-	private LocalDateTime deletedAt;
 }

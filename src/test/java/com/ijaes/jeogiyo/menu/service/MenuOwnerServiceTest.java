@@ -26,7 +26,7 @@ import com.ijaes.jeogiyo.common.exception.ErrorCode;
 import com.ijaes.jeogiyo.gemini.service.GeminiService;
 import com.ijaes.jeogiyo.menu.dto.request.CreateMenuRequest;
 import com.ijaes.jeogiyo.menu.dto.request.UpdateMenuRequest;
-import com.ijaes.jeogiyo.menu.dto.response.MenuResponse;
+import com.ijaes.jeogiyo.menu.dto.response.MenuDetailResponse;
 import com.ijaes.jeogiyo.menu.entity.Menu;
 import com.ijaes.jeogiyo.menu.repository.MenuRepository;
 import com.ijaes.jeogiyo.store.entity.Category;
@@ -110,7 +110,7 @@ class MenuOwnerServiceTest {
 		when(menuRepository.save(any(Menu.class))).thenReturn(savedMenu);
 
 		// when
-		MenuResponse result = menuOwnerService.createMenu(request, authentication);
+		MenuDetailResponse result = menuOwnerService.createMenu(request, authentication);
 
 		// then
 		assertNotNull(result);
@@ -170,7 +170,7 @@ class MenuOwnerServiceTest {
 		when(menuRepository.save(any(Menu.class))).thenReturn(savedMenu);
 
 		// when
-		MenuResponse result = menuOwnerService.createMenu(request, authentication);
+		MenuDetailResponse result = menuOwnerService.createMenu(request, authentication);
 
 		// then
 		assertNotNull(result);
@@ -200,7 +200,7 @@ class MenuOwnerServiceTest {
 		when(menuRepository.save(any(Menu.class))).thenReturn(savedMenu);
 
 		// when
-		MenuResponse result = menuOwnerService.createMenu(request, authentication);
+		MenuDetailResponse result = menuOwnerService.createMenu(request, authentication);
 
 		// then
 		assertNotNull(result);
@@ -231,7 +231,7 @@ class MenuOwnerServiceTest {
 		when(menuRepository.save(any(Menu.class))).thenReturn(savedMenu);
 
 		// when
-		MenuResponse result = menuOwnerService.createMenu(request, authentication);
+		MenuDetailResponse result = menuOwnerService.createMenu(request, authentication);
 
 		// then
 		assertNotNull(result);
@@ -262,7 +262,7 @@ class MenuOwnerServiceTest {
 		when(menuRepository.save(any(Menu.class))).thenReturn(savedMenu);
 
 		// when
-		MenuResponse result = menuOwnerService.createMenu(request, authentication);
+		MenuDetailResponse result = menuOwnerService.createMenu(request, authentication);
 
 		// then
 		assertNotNull(result.getId());
@@ -297,7 +297,7 @@ class MenuOwnerServiceTest {
 		when(menuRepository.save(any(Menu.class))).thenReturn(savedMenu);
 
 		// when
-		MenuResponse result = menuOwnerService.createMenu(request, authentication);
+		MenuDetailResponse result = menuOwnerService.createMenu(request, authentication);
 
 		// then
 		assertNotNull(result);
@@ -326,7 +326,7 @@ class MenuOwnerServiceTest {
 		when(menuRepository.save(any(Menu.class))).thenReturn(savedMenu);
 
 		// when
-		MenuResponse result = menuOwnerService.createMenu(request, authentication);
+		MenuDetailResponse result = menuOwnerService.createMenu(request, authentication);
 
 		// then
 		assertNotNull(result);
@@ -373,7 +373,7 @@ class MenuOwnerServiceTest {
 		when(menuRepository.findByOwnerId(ownerId)).thenReturn(menus);
 
 		// when
-		List<MenuResponse> result = menuOwnerService.getMyMenus(authentication);
+		List<MenuDetailResponse> result = menuOwnerService.getMyMenus(authentication);
 
 		// then
 		assertNotNull(result);
@@ -402,7 +402,7 @@ class MenuOwnerServiceTest {
 		when(menuRepository.findByOwnerId(ownerId)).thenReturn(Collections.emptyList());
 
 		// when
-		List<MenuResponse> result = menuOwnerService.getMyMenus(authentication);
+		List<MenuDetailResponse> result = menuOwnerService.getMyMenus(authentication);
 
 		// then
 		assertNotNull(result);
@@ -429,7 +429,7 @@ class MenuOwnerServiceTest {
 		when(menuRepository.findByOwnerId(ownerId)).thenReturn(Arrays.asList(menu));
 
 		// when
-		List<MenuResponse> result = menuOwnerService.getMyMenus(authentication);
+		List<MenuDetailResponse> result = menuOwnerService.getMyMenus(authentication);
 
 		// then
 		assertNotNull(result);
@@ -458,11 +458,11 @@ class MenuOwnerServiceTest {
 		when(menuRepository.findByOwnerId(ownerId)).thenReturn(Arrays.asList(menu));
 
 		// when
-		List<MenuResponse> result = menuOwnerService.getMyMenus(authentication);
+		List<MenuDetailResponse> result = menuOwnerService.getMyMenus(authentication);
 
 		// then
 		assertEquals(1, result.size());
-		MenuResponse response = result.get(0);
+		MenuDetailResponse response = result.get(0);
 
 		assertNotNull(response.getId());
 		assertNotNull(response.getStoreId());
@@ -489,7 +489,7 @@ class MenuOwnerServiceTest {
 			.thenReturn(Optional.of(menu));
 
 		// when
-		MenuResponse result = menuOwnerService.getMyMenu(menuId, authentication);
+		MenuDetailResponse result = menuOwnerService.getMyMenu(menuId, authentication);
 
 		// then
 		assertNotNull(result);
@@ -539,7 +539,7 @@ class MenuOwnerServiceTest {
 			.thenReturn(Optional.of(menu));
 
 		// when
-		MenuResponse result = menuOwnerService.getMyMenu(menuId, authentication);
+		MenuDetailResponse result = menuOwnerService.getMyMenu(menuId, authentication);
 
 		// then
 		assertNotNull(result.getId());
@@ -572,7 +572,7 @@ class MenuOwnerServiceTest {
 		when(menuRepository.findByIdAndOwnerId(menuId, ownerId)).thenReturn(Optional.of(existingMenu));
 
 		// when
-		MenuResponse result = menuOwnerService.updateMenu(menuId, request, authentication);
+		MenuDetailResponse result = menuOwnerService.updateMenu(menuId, request, authentication);
 
 		// then
 		assertNotNull(result);
@@ -604,7 +604,7 @@ class MenuOwnerServiceTest {
 		when(menuRepository.findByIdAndOwnerId(menuId, ownerId)).thenReturn(Optional.of(existingMenu));
 
 		// when
-		MenuResponse result = menuOwnerService.updateMenu(menuId, request, authentication);
+		MenuDetailResponse result = menuOwnerService.updateMenu(menuId, request, authentication);
 
 		// then
 		assertEquals("순대국밥", result.getName());
