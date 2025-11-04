@@ -21,6 +21,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.Authentication;
 
 import com.ijaes.jeogiyo.menu.dto.request.CreateMenuRequest;
+import com.ijaes.jeogiyo.menu.dto.request.UpdateMenuRequest;
 import com.ijaes.jeogiyo.menu.dto.response.MenuResponse;
 import com.ijaes.jeogiyo.menu.service.MenuOwnerService;
 import com.ijaes.jeogiyo.user.entity.Role;
@@ -532,5 +533,38 @@ class MenuOwnerControllerTest {
 		assertEquals(2, result.size());
 		assertEquals("첫번째", result.get(0).getName());
 		assertEquals("두번째", result.get(1).getName());
+	}
+
+	@Test
+	@DisplayName("메뉴 수정 API - 성공")
+	void updateMenu_success() {
+		// given
+		UUID targetMenuId = UUID.randomUUID();
+		UpdateMenuRequest request = UpdateMenuRequest.builder()
+			.name("특제 순대국밥")
+			.description("업그레이드된 설명")
+			.price(15000)
+			.build();
+
+		MenuResponse expectedResponse = MenuResponse.builder()
+			.id(targetMenuId)
+			.storeId(storeId)
+			.name("특제 순대국밥")
+			.description("업그레이드된 설명")
+			.price(15000)
+			.build();
+
+		when(menuOwnerService.updateMenu(targetMenuId, request, authentication)).thenReturn(expectedResponse);
+
+		// when
+		MenuResponse result = menuOwnerController.updateMenu(targetMenuId, request, authentication).getBody();
+
+		// then
+		assertNotNull(result);
+		assertEquals(targetMenuId, result.getId());
+		assertEquals("특제 순대국밥", result.getName());
+		assertEquals(15000, result.getPrice());
+
+		verify(menuOwnerService, times(1)).updateMenu(targetMenuId, request, authentication);
 	}
 }
