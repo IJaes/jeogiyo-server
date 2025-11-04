@@ -7,5 +7,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.ijaes.jeogiyo.menu.entity.Menu;
 
-public interface MenuRepository extends JpaRepository<Menu, UUID> {
+public interface MenuRepository extends JpaRepository<Menu, UUID>, MenuRepositoryCustom {
 }
