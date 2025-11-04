@@ -2,8 +2,14 @@ package com.ijaes.jeogiyo.menu.controller;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -16,7 +22,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.Authentication;
 
 import com.ijaes.jeogiyo.menu.dto.request.CreateMenuRequest;
-import com.ijaes.jeogiyo.menu.dto.response.MenuResponse;
+import com.ijaes.jeogiyo.menu.dto.request.UpdateMenuRequest;
+import com.ijaes.jeogiyo.menu.dto.response.MenuDetailResponse;
 import com.ijaes.jeogiyo.menu.service.MenuOwnerService;
 import com.ijaes.jeogiyo.user.entity.Role;
 import com.ijaes.jeogiyo.user.entity.User;
@@ -67,7 +74,7 @@ class MenuOwnerControllerTest {
 			.price(12000)
 			.build();
 
-		MenuResponse expectedResponse = MenuResponse.builder()
+		MenuDetailResponse expectedResponse = MenuDetailResponse.builder()
 			.id(menuId)
 			.storeId(storeId)
 			.name("순대국밥")
@@ -79,7 +86,7 @@ class MenuOwnerControllerTest {
 			.thenReturn(expectedResponse);
 
 		// when
-		MenuResponse result = menuOwnerController.createMenu(request, authentication);
+		MenuDetailResponse result = menuOwnerController.createMenu(request, authentication).getBody();
 
 		// then
 		assertNotNull(result);
@@ -100,7 +107,7 @@ class MenuOwnerControllerTest {
 			.price(5000)
 			.build();
 
-		MenuResponse expectedResponse = MenuResponse.builder()
+		MenuDetailResponse expectedResponse = MenuDetailResponse.builder()
 			.id(menuId)
 			.storeId(storeId)
 			.name("김밥")
@@ -112,7 +119,7 @@ class MenuOwnerControllerTest {
 			.thenReturn(expectedResponse);
 
 		// when
-		MenuResponse result = menuOwnerController.createMenu(request, authentication);
+		MenuDetailResponse result = menuOwnerController.createMenu(request, authentication).getBody();
 
 		// then
 		assertNotNull(result.getId());
@@ -132,7 +139,7 @@ class MenuOwnerControllerTest {
 			.price(15000)
 			.build();
 
-		MenuResponse expectedResponse = MenuResponse.builder()
+		MenuDetailResponse expectedResponse = MenuDetailResponse.builder()
 			.id(menuId)
 			.storeId(storeId)
 			.name("우육국밥")
@@ -144,7 +151,7 @@ class MenuOwnerControllerTest {
 			.thenReturn(expectedResponse);
 
 		// when
-		MenuResponse result = menuOwnerController.createMenu(request, authentication);
+		MenuDetailResponse result = menuOwnerController.createMenu(request, authentication).getBody();
 
 		// then
 		assertEquals("우육국밥", result.getName());
@@ -160,7 +167,7 @@ class MenuOwnerControllerTest {
 			.price(10000)
 			.build();
 
-		MenuResponse expectedResponse = MenuResponse.builder()
+		MenuDetailResponse expectedResponse = MenuDetailResponse.builder()
 			.id(menuId)
 			.storeId(storeId)
 			.name("국밥")
@@ -172,7 +179,7 @@ class MenuOwnerControllerTest {
 			.thenReturn(expectedResponse);
 
 		// when
-		MenuResponse result = menuOwnerController.createMenu(request, authentication);
+		MenuDetailResponse result = menuOwnerController.createMenu(request, authentication).getBody();
 
 		// then
 		assertEquals("집에서 정성스럽게 준비한 국밥입니다", result.getDescription());
@@ -188,7 +195,7 @@ class MenuOwnerControllerTest {
 			.price(8500)
 			.build();
 
-		MenuResponse expectedResponse = MenuResponse.builder()
+		MenuDetailResponse expectedResponse = MenuDetailResponse.builder()
 			.id(menuId)
 			.storeId(storeId)
 			.name("국밥")
@@ -200,7 +207,7 @@ class MenuOwnerControllerTest {
 			.thenReturn(expectedResponse);
 
 		// when
-		MenuResponse result = menuOwnerController.createMenu(request, authentication);
+		MenuDetailResponse result = menuOwnerController.createMenu(request, authentication).getBody();
 
 		// then
 		assertEquals(8500, result.getPrice());
@@ -216,7 +223,7 @@ class MenuOwnerControllerTest {
 			.price(12000)
 			.build();
 
-		MenuResponse expectedResponse = MenuResponse.builder()
+		MenuDetailResponse expectedResponse = MenuDetailResponse.builder()
 			.id(menuId)
 			.storeId(storeId)
 			.name("순대국밥")
@@ -228,7 +235,7 @@ class MenuOwnerControllerTest {
 			.thenReturn(expectedResponse);
 
 		// when
-		MenuResponse result = menuOwnerController.createMenu(request, authentication);
+		MenuDetailResponse result = menuOwnerController.createMenu(request, authentication).getBody();
 
 		// then
 		assertNotNull(result);
@@ -245,7 +252,7 @@ class MenuOwnerControllerTest {
 			.price(12000)
 			.build();
 
-		MenuResponse expectedResponse = MenuResponse.builder()
+		MenuDetailResponse expectedResponse = MenuDetailResponse.builder()
 			.id(menuId)
 			.storeId(storeId)
 			.name("순대국밥")
@@ -273,7 +280,7 @@ class MenuOwnerControllerTest {
 			.price(0)
 			.build();
 
-		MenuResponse expectedResponse = MenuResponse.builder()
+		MenuDetailResponse expectedResponse = MenuDetailResponse.builder()
 			.id(menuId)
 			.storeId(storeId)
 			.name("무료 메뉴")
@@ -285,7 +292,7 @@ class MenuOwnerControllerTest {
 			.thenReturn(expectedResponse);
 
 		// when
-		MenuResponse result = menuOwnerController.createMenu(request, authentication);
+		MenuDetailResponse result = menuOwnerController.createMenu(request, authentication).getBody();
 
 		// then
 		assertNotNull(result);
@@ -301,7 +308,7 @@ class MenuOwnerControllerTest {
 			.price(12000)
 			.build();
 
-		MenuResponse expectedResponse = MenuResponse.builder()
+		MenuDetailResponse expectedResponse = MenuDetailResponse.builder()
 			.id(menuId)
 			.storeId(storeId)
 			.name("순대국밥")
@@ -313,12 +320,362 @@ class MenuOwnerControllerTest {
 			.thenReturn(expectedResponse);
 
 		// when
-		MenuResponse result = menuOwnerController.createMenu(request, authentication);
+		MenuDetailResponse result = menuOwnerController.createMenu(request, authentication).getBody();
 
 		// then
 		assertNotNull(result);
 		assertEquals("순대국밥", result.getName());
 		assertNull(result.getDescription());
 		assertEquals(12000, result.getPrice());
+	}
+
+	@Test
+	@DisplayName("메뉴 조회 API - 성공 (여러 메뉴)")
+	void getMenus_success_multipleMenus() {
+		// given
+		UUID menu1Id = UUID.randomUUID();
+		UUID menu2Id = UUID.randomUUID();
+		UUID menu3Id = UUID.randomUUID();
+
+		MenuDetailResponse menu1 = MenuDetailResponse.builder()
+			.id(menu1Id)
+			.storeId(storeId)
+			.name("순대국밥")
+			.description("뜨끈한 국밥")
+			.price(12000)
+			.build();
+
+		MenuDetailResponse menu2 = MenuDetailResponse.builder()
+			.id(menu2Id)
+			.storeId(storeId)
+			.name("내장탕")
+			.description("고소한 내장탕")
+			.price(13000)
+			.build();
+
+		MenuDetailResponse menu3 = MenuDetailResponse.builder()
+			.id(menu3Id)
+			.storeId(storeId)
+			.name("순대")
+			.description("신선한 순대")
+			.price(8000)
+			.build();
+
+		List<MenuDetailResponse> expectedMenus = Arrays.asList(menu1, menu2, menu3);
+
+		when(menuOwnerService.getMyMenus(authentication))
+			.thenReturn(expectedMenus);
+
+		// when
+		List<MenuDetailResponse> result = menuOwnerController.getMenus(authentication).getBody();
+
+		// then
+		assertNotNull(result);
+		assertEquals(3, result.size());
+
+		assertEquals(menu1Id, result.get(0).getId());
+		assertEquals("순대국밥", result.get(0).getName());
+		assertEquals(12000, result.get(0).getPrice());
+
+		assertEquals(menu2Id, result.get(1).getId());
+		assertEquals("내장탕", result.get(1).getName());
+		assertEquals(13000, result.get(1).getPrice());
+
+		assertEquals(menu3Id, result.get(2).getId());
+		assertEquals("순대", result.get(2).getName());
+		assertEquals(8000, result.get(2).getPrice());
+
+		verify(menuOwnerService, times(1)).getMyMenus(authentication);
+	}
+
+	@Test
+	@DisplayName("메뉴 조회 API - 성공 (메뉴 없음)")
+	void getMenus_success_emptyList() {
+		// given
+		when(menuOwnerService.getMyMenus(authentication))
+			.thenReturn(Collections.emptyList());
+
+		// when
+		List<MenuDetailResponse> result = menuOwnerController.getMenus(authentication).getBody();
+
+		// then
+		assertNotNull(result);
+		assertEquals(0, result.size());
+		assertTrue(result.isEmpty());
+
+		verify(menuOwnerService, times(1)).getMyMenus(authentication);
+	}
+
+	@Test
+	@DisplayName("메뉴 조회 API - 성공 (단일 메뉴)")
+	void getMenus_success_singleMenu() {
+		// given
+		MenuDetailResponse menu = MenuDetailResponse.builder()
+			.id(menuId)
+			.storeId(storeId)
+			.name("순대국밥")
+			.description("뜨끈한 국밥")
+			.price(12000)
+			.build();
+
+		when(menuOwnerService.getMyMenus(authentication))
+			.thenReturn(Arrays.asList(menu));
+
+		// when
+		List<MenuDetailResponse> result = menuOwnerController.getMenus(authentication).getBody();
+
+		// then
+		assertNotNull(result);
+		assertEquals(1, result.size());
+		assertEquals(menuId, result.get(0).getId());
+		assertEquals("순대국밥", result.get(0).getName());
+		assertEquals(storeId, result.get(0).getStoreId());
+
+		verify(menuOwnerService, times(1)).getMyMenus(authentication);
+	}
+
+	@Test
+	@DisplayName("메뉴 조회 API - 응답 상태 코드 200 OK")
+	void getMenus_responseStatusOk() {
+		// given
+		MenuDetailResponse menu = MenuDetailResponse.builder()
+			.id(menuId)
+			.storeId(storeId)
+			.name("순대국밥")
+			.description("뜨끈한 국밥")
+			.price(12000)
+			.build();
+
+		when(menuOwnerService.getMyMenus(authentication))
+			.thenReturn(Arrays.asList(menu));
+
+		// when
+		var response = menuOwnerController.getMenus(authentication);
+
+		// then
+		assertEquals(200, response.getStatusCodeValue());
+		assertNotNull(response.getBody());
+	}
+
+	@Test
+	@DisplayName("메뉴 조회 API - 서비스 호출 확인")
+	void getMenus_serviceInvocation() {
+		// given
+		when(menuOwnerService.getMyMenus(any(Authentication.class)))
+			.thenReturn(Collections.emptyList());
+
+		// when
+		menuOwnerController.getMenus(authentication);
+
+		// then
+		verify(menuOwnerService, times(1)).getMyMenus(authentication);
+	}
+
+	@Test
+	@DisplayName("메뉴 조회 API - 응답에 필수 정보 포함")
+	void getMenus_responseContainsRequiredFields() {
+		// given
+		MenuDetailResponse menu = MenuDetailResponse.builder()
+			.id(menuId)
+			.storeId(storeId)
+			.name("순대국밥")
+			.description("뜨끈한 국밥")
+			.price(12000)
+			.build();
+
+		when(menuOwnerService.getMyMenus(authentication))
+			.thenReturn(Arrays.asList(menu));
+
+		// when
+		List<MenuDetailResponse> result = menuOwnerController.getMenus(authentication).getBody();
+
+		// then
+		assertNotNull(result);
+		assertEquals(1, result.size());
+
+		MenuDetailResponse menuDetailResponse = result.get(0);
+		assertNotNull(menuDetailResponse.getId());
+		assertNotNull(menuDetailResponse.getStoreId());
+		assertNotNull(menuDetailResponse.getName());
+		assertNotNull(menuDetailResponse.getDescription());
+		assertNotNull(menuDetailResponse.getPrice());
+	}
+
+	@Test
+	@DisplayName("메뉴 조회 API - 여러 메뉴 정렬 순서 유지")
+	void getMenus_orderMaintained() {
+		// given
+		MenuDetailResponse menu1 = MenuDetailResponse.builder()
+			.id(UUID.randomUUID())
+			.storeId(storeId)
+			.name("첫번째")
+			.description("설명1")
+			.price(10000)
+			.build();
+
+		MenuDetailResponse menu2 = MenuDetailResponse.builder()
+			.id(UUID.randomUUID())
+			.storeId(storeId)
+			.name("두번째")
+			.description("설명2")
+			.price(20000)
+			.build();
+
+		List<MenuDetailResponse> expectedMenus = Arrays.asList(menu1, menu2);
+
+		when(menuOwnerService.getMyMenus(authentication))
+			.thenReturn(expectedMenus);
+
+		// when
+		List<MenuDetailResponse> result = menuOwnerController.getMenus(authentication).getBody();
+
+		// then
+		assertNotNull(result);
+		assertEquals(2, result.size());
+		assertEquals("첫번째", result.get(0).getName());
+		assertEquals("두번째", result.get(1).getName());
+	}
+
+	@Test
+	@DisplayName("특정 메뉴 조회 API - 성공")
+	void getMenu_success() {
+		// given
+		UUID targetMenuId = UUID.randomUUID();
+		MenuDetailResponse expectedResponse = MenuDetailResponse.builder()
+			.id(targetMenuId)
+			.storeId(storeId)
+			.name("순대국밥")
+			.description("뜨끈한 국밥")
+			.price(12000)
+			.build();
+
+		when(menuOwnerService.getMyMenu(targetMenuId, authentication))
+			.thenReturn(expectedResponse);
+
+		// when
+		MenuDetailResponse result = menuOwnerController.getMenu(targetMenuId, authentication).getBody();
+
+		// then
+		assertNotNull(result);
+		assertEquals(targetMenuId, result.getId());
+		assertEquals("순대국밥", result.getName());
+		assertEquals("뜨끈한 국밥", result.getDescription());
+		assertEquals(12000, result.getPrice());
+		assertEquals(storeId, result.getStoreId());
+
+		verify(menuOwnerService, times(1)).getMyMenu(targetMenuId, authentication);
+	}
+
+	@Test
+	@DisplayName("특정 메뉴 조회 API - 응답 상태 코드 200 OK")
+	void getMenu_responseStatusOk() {
+		// given
+		UUID targetMenuId = UUID.randomUUID();
+		MenuDetailResponse expectedResponse = MenuDetailResponse.builder()
+			.id(targetMenuId)
+			.storeId(storeId)
+			.name("순대국밥")
+			.description("뜨끈한 국밥")
+			.price(12000)
+			.build();
+
+		when(menuOwnerService.getMyMenu(targetMenuId, authentication))
+			.thenReturn(expectedResponse);
+
+		// when
+		var response = menuOwnerController.getMenu(targetMenuId, authentication);
+
+		// then
+		assertEquals(200, response.getStatusCodeValue());
+		assertNotNull(response.getBody());
+	}
+
+	@Test
+	@DisplayName("특정 메뉴 조회 API - 서비스 호출 확인")
+	void getMenu_serviceInvocation() {
+		// given
+		UUID targetMenuId = UUID.randomUUID();
+		MenuDetailResponse expectedResponse = MenuDetailResponse.builder()
+			.id(targetMenuId)
+			.storeId(storeId)
+			.name("순대국밥")
+			.description("뜨끈한 국밥")
+			.price(12000)
+			.build();
+
+		when(menuOwnerService.getMyMenu(any(UUID.class), any(Authentication.class)))
+			.thenReturn(expectedResponse);
+
+		// when
+		menuOwnerController.getMenu(targetMenuId, authentication);
+
+		// then
+		verify(menuOwnerService, times(1)).getMyMenu(targetMenuId, authentication);
+	}
+
+	@Test
+	@DisplayName("메뉴 수정 API - 성공")
+	void updateMenu_success() {
+		// given
+		UUID targetMenuId = UUID.randomUUID();
+		UpdateMenuRequest request = UpdateMenuRequest.builder()
+			.name("특제 순대국밥")
+			.description("업그레이드된 설명")
+			.price(15000)
+			.build();
+
+		MenuDetailResponse expectedResponse = MenuDetailResponse.builder()
+			.id(targetMenuId)
+			.storeId(storeId)
+			.name("특제 순대국밥")
+			.description("업그레이드된 설명")
+			.price(15000)
+			.build();
+
+		when(menuOwnerService.updateMenu(targetMenuId, request, authentication)).thenReturn(expectedResponse);
+
+		// when
+		MenuDetailResponse result = menuOwnerController.updateMenu(targetMenuId, request, authentication).getBody();
+
+		// then
+		assertNotNull(result);
+		assertEquals(targetMenuId, result.getId());
+		assertEquals("특제 순대국밥", result.getName());
+		assertEquals(15000, result.getPrice());
+
+		verify(menuOwnerService, times(1)).updateMenu(targetMenuId, request, authentication);
+	}
+
+	@Test
+	@DisplayName("메뉴 삭제 API - 성공")
+	void deleteMenu_success() {
+		// given
+		UUID targetMenuId = UUID.randomUUID();
+
+		doNothing().when(menuOwnerService).deleteMenu(targetMenuId, authentication);
+
+		// when
+		var response = menuOwnerController.deleteMenu(targetMenuId, authentication);
+
+		// then
+		assertEquals(204, response.getStatusCodeValue());
+		assertNull(response.getBody());
+
+		verify(menuOwnerService, times(1)).deleteMenu(targetMenuId, authentication);
+	}
+
+	@Test
+	@DisplayName("메뉴 삭제 API - 서비스 호출 확인")
+	void deleteMenu_serviceInvocation() {
+		// given
+		UUID targetMenuId = UUID.randomUUID();
+
+		doNothing().when(menuOwnerService).deleteMenu(any(UUID.class), any(Authentication.class));
+
+		// when
+		menuOwnerController.deleteMenu(targetMenuId, authentication);
+
+		// then
+		verify(menuOwnerService, times(1)).deleteMenu(targetMenuId, authentication);
 	}
 }
