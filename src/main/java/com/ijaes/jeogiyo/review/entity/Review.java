@@ -59,13 +59,6 @@ public class Review extends BaseEntity {
 	@Column(nullable = false)
 	private boolean isHidden = false;
 
-	//삭제 여부
-	@Column(nullable = false)
-	private Boolean isDeleted = false;
-
-	@Column
-	private LocalDateTime deletedAt;
-
 	//제목 업데이트
 	public void updateTitle(String title) {
 		this.title = title;
@@ -92,7 +85,6 @@ public class Review extends BaseEntity {
 	}
 
 	public void softDelete() {
-		this.isDeleted = true;
-		this.deletedAt = LocalDateTime.now();
+		this.setDeletedAt(LocalDateTime.now());
 	}
 }
