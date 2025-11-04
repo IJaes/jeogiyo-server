@@ -4,6 +4,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+
 import com.ijaes.jeogiyo.menu.entity.Menu;
 import com.ijaes.jeogiyo.menu.entity.QMenu;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -38,5 +42,26 @@ public class MenuRepositoryCustomImpl implements MenuRepositoryCustom {
 			.fetchOne();
 
 		return Optional.ofNullable(result);
+	}
+
+	@Override
+	public Page<Menu> findAllNotDeleted(Pageable pageable) {
+		QMenu menu = QMenu.menu;
+
+		Long total = queryFactory
+			.select(menu.count())
+			.from(menu)
+			.where(menu.deletedAt.isNull())
+			.fetchOne();
+
+		var content = queryFactory
+			.selectFrom(menu)
+			.where(menu.deletedAt.isNull())
+			.orderBy(menu.createdAt.desc())
+			.offset(pageable.getOffset())
+			.limit(pageable.getPageSize())
+			.fetch();
+
+		return new PageImpl<>(content, pageable, total == null ? 0 : total);
 	}
 }
