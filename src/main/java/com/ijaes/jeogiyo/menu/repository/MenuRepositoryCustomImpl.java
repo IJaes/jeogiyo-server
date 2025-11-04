@@ -1,6 +1,7 @@
 package com.ijaes.jeogiyo.menu.repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import com.ijaes.jeogiyo.menu.entity.Menu;
@@ -22,5 +23,21 @@ public class MenuRepositoryCustomImpl implements MenuRepositoryCustom {
 			.selectFrom(menu)
 			.where(menu.store.owner.id.eq(ownerId))
 			.fetch();
+	}
+
+	@Override
+	public Optional<Menu> findByIdAndOwnerId(UUID menuId, UUID ownerId) {
+		QMenu menu = QMenu.menu;
+
+		Menu result = queryFactory
+			.selectFrom(menu)
+			.where(
+				menu.id.eq(menuId),
+				menu.store.owner.id.eq(ownerId),
+				menu.deletedAt.isNull()
+			)
+			.fetchOne();
+
+		return Optional.ofNullable(result);
 	}
 }
