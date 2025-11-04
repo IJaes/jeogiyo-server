@@ -1,7 +1,6 @@
 package com.ijaes.jeogiyo.menu.service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
@@ -72,6 +71,7 @@ public class MenuOwnerService {
 			.price(menu.getPrice())
 			.createdAt(menu.getCreatedAt())
 			.updatedAt(menu.getUpdatedAt())
+			.deletedAt(menu.getDeletedAt())
 			.build();
 	}
 }
