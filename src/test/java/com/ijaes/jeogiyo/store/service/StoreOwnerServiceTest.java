@@ -76,7 +76,8 @@ class StoreOwnerServiceTest {
 			.description("뜨근뜨끈한 국물 한 사발 먹고 가세요")
 			.category(Category.KOREAN)
 			.rate(0.0)
-			.ownerId(ownerId)
+		.owner(ownerUser)
+			
 			.build();
 	}
 
@@ -255,7 +256,8 @@ class StoreOwnerServiceTest {
 				.description("뜨근뜨끈한 국물 한 사발 먹고 가세요")
 				.category(Category.valueOf(category))
 				.rate(0.0)
-				.ownerId(ownerId)
+		.owner(ownerUser)
+				
 				.build();
 
 			when(storeRepository.save(any(Store.class))).thenReturn(store);
@@ -292,7 +294,7 @@ class StoreOwnerServiceTest {
 			.description("새로운 설명")
 			.category(Category.JAPANESE)
 			.rate(testStore.getRate())
-			.ownerId(ownerId)
+			
 			.build();
 
 		when(storeRepository.save(any(Store.class))).thenReturn(updatedStore);
@@ -331,7 +333,7 @@ class StoreOwnerServiceTest {
 			.description(testStore.getDescription())
 			.category(testStore.getCategory())
 			.rate(testStore.getRate())
-			.ownerId(ownerId)
+			
 			.build();
 
 		when(storeRepository.save(any(Store.class))).thenReturn(updatedStore);
