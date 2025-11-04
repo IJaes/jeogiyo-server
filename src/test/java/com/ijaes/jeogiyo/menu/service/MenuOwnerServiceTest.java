@@ -6,6 +6,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -20,6 +23,7 @@ import org.springframework.security.core.Authentication;
 
 import com.ijaes.jeogiyo.common.exception.CustomException;
 import com.ijaes.jeogiyo.common.exception.ErrorCode;
+import com.ijaes.jeogiyo.gemini.service.GeminiService;
 import com.ijaes.jeogiyo.menu.dto.request.CreateMenuRequest;
 import com.ijaes.jeogiyo.menu.dto.response.MenuResponse;
 import com.ijaes.jeogiyo.menu.entity.Menu;
@@ -39,6 +43,9 @@ class MenuOwnerServiceTest {
 
 	@Mock
 	private MenuRepository menuRepository;
+
+	@Mock
+	private GeminiService geminiService;
 
 	@Mock
 	private Authentication authentication;
@@ -325,5 +332,141 @@ class MenuOwnerServiceTest {
 		assertEquals("순대국밥", result.getName());
 		assertNull(result.getDescription());
 		assertEquals(12000, result.getPrice());
+	}
+
+	@Test
+	@DisplayName("메뉴 조회 - 성공 (여러 메뉴)")
+	void getMyMenus_success_multipleMenus() {
+		// given
+		UUID menu1Id = UUID.randomUUID();
+		UUID menu2Id = UUID.randomUUID();
+		UUID menu3Id = UUID.randomUUID();
+
+		Menu menu1 = Menu.builder()
+			.id(menu1Id)
+			.store(testStore)
+			.name("순대국밥")
+			.description("뜨끈한 국밥")
+			.price(12000)
+			.build();
+
+		Menu menu2 = Menu.builder()
+			.id(menu2Id)
+			.store(testStore)
+			.name("내장탕")
+			.description("고소한 내장탕")
+			.price(13000)
+			.build();
+
+		Menu menu3 = Menu.builder()
+			.id(menu3Id)
+			.store(testStore)
+			.name("순대")
+			.description("신선한 순대")
+			.price(8000)
+			.build();
+
+		List<Menu> menus = Arrays.asList(menu1, menu2, menu3);
+
+		when(authentication.getPrincipal()).thenReturn(testOwner);
+		when(menuRepository.findByOwnerId(ownerId)).thenReturn(menus);
+
+		// when
+		List<MenuResponse> result = menuOwnerService.getMyMenus(authentication);
+
+		// then
+		assertNotNull(result);
+		assertEquals(3, result.size());
+
+		assertEquals(menu1Id, result.get(0).getId());
+		assertEquals("순대국밥", result.get(0).getName());
+		assertEquals(12000, result.get(0).getPrice());
+
+		assertEquals(menu2Id, result.get(1).getId());
+		assertEquals("내장탕", result.get(1).getName());
+		assertEquals(13000, result.get(1).getPrice());
+
+		assertEquals(menu3Id, result.get(2).getId());
+		assertEquals("순대", result.get(2).getName());
+		assertEquals(8000, result.get(2).getPrice());
+
+		verify(menuRepository, times(1)).findByOwnerId(ownerId);
+	}
+
+	@Test
+	@DisplayName("메뉴 조회 - 성공 (메뉴 없음)")
+	void getMyMenus_success_emptyList() {
+		// given
+		when(authentication.getPrincipal()).thenReturn(testOwner);
+		when(menuRepository.findByOwnerId(ownerId)).thenReturn(Collections.emptyList());
+
+		// when
+		List<MenuResponse> result = menuOwnerService.getMyMenus(authentication);
+
+		// then
+		assertNotNull(result);
+		assertEquals(0, result.size());
+		assertTrue(result.isEmpty());
+
+		verify(menuRepository, times(1)).findByOwnerId(ownerId);
+	}
+
+	@Test
+	@DisplayName("메뉴 조회 - 성공 (단일 메뉴)")
+	void getMyMenus_success_singleMenu() {
+		// given
+		UUID menuId = UUID.randomUUID();
+		Menu menu = Menu.builder()
+			.id(menuId)
+			.store(testStore)
+			.name("순대국밥")
+			.description("뜨끈한 국밥")
+			.price(12000)
+			.build();
+
+		when(authentication.getPrincipal()).thenReturn(testOwner);
+		when(menuRepository.findByOwnerId(ownerId)).thenReturn(Arrays.asList(menu));
+
+		// when
+		List<MenuResponse> result = menuOwnerService.getMyMenus(authentication);
+
+		// then
+		assertNotNull(result);
+		assertEquals(1, result.size());
+		assertEquals(menuId, result.get(0).getId());
+		assertEquals("순대국밥", result.get(0).getName());
+		assertEquals(storeId, result.get(0).getStoreId());
+
+		verify(menuRepository, times(1)).findByOwnerId(ownerId);
+	}
+
+	@Test
+	@DisplayName("메뉴 조회 - 응답에 모든 필드 포함 확인")
+	void getMyMenus_responseContainsAllFields() {
+		// given
+		UUID menuId = UUID.randomUUID();
+		Menu menu = Menu.builder()
+			.id(menuId)
+			.store(testStore)
+			.name("순대국밥")
+			.description("뜨끈한 국밥")
+			.price(12000)
+			.build();
+
+		when(authentication.getPrincipal()).thenReturn(testOwner);
+		when(menuRepository.findByOwnerId(ownerId)).thenReturn(Arrays.asList(menu));
+
+		// when
+		List<MenuResponse> result = menuOwnerService.getMyMenus(authentication);
+
+		// then
+		assertEquals(1, result.size());
+		MenuResponse response = result.get(0);
+
+		assertNotNull(response.getId());
+		assertNotNull(response.getStoreId());
+		assertNotNull(response.getName());
+		assertNotNull(response.getDescription());
+		assertNotNull(response.getPrice());
 	}
 }
