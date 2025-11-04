@@ -15,13 +15,13 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "j_payment")
-@Data
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -59,4 +59,23 @@ public class Payment extends BaseEntity {
 	@Column(nullable = false)
 	private String paymentKey;
 
+	public void updatePaymentApprove(LocalDateTime approvedAt, String bank, String method) {
+		this.status = PaymentStatus.SUCCESS;
+		this.approvedAt = approvedAt;
+		this.bank = bank;
+		this.paymentMethod = method;
+	}
+
+	public void updatePaymentFail(String bank, String method, String log) {
+		this.bank = bank;
+		this.paymentMethod = method;
+		this.status = PaymentStatus.FAIL;
+		this.log = log;
+	}
+
+	public void updateLog(String log) {
+		this.log = log;
+	}
+
 }
+

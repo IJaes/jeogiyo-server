@@ -20,9 +20,10 @@ public class OrderService {
 	}
 
 	public void orderProcess(UUID orderId, int amount) {
-		orderId = UUID.fromString("82671ED9-B61A-11F0-97EA-EED0BD4DB110");
+		orderId = UUID.fromString("82671ED9-B61A-11F0-97EA-EED0BD4D0181");
 		amount = 1;
 		eventPublisher.publishEvent(new OrderEvent(orderId, amount));
 
 	}
 }
+

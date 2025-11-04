@@ -59,12 +59,12 @@ public enum ErrorCode {
 
 	// 결제 관련 (P-xxx)
 	PAYMENT_KEY_GENERATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "P-001", "결제 키 발급 중 오류가 발생했습니다."),
-	INVALID_PAYMENT_REQUEST(HttpStatus.BAD_REQUEST, "P-002", "잘못된 결제 요청입니다."),
-	PAYMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "P-003", "해당 결제 정보를 찾을 수 없습니다."),
-	PAYMENT_VERIFICATION_FAILED(HttpStatus.BAD_REQUEST, "P-004", "결제 검증에 실패했습니다."),
-	PAYMENT_CANCEL_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "P-005", "결제 취소 중 오류가 발생했습니다."),
-
-	;
+	PAYMENT_CONFIRMATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "P-002", "결제 승인 중 오류가 발생했습니다."),
+	INVALID_PAYMENT_REQUEST(HttpStatus.BAD_REQUEST, "P-003", "잘못된 결제 요청입니다."),
+	PAYMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "P-004", "해당 결제 정보를 찾을 수 없습니다."),
+	PAYMENT_VERIFICATION_FAILED(HttpStatus.BAD_REQUEST, "P-005", "결제 검증에 실패했습니다."),
+	PAYMENT_CANCEL_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "P-006", "결제 취소 중 오류가 발생했습니다."),
+	PAYMENT_DB_SAVE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "P-007", "결제 DB 저장 중 오류가 발생했습니다.");
 
 	private final HttpStatus httpStatus;
 	private final String code;

@@ -45,11 +45,12 @@ public class PaymentService {
 			String paymentKey = createPayment(event.getOrderId(), event.getAmount());
 
 			//결제키 받은 후 결제요청 상태로 DB저장
-			Payment payment = new Payment();
-			payment.setOrderId(event.getOrderId());
-			payment.setPaymentKey(paymentKey);
-			payment.setPaymentAmount(event.getAmount());
-			payment.setStatus(PaymentStatus.REQUESTED);
+			Payment payment = Payment.builder()
+				.orderId(event.getOrderId())
+				.paymentKey(paymentKey)
+				.paymentAmount(event.getAmount())
+				.status(PaymentStatus.REQUESTED)
+				.build();
 			paymentRepository.save(payment);
 
 		} catch (Exception e) {
@@ -66,7 +67,7 @@ public class PaymentService {
 		String bodyJson = String.format(
 			"{\"method\":\"CARD\", \"amount\":%d, \"orderId\":\"%s\", \"orderName\":\"테스트 결제\", " +
 				"\"successUrl\":\"http://localhost:8080/v1/payments/resp/success\", " +
-				"\"failUrl\":\"http://localhost:8080/v1/payments/payments/resp/fail\"}",
+				"\"failUrl\":\"http://localhost:8080/v1/payments/resp/fail\"}",
 			amount, orderId
 		);
 
@@ -91,7 +92,9 @@ public class PaymentService {
 	}
 
 	//결제 승인 처리
-	public void confirmPayment(String paymentKey, UUID orderId, int amount) throws Exception {
+	@SuppressWarnings("checkstyle:WhitespaceAfter")
+	public void confirmPayment(String paymentKey, UUID orderId, int amount) throws
+		Exception {
 		String url = "https://api.tosspayments.com/v1/payments/confirm";
 		String auth = secretKey.trim() + ":";
 		String encodedAuth = Base64.getEncoder().encodeToString(auth.getBytes(StandardCharsets.UTF_8));
@@ -112,23 +115,41 @@ public class PaymentService {
 		HttpResponse<String> response = HttpClient.newHttpClient()
 			.send(request, HttpResponse.BodyHandlers.ofString());
 
-		if (response.statusCode() == 200) {
-			Payment payment = (Payment)paymentRepository.findByPaymentKey(paymentKey)
-				.orElseThrow(() -> new CustomException(ErrorCode.PAYMENT_NOT_FOUND));
-			JsonNode jsonNode = objectMapper.readTree(response.body());
+		Payment payment = (Payment)paymentRepository.findByPaymentKey(paymentKey)
+			.orElseThrow(() -> new CustomException(ErrorCode.PAYMENT_NOT_FOUND));
 
-			LocalDateTime approvedAt = OffsetDateTime.parse(jsonNode.get("approvedAt").asText()).toLocalDateTime();
-			String bank = jsonNode.get("easyPay").get("provider").asText();
-			String method = jsonNode.get("method").asText();
-			payment.setStatus(PaymentStatus.SUCCESS);
-			payment.setApprovedAt(approvedAt);
-			payment.setBank(bank);
-			payment.setPaymentMethod(method);
+		JsonNode jsonNode = objectMapper.readTree(response.body());
 
+		String bank = jsonNode.path("easyPay").path("provider").asText(null);
+		String method = jsonNode.path("method").asText(null);
+
+		String log = jsonNode.path("message").asText(null);
+		String logMessage = (log != null) ? log : ErrorCode.PAYMENT_CONFIRMATION_FAILED.getMessage();
+
+		try {
+			if (response.statusCode() == 200 && "DONE".equals(jsonNode.path("status").asText())) {
+				try {
+					// 결제 승인 완료 시
+					LocalDateTime approvedAt = OffsetDateTime.parse(jsonNode.get("approvedAt").asText(null))
+						.toLocalDateTime();
+					payment.updatePaymentApprove(approvedAt, bank, method);
+					paymentRepository.save(payment);
+				} catch (Exception dbEx) {
+					// 결제는 완료되었으나 DB 저장 실패 시
+					payment.updateLog("DB 저장 실패: " + dbEx.getMessage());
+					throw new CustomException(ErrorCode.PAYMENT_DB_SAVE_FAILED);
+				}
+
+			} else {
+
+				payment.updatePaymentFail(bank, method, logMessage);
+				paymentRepository.save(payment);
+			}
+		} catch (Exception e) {
+			payment.updatePaymentFail(bank, method, logMessage);
 			paymentRepository.save(payment);
-		} else {
-			throw new CustomException(ErrorCode.PAYMENT_VERIFICATION_FAILED);
+			throw e;
 		}
-
 	}
 }
+
