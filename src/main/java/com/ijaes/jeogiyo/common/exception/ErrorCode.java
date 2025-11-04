@@ -60,6 +60,7 @@ public enum ErrorCode {
 
 	// 메뉴 관련 (M-xxx)
 	MENU_NOT_FOUND(HttpStatus.NOT_FOUND, "M-001", "메뉴를 찾을 수 없습니다."),
+	MENU_ALREADY_DELETED(HttpStatus.BAD_REQUEST, "M-002", "이미 삭제된 메뉴입니다."),
 
 	// 주문 관련 (O-xxx)
 	ORDER_NOT_WAITING(HttpStatus.BAD_REQUEST, "O-001", "해당 작업은 주문 대기 상태에서만 가능합니다."),
