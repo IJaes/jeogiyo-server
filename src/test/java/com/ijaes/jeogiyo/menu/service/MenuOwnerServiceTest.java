@@ -472,6 +472,84 @@ class MenuOwnerServiceTest {
 	}
 
 	@Test
+	@DisplayName("특정 메뉴 조회 - 성공")
+	void getMyMenu_success() {
+		// given
+		UUID menuId = UUID.randomUUID();
+		Menu menu = Menu.builder()
+			.id(menuId)
+			.store(testStore)
+			.name("순대국밥")
+			.description("뜨끈한 국밥")
+			.price(12000)
+			.build();
+
+		when(authentication.getPrincipal()).thenReturn(testOwner);
+		when(menuRepository.findByIdAndOwnerId(menuId, ownerId))
+			.thenReturn(Optional.of(menu));
+
+		// when
+		MenuResponse result = menuOwnerService.getMyMenu(menuId, authentication);
+
+		// then
+		assertNotNull(result);
+		assertEquals(menuId, result.getId());
+		assertEquals("순대국밥", result.getName());
+		assertEquals("뜨끈한 국밥", result.getDescription());
+		assertEquals(12000, result.getPrice());
+		assertEquals(storeId, result.getStoreId());
+
+		verify(menuRepository, times(1)).findByIdAndOwnerId(menuId, ownerId);
+	}
+
+	@Test
+	@DisplayName("특정 메뉴 조회 - 실패 (메뉴 없음)")
+	void getMyMenu_fail_menuNotFound() {
+		// given
+		UUID menuId = UUID.randomUUID();
+
+		when(authentication.getPrincipal()).thenReturn(testOwner);
+		when(menuRepository.findByIdAndOwnerId(menuId, ownerId))
+			.thenReturn(Optional.empty());
+
+		// when & then
+		CustomException exception = assertThrows(CustomException.class, () -> {
+			menuOwnerService.getMyMenu(menuId, authentication);
+		});
+
+		assertEquals(ErrorCode.MENU_NOT_FOUND, exception.getErrorCode());
+		verify(menuRepository, times(1)).findByIdAndOwnerId(menuId, ownerId);
+	}
+
+	@Test
+	@DisplayName("특정 메뉴 조회 - 응답에 모든 필드 포함")
+	void getMyMenu_responseContainsAllFields() {
+		// given
+		UUID menuId = UUID.randomUUID();
+		Menu menu = Menu.builder()
+			.id(menuId)
+			.store(testStore)
+			.name("순대국밥")
+			.description("뜨끈한 국밥")
+			.price(12000)
+			.build();
+
+		when(authentication.getPrincipal()).thenReturn(testOwner);
+		when(menuRepository.findByIdAndOwnerId(menuId, ownerId))
+			.thenReturn(Optional.of(menu));
+
+		// when
+		MenuResponse result = menuOwnerService.getMyMenu(menuId, authentication);
+
+		// then
+		assertNotNull(result.getId());
+		assertNotNull(result.getStoreId());
+		assertNotNull(result.getName());
+		assertNotNull(result.getDescription());
+		assertNotNull(result.getPrice());
+	}
+
+	@Test
 	@DisplayName("메뉴 수정 - 성공 (전체 필드)")
 	void updateMenu_success_allFields() {
 		// given
