@@ -10,14 +10,12 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Getter
-@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Schema(description = "리뷰 단건 조회 요청 응답")
+@Schema(description = "리뷰 조회 요청 응답")
 public class ReviewResponse {
 
 	@Schema(description = "리뷰 식별 ID", example = "a1b2c3d4-e5f6-7890-abcd-ef0123456789", required = true)
@@ -44,11 +42,20 @@ public class ReviewResponse {
 	@Schema(description = "리뷰 작성된 가게 이름", example = "신선설농탕", required = true)
 	private String storeName;
 
+	@Schema(description = "리뷰 숨김 처리 여부", example = "false", required = true)
+	private boolean isHidden;
+
+	@Schema(description = "리뷰 삭제 여부", example = "false", required = true)
+	private boolean isDeleted;
+
 	@Schema(description = "리뷰 생성 시각")
 	LocalDateTime createdAt;
 
 	@Schema(description = "리뷰 수정 시각")
 	LocalDateTime updatedAt;
+
+	@Schema(description = "리뷰 삭제 시각")
+	LocalDateTime deletedAt;
 
 	public static ReviewResponse of(Review review, String reviewerName, String storeName) {
 		return ReviewResponse.builder()
@@ -60,8 +67,11 @@ public class ReviewResponse {
 			.rate(review.getRate())
 			.reviewerName(reviewerName)
 			.storeName(storeName)
+			.isHidden(review.isHidden())
+			.isDeleted(review.isDeleted())
 			.createdAt(review.getCreatedAt())
 			.updatedAt(review.getUpdatedAt())
+			.deletedAt(review.getDeletedAt())
 			.build();
 	}
 }
