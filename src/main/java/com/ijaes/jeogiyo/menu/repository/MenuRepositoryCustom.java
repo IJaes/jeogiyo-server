@@ -3,9 +3,8 @@ package com.ijaes.jeogiyo.menu.repository;
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-
 import com.ijaes.jeogiyo.menu.entity.Menu;
 
-public interface MenuRepository extends JpaRepository<Menu, UUID> {
+public interface MenuRepositoryCustom {
+	List<Menu> findByOwnerId(UUID ownerId);
 }
