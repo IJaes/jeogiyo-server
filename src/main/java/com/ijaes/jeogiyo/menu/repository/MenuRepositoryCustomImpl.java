@@ -33,8 +33,7 @@ public class MenuRepositoryCustomImpl implements MenuRepositoryCustom {
 			.selectFrom(menu)
 			.where(
 				menu.id.eq(menuId),
-				menu.store.owner.id.eq(ownerId),
-				menu.deletedAt.isNull()
+				menu.store.owner.id.eq(ownerId)
 			)
 			.fetchOne();
 
