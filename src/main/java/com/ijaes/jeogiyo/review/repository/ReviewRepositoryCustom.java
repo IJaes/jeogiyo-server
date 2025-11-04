@@ -1,8 +1,10 @@
-package com.ijaes.jeogiyo.review.domain;
+package com.ijaes.jeogiyo.review.repository;
 
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
+
+import com.ijaes.jeogiyo.review.entity.Review;
 
 public interface ReviewRepositoryCustom {
 	//복잡한 조회, 복잡한 검색 및 페이지네이션이 필요한 경우
