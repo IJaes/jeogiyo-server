@@ -42,7 +42,7 @@ public class ReviewRepositoryCustomImpl implements ReviewRepositoryCustom {
 				user.username,
 				store.name,
 				review.isHidden,
-				review.isDeleted,
+				review.deletedAt.isNotNull(),
 				review.createdAt,
 				review.updatedAt,
 				review.deletedAt
@@ -82,7 +82,7 @@ public class ReviewRepositoryCustomImpl implements ReviewRepositoryCustom {
 				user.username,
 				store.name,
 				review.isHidden,
-				review.isDeleted,
+				review.deletedAt.isNotNull(),
 				review.createdAt,
 				review.updatedAt,
 				review.deletedAt
@@ -126,7 +126,7 @@ public class ReviewRepositoryCustomImpl implements ReviewRepositoryCustom {
 				user.username,
 				store.name,
 				review.isHidden,
-				review.isDeleted,
+				review.deletedAt.isNotNull(),
 				review.createdAt,
 				review.updatedAt,
 				review.deletedAt
@@ -137,7 +137,7 @@ public class ReviewRepositoryCustomImpl implements ReviewRepositoryCustom {
 			.where(
 				review.storeId.eq(storeId),
 				review.isHidden.eq(false), //숨김처리된 리뷰 제외
-				review.isDeleted.eq(false), //삭제된 리뷰 제외
+				review.deletedAt.isNull(), //삭제된 리뷰 제외
 				user.role.ne(Role.BLOCK) //차단된 사용자 리뷰 제외
 			)
 			.orderBy(review.createdAt.desc()) //최신순
@@ -154,7 +154,7 @@ public class ReviewRepositoryCustomImpl implements ReviewRepositoryCustom {
 			.where(
 				review.storeId.eq(storeId),
 				review.isHidden.eq(false),
-				review.isDeleted.eq(false),
+				review.deletedAt.isNull(),
 				user.role.ne(Role.BLOCK)
 			)
 			.fetchOne();

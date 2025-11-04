@@ -43,10 +43,10 @@ public class ReviewResponse {
 	private String storeName;
 
 	@Schema(description = "리뷰 숨김 처리 여부", example = "false", required = true)
-	private Boolean isHidden;
+	private boolean isHidden;
 
 	@Schema(description = "리뷰 삭제 여부", example = "false", required = true)
-	private Boolean isDeleted;
+	private boolean isDeleted;
 
 	@Schema(description = "리뷰 생성 시각")
 	LocalDateTime createdAt;
