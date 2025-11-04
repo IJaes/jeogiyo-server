@@ -25,6 +25,7 @@ import com.ijaes.jeogiyo.common.exception.CustomException;
 import com.ijaes.jeogiyo.common.exception.ErrorCode;
 import com.ijaes.jeogiyo.gemini.service.GeminiService;
 import com.ijaes.jeogiyo.menu.dto.request.CreateMenuRequest;
+import com.ijaes.jeogiyo.menu.dto.request.UpdateMenuRequest;
 import com.ijaes.jeogiyo.menu.dto.response.MenuResponse;
 import com.ijaes.jeogiyo.menu.entity.Menu;
 import com.ijaes.jeogiyo.menu.repository.MenuRepository;
@@ -468,5 +469,89 @@ class MenuOwnerServiceTest {
 		assertNotNull(response.getName());
 		assertNotNull(response.getDescription());
 		assertNotNull(response.getPrice());
+	}
+
+	@Test
+	@DisplayName("메뉴 수정 - 성공 (전체 필드)")
+	void updateMenu_success_allFields() {
+		// given
+		UUID menuId = UUID.randomUUID();
+		Menu existingMenu = Menu.builder()
+			.id(menuId)
+			.store(testStore)
+			.name("순대국밥")
+			.description("원래 설명")
+			.price(12000)
+			.build();
+
+		UpdateMenuRequest request = UpdateMenuRequest.builder()
+			.name("특제 순대국밥")
+			.description("새로운 설명")
+			.price(15000)
+			.build();
+
+		when(authentication.getPrincipal()).thenReturn(testOwner);
+		when(menuRepository.findByIdAndOwnerId(menuId, ownerId)).thenReturn(Optional.of(existingMenu));
+
+		// when
+		MenuResponse result = menuOwnerService.updateMenu(menuId, request, authentication);
+
+		// then
+		assertNotNull(result);
+		assertEquals("특제 순대국밥", result.getName());
+		assertEquals("새로운 설명", result.getDescription());
+		assertEquals(15000, result.getPrice());
+
+		verify(menuRepository, times(1)).findByIdAndOwnerId(menuId, ownerId);
+	}
+
+	@Test
+	@DisplayName("메뉴 수정 - 성공 (부분 수정 - 가격만)")
+	void updateMenu_success_priceOnly() {
+		// given
+		UUID menuId = UUID.randomUUID();
+		Menu existingMenu = Menu.builder()
+			.id(menuId)
+			.store(testStore)
+			.name("순대국밥")
+			.description("맛있는 국밥")
+			.price(12000)
+			.build();
+
+		UpdateMenuRequest request = UpdateMenuRequest.builder()
+			.price(15000)
+			.build();
+
+		when(authentication.getPrincipal()).thenReturn(testOwner);
+		when(menuRepository.findByIdAndOwnerId(menuId, ownerId)).thenReturn(Optional.of(existingMenu));
+
+		// when
+		MenuResponse result = menuOwnerService.updateMenu(menuId, request, authentication);
+
+		// then
+		assertEquals("순대국밥", result.getName());
+		assertEquals("맛있는 국밥", result.getDescription());
+		assertEquals(15000, result.getPrice());
+	}
+
+	@Test
+	@DisplayName("메뉴 수정 - 실패 (메뉴 없음)")
+	void updateMenu_fail_menuNotFound() {
+		// given
+		UUID menuId = UUID.randomUUID();
+		UpdateMenuRequest request = UpdateMenuRequest.builder()
+			.price(15000)
+			.build();
+
+		when(authentication.getPrincipal()).thenReturn(testOwner);
+		when(menuRepository.findByIdAndOwnerId(menuId, ownerId)).thenReturn(Optional.empty());
+
+		// when & then
+		CustomException exception = assertThrows(CustomException.class, () -> {
+			menuOwnerService.updateMenu(menuId, request, authentication);
+		});
+
+		assertEquals(ErrorCode.MENU_NOT_FOUND, exception.getErrorCode());
+		verify(menuRepository, times(1)).findByIdAndOwnerId(menuId, ownerId);
 	}
 }
