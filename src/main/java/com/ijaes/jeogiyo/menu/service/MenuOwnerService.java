@@ -76,6 +76,20 @@ public class MenuOwnerService {
 		return toMenuResponse(menu);
 	}
 
+	@Transactional
+	public void deleteMenu(UUID menuId, Authentication authentication) {
+		User owner = (User)authentication.getPrincipal();
+
+		Menu menu = menuRepository.findByIdAndOwnerId(menuId, owner.getId())
+			.orElseThrow(() -> new CustomException(ErrorCode.MENU_NOT_FOUND));
+
+		if (menu.isDeleted()) {
+			throw new CustomException(ErrorCode.MENU_ALREADY_DELETED);
+		}
+
+		menu.delete();
+	}
+
 	private MenuResponse toMenuResponse(Menu menu) {
 		return MenuResponse.builder()
 			.id(menu.getId())
