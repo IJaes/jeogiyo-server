@@ -65,7 +65,16 @@ public enum ErrorCode {
 	ORDER_CANCEL_OVERTIME(HttpStatus.BAD_REQUEST, "O-004", "주문 후 5분이 지나 취소할 수 없습니다."),
 	ORDER_USER_MISMATCH(HttpStatus.FORBIDDEN, "O-005", "본인 주문만 취소할 수 있습니다."),
 	ORDER_OWNER_MISMATCH(HttpStatus.FORBIDDEN, "O-006", "해당 매장 주문만 처리할 수 있습니다."),
-	ORDER_TOTAL_PRICE_INVALID(HttpStatus.BAD_REQUEST, "0-007", "합계 금액은 0원 이상이어야 합니다.");
+	ORDER_TOTAL_PRICE_INVALID(HttpStatus.BAD_REQUEST, "0-007", "합계 금액은 0원 이상이어야 합니다."),
+
+	// 결제 관련 (P-xxx)
+	PAYMENT_KEY_GENERATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "P-001", "결제 키 발급 중 오류가 발생했습니다."),
+	PAYMENT_CONFIRMATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "P-002", "결제 승인 중 오류가 발생했습니다."),
+	INVALID_PAYMENT_REQUEST(HttpStatus.BAD_REQUEST, "P-003", "잘못된 결제 요청입니다."),
+	PAYMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "P-004", "해당 결제 정보를 찾을 수 없습니다."),
+	PAYMENT_VERIFICATION_FAILED(HttpStatus.BAD_REQUEST, "P-005", "결제 검증에 실패했습니다."),
+	PAYMENT_CANCEL_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "P-006", "결제 취소 중 오류가 발생했습니다."),
+	PAYMENT_DB_SAVE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "P-007", "결제 DB 저장 중 오류가 발생했습니다.");
 
 	private final HttpStatus httpStatus;
 	private final String code;
