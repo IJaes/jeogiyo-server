@@ -3,11 +3,9 @@ package com.ijaes.jeogiyo.menu.controller;
 import java.util.List;
 import java.util.UUID;
 
-import org.apache.coyote.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -45,10 +43,17 @@ public class MenuOwnerController {
 	}
 
 	@GetMapping
-	@Operation(summary = "메뉴 조회", description = "매장에 등록된 전체 메뉴를 조회합니다", security = @SecurityRequirement(name = "bearer-jwt"))
+	@Operation(summary = "전체 메뉴 조회", description = "매장에 등록된 전체 메뉴를 조회합니다", security = @SecurityRequirement(name = "bearer-jwt"))
 	public ResponseEntity<List<MenuResponse>> getMenus(Authentication authentication) {
 		List<MenuResponse> menus = menuOwnerService.getMyMenus(authentication);
 		return ResponseEntity.ok(menus);
+	}
+
+	@GetMapping("/{menuId}")
+	@Operation(summary = "특정 메뉴 조회", description = "매장에 등록된 특정 메뉴를 조회합니다", security = @SecurityRequirement(name = "bearer-jwt"))
+	public ResponseEntity<MenuResponse> getMenu(@PathVariable UUID menuId, Authentication authentication) {
+		MenuResponse menuResponse = menuOwnerService.getMyMenu(menuId, authentication);
+		return ResponseEntity.ok(menuResponse);
 	}
 
 	@PatchMapping("/{menuId}")

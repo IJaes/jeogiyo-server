@@ -15,7 +15,6 @@ import com.ijaes.jeogiyo.menu.dto.request.UpdateMenuRequest;
 import com.ijaes.jeogiyo.menu.dto.response.MenuResponse;
 import com.ijaes.jeogiyo.menu.entity.Menu;
 import com.ijaes.jeogiyo.menu.repository.MenuRepository;
-import com.ijaes.jeogiyo.menu.repository.MenuRepositoryCustom;
 import com.ijaes.jeogiyo.store.entity.Store;
 import com.ijaes.jeogiyo.store.repository.StoreRepository;
 import com.ijaes.jeogiyo.user.entity.User;
@@ -62,6 +61,14 @@ public class MenuOwnerService {
 		return menus.stream()
 			.map(this::toMenuResponse)
 			.toList();
+	}
+
+	@Transactional(readOnly = true)
+	public MenuResponse getMyMenu(UUID menuId, Authentication authentication) {
+		User owner = (User)authentication.getPrincipal();
+		Menu menu = menuRepository.findByIdAndOwnerId(menuId, owner.getId())
+			.orElseThrow(() -> new CustomException(ErrorCode.MENU_NOT_FOUND));
+		return toMenuResponse(menu);
 	}
 
 	@Transactional
