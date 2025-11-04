@@ -1,11 +1,8 @@
 package com.ijaes.jeogiyo.review.service;
 
-import java.util.List;
 import java.util.UUID;
 
-import org.springdoc.api.AbstractOpenApiResource;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
@@ -34,7 +31,6 @@ public class ReviewService {
 	private final UserRepository userRepository;
 	private final StoreRepository storeRepository;
 	private final ReviewRepositoryCustomImpl reviewRepositoryCustomImpl;
-	private final AbstractOpenApiResource abstractOpenApiResource;
 
 	//1. 리뷰 생성
 	public CreateReviewResponse createReview(Authentication authentication, CreateReviewRequest request) {
@@ -76,7 +72,12 @@ public class ReviewService {
 		Review review = reviewRepository.findById(reviewId)
 			.orElseThrow(() -> new CustomException(ErrorCode.RESOURCE_NOT_FOUND));
 
-		//리뷰 작성자 이름 조회(리뷰에 저장된 userid 사용해서 username 가져오기)
+		//삭제된 리뷰인지 확인
+		if (review.isDeleted()) {
+			throw new CustomException(ErrorCode.RESOURCE_NOT_FOUND);
+		}
+
+		//리뷰 작성자 이름 조회(리뷰에 저장된 userid 사용해서 유저 엔티티 가져오기)
 		User reviewer = userRepository.findById(review.getUserId()).orElse(null);
 
 		//리뷰 작성된 가게 이름 조회(리뷰에 저장된 storeid 사용해서 가게의 name 가져오기)
@@ -104,8 +105,11 @@ public class ReviewService {
 				.title("관리 정책 위반으로 내용이 숨겨졌습니다.")
 				.content("이 리뷰는 관리 정책 위반 혹은 관리자의 결정에 따라 내용이 공개되지 않습니다.")
 				.rate(0)
+				.isHidden(review.isHidden())
+				.isDeleted(review.isDeleted())
 				.createdAt(review.getCreatedAt())
 				.updatedAt(review.getUpdatedAt())
+				.deletedAt(review.getDeletedAt())
 				.build();
 		}
 
@@ -118,57 +122,23 @@ public class ReviewService {
 	//3. 사용자별 리뷰 전체 목록 조회(사용자가 자신이 작성한 리뷰 목록 조회)
 	public Page<ReviewResponse> getUserReviews(Authentication authentication, UUID userId, int page, int size) {
 		UUID currentUserId = ((User)authentication.getPrincipal()).getId();
-		String currentUserName = ((User)authentication.getPrincipal()).getName();
 
 		//자신이 작성한 리뷰 목록만 조회 가능
 		if (!currentUserId.equals(userId)) {
 			throw new CustomException(ErrorCode.ACCESS_DENIED);
 		}
 
-		Page<Review> reviewPage = reviewRepositoryCustomImpl.findReviewsByUserId(userId, page, size);
+		Page<ReviewResponse> reviewPage = reviewRepositoryCustomImpl.findReviewsByUserId(userId, page, size);
 
-		List<ReviewResponse> reviews = reviewPage.getContent().stream()
-			.map(review -> {
-
-				//작성자 이름은 현재 유저 이름으로
-				String reviewerName = currentUserName;
-
-				//매장 이름 조회하기
-				String storeName = storeRepository.findById(review.getStoreId())
-					.map(Store::getName)
-					.orElse("폐점된 가게");
-
-				return ReviewResponse.of(review, reviewerName, storeName);
-			}).toList();
-
-		return new PageImpl<>(
-			reviews, reviewPage.getPageable(), reviewPage.getTotalElements()
-		);
+		return reviewPage;
 	}
 
 	//4. 가게별 리뷰 전체 목록 조회
 	public Page<ReviewResponse> getStoreReviews(Authentication authentication, UUID storeId, int page, int size) {
 		//db에서 페이지 데이터 조회
-		Page<Review> reviewPage = reviewRepositoryCustomImpl.findReviewsByStoreID(storeId, page, size);
+		Page<ReviewResponse> reviewPage = reviewRepositoryCustomImpl.findReviewsByStoreID(storeId, page, size);
 
-		List<ReviewResponse> reviews = reviewPage.getContent().stream()
-			.map(review -> {
-				//각 리뷰별 작성자 이름 가져오기
-				String reviewerName = userRepository.findById(review.getUserId())
-					.map(User::getUsername)
-					.orElse("탈퇴한 사용자");
-
-				//매장 이름 가져오기(한 매장에 대한 리뷰이므로 동일)
-				String storeName = storeRepository.findById(storeId)
-					.map(Store::getName)
-					.orElse("폐점된 가게");
-
-				return ReviewResponse.of(review, reviewerName, storeName);
-			}).toList();
-
-		return new PageImpl<>(
-			reviews, reviewPage.getPageable(), reviewPage.getTotalElements()
-		);
+		return reviewPage;
 	}
 
 	//5. 리뷰 수정
@@ -200,7 +170,8 @@ public class ReviewService {
 
 		reviewRepository.save(review);
 
-		String reviewerName = ((User)authentication.getPrincipal()).getName();
+		//username을 가져옴
+		String reviewerName = ((User)authentication.getPrincipal()).getUsername();
 
 		String storeName = storeRepository.findById(review.getStoreId())
 			.map(Store::getName)
@@ -223,7 +194,8 @@ public class ReviewService {
 		}
 
 		//삭제
-		reviewRepository.delete(review);
+		review.softDelete();
+		reviewRepository.save(review);
 
 		//여기도 가게 평점 재계산 이벤트 처리
 	}

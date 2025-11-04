@@ -1,5 +1,6 @@
 package com.ijaes.jeogiyo.review.repository;
 
+import static com.ijaes.jeogiyo.store.entity.QStore.*;
 import static com.ijaes.jeogiyo.user.entity.QUser.*;
 
 import java.util.List;
@@ -10,9 +11,10 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
 
+import com.ijaes.jeogiyo.review.dto.response.ReviewResponse;
 import com.ijaes.jeogiyo.review.entity.QReview;
-import com.ijaes.jeogiyo.review.entity.Review;
 import com.ijaes.jeogiyo.user.entity.Role;
+import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
 import lombok.RequiredArgsConstructor;
@@ -24,14 +26,31 @@ public class ReviewRepositoryCustomImpl implements ReviewRepositoryCustom {
 
 	//1. 작성된 리뷰 전체 조회 - 관리자
 	@Override
-	public Page<Review> findAllReviewsByPaging(int page, int size) {
+	public Page<ReviewResponse> findAllReviewsForAdmin(int page, int size) {
 		long offset = (long)page * size;
 		QReview review = QReview.review;
 
 		// 전체 조회
-		List<Review> content = queryFactory
-			.selectFrom(review)
-			.orderBy(review.reviewId.desc())
+		List<ReviewResponse> content = queryFactory
+			.select(Projections.constructor(ReviewResponse.class,
+				review.reviewId,
+				review.orderId,
+				review.storeId,
+				review.title,
+				review.content,
+				review.rate,
+				user.username,
+				store.name,
+				review.isHidden,
+				review.isDeleted,
+				review.createdAt,
+				review.updatedAt,
+				review.deletedAt
+			))
+			.from(review)
+			.innerJoin(user).on(review.userId.eq(user.id))
+			.innerJoin(store).on(review.storeId.eq(store.id))
+			.orderBy(review.createdAt.desc()) //최신순
 			.offset(offset)
 			.limit(size)
 			.fetch();
@@ -39,6 +58,8 @@ public class ReviewRepositoryCustomImpl implements ReviewRepositoryCustom {
 		Long totalCount = queryFactory
 			.select(review.count())
 			.from(review)
+			.innerJoin(user).on(review.userId.eq(user.id))
+			.innerJoin(store).on(review.storeId.eq(store.id))
 			.fetchOne();
 
 		return new PageImpl<>(content, PageRequest.of(page, size), totalCount);
@@ -46,14 +67,31 @@ public class ReviewRepositoryCustomImpl implements ReviewRepositoryCustom {
 
 	//2. 사용자 아이디 기준으로 리뷰 전체 조회
 	@Override
-	public Page<Review> findReviewsByUserId(UUID userId, int page, int size) {
+	public Page<ReviewResponse> findReviewsByUserId(UUID userId, int page, int size) {
 		long offset = (long)page * size;
 		QReview review = QReview.review;
 
-		List<Review> content = queryFactory
-			.selectFrom(review)
+		List<ReviewResponse> content = queryFactory
+			.select(Projections.constructor(ReviewResponse.class,
+				review.reviewId,
+				review.orderId,
+				review.storeId,
+				review.title,
+				review.content,
+				review.rate,
+				user.username,
+				store.name,
+				review.isHidden,
+				review.isDeleted,
+				review.createdAt,
+				review.updatedAt,
+				review.deletedAt
+			))
+			.from(review)
+			.innerJoin(user).on(review.userId.eq(user.id))
+			.innerJoin(store).on(review.storeId.eq(store.id))
 			.where(review.userId.eq(userId))
-			.orderBy(review.reviewId.desc())
+			.orderBy(review.createdAt.desc()) //최신순
 			.offset(offset)
 			.limit(size)
 			.fetch();
@@ -61,6 +99,8 @@ public class ReviewRepositoryCustomImpl implements ReviewRepositoryCustom {
 		Long totalCount = queryFactory
 			.select(review.count())
 			.from(review)
+			.innerJoin(user).on(review.userId.eq(user.id))
+			.innerJoin(store).on(review.storeId.eq(store.id))
 			.where(review.userId.eq(userId))
 			.fetchOne();
 
@@ -69,21 +109,38 @@ public class ReviewRepositoryCustomImpl implements ReviewRepositoryCustom {
 
 	//3. 가게 아이디 기준으로 리뷰 전체 조회
 	@Override
-	public Page<Review> findReviewsByStoreID(UUID storeId, int page, int size) {
+	public Page<ReviewResponse> findReviewsByStoreID(UUID storeId, int page, int size) {
 		long offset = (long)page * size;
 		QReview review = QReview.review;
 
 		// 1. 해당 페이지에서 보여줄 데이터만 조회
 		// 숨김 처리된 리뷰, BLOCK된 사용자의 리뷰는 조회되지 않게 처리
-		List<Review> content = queryFactory
-			.selectFrom(review)
-			.join(user).on(review.userId.eq(user.id))
+		List<ReviewResponse> content = queryFactory
+			.select(Projections.constructor(ReviewResponse.class,
+				review.reviewId,
+				review.orderId,
+				review.storeId,
+				review.title,
+				review.content,
+				review.rate,
+				user.username,
+				store.name,
+				review.isHidden,
+				review.isDeleted,
+				review.createdAt,
+				review.updatedAt,
+				review.deletedAt
+			))
+			.from(review)
+			.innerJoin(user).on(review.userId.eq(user.id))
+			.innerJoin(store).on(review.storeId.eq(store.id))
 			.where(
 				review.storeId.eq(storeId),
-				review.isHidden.eq(false),
-				user.role.ne(Role.BLOCK)
+				review.isHidden.eq(false), //숨김처리된 리뷰 제외
+				review.isDeleted.eq(false), //삭제된 리뷰 제외
+				user.role.ne(Role.BLOCK) //차단된 사용자 리뷰 제외
 			)
-			.orderBy(review.reviewId.desc()) //최신순
+			.orderBy(review.createdAt.desc()) //최신순
 			.offset(offset)
 			.limit(size)
 			.fetch();
@@ -92,10 +149,12 @@ public class ReviewRepositoryCustomImpl implements ReviewRepositoryCustom {
 		Long totalCount = queryFactory
 			.select(review.count())
 			.from(review)
-			.join(user).on(review.userId.eq(user.id))
+			.innerJoin(user).on(review.userId.eq(user.id))
+			.innerJoin(store).on(review.storeId.eq(store.id))
 			.where(
 				review.storeId.eq(storeId),
 				review.isHidden.eq(false),
+				review.isDeleted.eq(false),
 				user.role.ne(Role.BLOCK)
 			)
 			.fetchOne();
