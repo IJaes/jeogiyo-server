@@ -52,4 +52,19 @@ public class MenuRepositoryCustomImpl implements MenuRepositoryCustom {
 			)
 			.fetch();
 	}
+
+	@Override
+	public Optional<Menu> findByIdNotDeleted(UUID menuId) {
+		QMenu menu = QMenu.menu;
+
+		Menu result = queryFactory
+			.selectFrom(menu)
+			.where(
+				menu.id.eq(menuId),
+				menu.deletedAt.isNull()
+			)
+			.fetchOne();
+
+		return Optional.ofNullable(result);
+	}
 }

@@ -31,6 +31,14 @@ public class MenuUserService {
 		return menus.stream().map(this::toMenuUserResponse).toList();
 	}
 
+	@Transactional(readOnly = true)
+	public MenuUserResponse getMenuByMenuId(UUID menuId) {
+		Menu menu = menuRepository.findByIdNotDeleted(menuId)
+			.orElseThrow(() -> new CustomException(ErrorCode.MENU_NOT_FOUND));
+
+		return toMenuUserResponse(menu);
+	}
+
 	private MenuUserResponse toMenuUserResponse(Menu menu) {
 		return MenuUserResponse.builder()
 			.id(menu.getId())
