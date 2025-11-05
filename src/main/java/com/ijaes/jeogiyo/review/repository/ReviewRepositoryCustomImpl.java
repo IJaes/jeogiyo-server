@@ -162,4 +162,21 @@ public class ReviewRepositoryCustomImpl implements ReviewRepositoryCustom {
 		// 3. Page 객체로 반환
 		return new PageImpl<>(content, PageRequest.of(page, size), totalCount);
 	}
+
+	@Override
+	public Double calculateAverageRateByStoreId(UUID storeId) {
+		QReview review = QReview.review;
+
+		return queryFactory
+			.select(review.rate.avg())
+			.from(review)
+			.innerJoin(user).on(review.userId.eq(user.id))
+			.where(
+				review.storeId.eq(storeId),
+				review.deletedAt.isNull(),
+				review.isHidden.eq(false),
+				user.role.ne(Role.BLOCK)
+			)
+			.fetchOne();
+	}
 }

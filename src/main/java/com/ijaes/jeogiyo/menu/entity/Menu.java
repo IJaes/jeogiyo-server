@@ -6,7 +6,6 @@ import java.util.UUID;
 import com.ijaes.jeogiyo.common.entity.BaseEntity;
 import com.ijaes.jeogiyo.store.entity.Store;
 
-import ch.qos.logback.core.spi.LogbackLock;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -40,17 +39,17 @@ public class Menu extends BaseEntity {
 	@Column(nullable = false)
 	private String name;
 
-	@Column(nullable = false)
+	@Column(nullable = true)
 	private String description;
 
 	@Column(nullable = false)
 	private Integer price;
 
 	public void update(String name, String description, Integer price) {
-		if (name != null) {
+		if (name != null && !name.isBlank()) {
 			this.name = name;
 		}
-		if (description != null) {
+		if (description != null && !description.isBlank()) {
 			this.description = description;
 		}
 		if (price != null) {
@@ -58,7 +57,7 @@ public class Menu extends BaseEntity {
 		}
 	}
 
-	public void delete() {
+	public void softDelete() {
 		this.setDeletedAt(LocalDateTime.now());
 	}
 }
