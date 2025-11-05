@@ -19,6 +19,7 @@ import com.ijaes.jeogiyo.store.dto.response.StoreResponse;
 import com.ijaes.jeogiyo.store.service.StoreAdminService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -46,6 +47,7 @@ public class StoreAdminController {
 	@PatchMapping("/{storeId}")
 	@Operation(summary = "특정 매장 정보 수정", description = "MANAGER 역할의 관리자가 특정 매장 정보를 수정합니다", security = @SecurityRequirement(name = "bearer-jwt"))
 	public ResponseEntity<StoreResponse> updateStore(
+		@Parameter(description = "매장 ID")
 		@PathVariable UUID storeId,
 		@Valid @RequestBody UpdateStoreRequest request) {
 		StoreResponse response = storeAdminService.updateStore(storeId, request);
@@ -54,7 +56,9 @@ public class StoreAdminController {
 
 	@DeleteMapping("/{storeId}")
 	@Operation(summary = "특정 매장 소프트 삭제", description = "MANAGER 역할의 관리자가 특정 매장을 소프트 삭제합니다 (실제 데이터는 유지)", security = @SecurityRequirement(name = "bearer-jwt"))
-	public ResponseEntity<Void> deleteStore(@PathVariable UUID storeId) {
+	public ResponseEntity<Void> deleteStore(
+		@Parameter(description = "매장 ID")
+		@PathVariable UUID storeId) {
 		storeAdminService.deleteStore(storeId);
 		return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
 	}

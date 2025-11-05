@@ -54,9 +54,13 @@ public enum ErrorCode {
 	STORE_NOT_FOUND(HttpStatus.NOT_FOUND, "S-002", "매장을 찾을 수 없습니다. 먼저 매장을 등록해주세요."),
 	INVALID_CATEGORY(HttpStatus.BAD_REQUEST, "S-003", "유효하지 않은 카테고리입니다. (KOREAN, JAPANESE, CHINESE, ITALIAN)"),
 
-	//리뷰 관련 (W-xxx)
+	// 리뷰 관련 (W-xxx)
 	REVIEW_ALREADY_EXISTS(HttpStatus.CONFLICT, "W-001", "이미 해당 주문에 대한 리뷰가 작성되었습니다."),
 	REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "W-002", "리뷰를 찾을 수 없습니다. 먼저 리뷰를 등록해주세요."),
+
+	// 메뉴 관련 (M-xxx)
+	MENU_NOT_FOUND(HttpStatus.NOT_FOUND, "M-001", "메뉴를 찾을 수 없습니다."),
+	MENU_ALREADY_DELETED(HttpStatus.BAD_REQUEST, "M-002", "이미 삭제된 메뉴입니다."),
 
 	// 주문 관련 (O-xxx)
 	ORDER_NOT_WAITING(HttpStatus.BAD_REQUEST, "O-001", "해당 작업은 주문 대기 상태에서만 가능합니다."),
