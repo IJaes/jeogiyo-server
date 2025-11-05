@@ -8,6 +8,9 @@ import org.springframework.data.domain.Sort;
 
 import com.ijaes.jeogiyo.orders.entity.OrderStatus;
 
+import lombok.Builder;
+
+@Builder
 public record OrderSearchCondition(
 	// record 클래스는 자바 16버전 이상부터 사용 가능
 	// 이번 프로젝트에서는 시도해보고 다음번엔 일반 class로 생성해보기

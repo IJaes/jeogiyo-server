@@ -47,10 +47,10 @@ public class Order extends BaseEntity {
 	private OrderStatus orderStatus = WAITING;
 
 	// 거절 사유 저장
-	/*@Enumerated(EnumType.STRING)
+	@Enumerated(EnumType.STRING)
 	@Column(length = 50)
 	private RejectReasonCode rejectReasonCode;
-*/
+
 	@CreatedDate
 	private LocalDateTime rejectedDate; // 거절 시간
 
