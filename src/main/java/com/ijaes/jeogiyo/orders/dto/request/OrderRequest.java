@@ -4,15 +4,16 @@ import java.util.UUID;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Data
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class OrderEvent {
+public class OrderRequest {
 	private UUID orderId;
 	private int amount;
+	private String username;
 
 }
