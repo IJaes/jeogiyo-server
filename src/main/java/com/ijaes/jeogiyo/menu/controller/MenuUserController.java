@@ -15,11 +15,13 @@ import com.ijaes.jeogiyo.menu.service.MenuUserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/v1/menus")
 @RequiredArgsConstructor
+@Tag(name = "매장", description = "사용자가 매장과 메뉴를 조회하는 API")
 public class MenuUserController {
 
 	private final MenuUserService menuUserService;

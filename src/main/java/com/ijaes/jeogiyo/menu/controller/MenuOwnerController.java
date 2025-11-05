@@ -30,7 +30,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/v1/owner/menus")
 @RequiredArgsConstructor
-@Tag(name = "사장님")
+@Tag(name = "사장님", description = "메뉴 관리 API")
 public class MenuOwnerController {
 
 	private final MenuOwnerService menuOwnerService;
