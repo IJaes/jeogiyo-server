@@ -49,6 +49,7 @@ public class SecurityConfig {
 					"/webjars/**"
 				).permitAll()
 				.requestMatchers("/v1/admin/**").hasRole("MANAGER")
+				.requestMatchers("/v1/owner/**").hasRole("OWNER")
 				.requestMatchers("/v1/users/**").authenticated()
 				.anyRequest().authenticated()
 			)
