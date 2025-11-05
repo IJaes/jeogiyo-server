@@ -33,17 +33,18 @@ public class MenuDetailResponse {
 	private LocalDateTime updatedAt;
 	private LocalDateTime deletedAt;
 
-	public static MenuDetailResponse fromEntity(Menu menu) {
+	public static MenuDetailResponse from(Menu menu) {
 		return MenuDetailResponse.builder()
 			.id(menu.getId())
+			.storeId(menu.getStore().getId())
 			.name(menu.getName())
 			.description(menu.getDescription())
 			.price(menu.getPrice())
-			.storeId(menu.getStore().getId())
 			.createdAt(menu.getCreatedAt())
 			.updatedAt(menu.getUpdatedAt())
 			.deletedAt(menu.getDeletedAt())
 			.build();
 	}
+
 }
 

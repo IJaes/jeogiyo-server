@@ -2,14 +2,12 @@ package com.ijaes.jeogiyo.menu.controller;
 
 import java.util.UUID;
 
-import javax.crypto.spec.DESedeKeySpec;
-
-import org.apache.coyote.Response;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -18,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ijaes.jeogiyo.menu.dto.request.CreateMenuRequest;
+import com.ijaes.jeogiyo.menu.dto.request.UpdateMenuRequest;
 import com.ijaes.jeogiyo.menu.dto.response.MenuDetailResponse;
 import com.ijaes.jeogiyo.menu.service.MenuAdminService;
 
@@ -51,16 +50,14 @@ public class MenuAdminController {
 	@Operation(summary = "전체 메뉴 조회 (삭제된 메뉴 포함)", description = "관리자 권한으로 모든 메뉴를 조회합니다", security = @SecurityRequirement(name = "bearer-jwt"))
 	public ResponseEntity<Page<MenuDetailResponse>> getAllMenus(
 		@Parameter(description = "페이지 번호 (0부터 시작)") @RequestParam(defaultValue = "0") int page,
-		@Parameter(description = "페이지 크기") @RequestParam(defaultValue = "10") int size,
-		@Parameter(description = "정렬 기준 (예: name, rate)") @RequestParam(defaultValue = "rate") String sortBy,
-		@Parameter(description = "정렬 방향 (ASC 또는 DESC)") @RequestParam(defaultValue = "DESC") String direction
+		@Parameter(description = "페이지 크기") @RequestParam(defaultValue = "10") int size
 	) {
-		Page<MenuDetailResponse> menus = menuAdminService.getAllMenus(page, size, sortBy, direction);
+		Page<MenuDetailResponse> menus = menuAdminService.getAllMenus(page, size);
 		return ResponseEntity.ok(menus);
 	}
 
 	@GetMapping("/{menuId}")
-	@Operation(summary = "메뉴 상세 조회 (삭제된 메뉴도 가능)", description = "관리자 권한으로 메뉴 상세 정보를 조회합니다", security = @SecurityRequirement(name = "bearer_jwt"))
+	@Operation(summary = "메뉴 상세 조회 (삭제된 메뉴도 가능)", description = "관리자 권한으로 메뉴 상세 정보를 조회합니다", security = @SecurityRequirement(name = "bearer-jwt"))
 	public ResponseEntity<MenuDetailResponse> getMenu(
 		@Parameter(description = "메뉴 ID")
 		@PathVariable UUID menuId
@@ -77,5 +74,16 @@ public class MenuAdminController {
 	) {
 		menuAdminService.deleteMenu(menuId);
 		return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+	}
+
+	@PatchMapping("/{menuId}")
+	@Operation(summary = "특정 메뉴 정보 수정", description = "관리자가 특정 메뉴 정보를 수정합니다", security = @SecurityRequirement(name = "bearer-jwt"))
+	public ResponseEntity<MenuDetailResponse> updateMenu(
+		@Parameter(description = "메뉴 ID")
+		@PathVariable UUID menuId,
+		@Valid @RequestBody UpdateMenuRequest request
+	) {
+		MenuDetailResponse response = menuAdminService.updateMenu(menuId, request);
+		return ResponseEntity.ok(response);
 	}
 }

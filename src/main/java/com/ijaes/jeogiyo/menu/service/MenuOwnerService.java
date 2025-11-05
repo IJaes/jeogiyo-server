@@ -51,7 +51,7 @@ public class MenuOwnerService {
 
 		Menu savedMenu = menuRepository.save(menu);
 
-		return toMenuResponse(savedMenu);
+		return MenuDetailResponse.from(savedMenu);
 	}
 
 	@Transactional(readOnly = true)
@@ -60,7 +60,7 @@ public class MenuOwnerService {
 
 		List<Menu> menus = menuRepository.findByOwnerId(owner.getId());
 
-		return menus.stream().map(this::toMenuResponse).toList();
+		return menus.stream().map(MenuDetailResponse::from).toList();
 	}
 
 	@Transactional(readOnly = true)
@@ -70,7 +70,7 @@ public class MenuOwnerService {
 		Menu menu = menuRepository.findByIdAndOwnerId(menuId, owner.getId())
 			.orElseThrow(() -> new CustomException(ErrorCode.MENU_NOT_FOUND));
 
-		return toMenuResponse(menu);
+		return MenuDetailResponse.from(menu);
 	}
 
 	@Transactional
@@ -82,7 +82,7 @@ public class MenuOwnerService {
 
 		menu.update(request.getName(), request.getDescription(), request.getPrice());
 
-		return toMenuResponse(menu);
+		return MenuDetailResponse.from(menu);
 	}
 
 	@Transactional
@@ -97,18 +97,5 @@ public class MenuOwnerService {
 		}
 
 		menu.softDelete();
-	}
-
-	private MenuDetailResponse toMenuResponse(Menu menu) {
-		return MenuDetailResponse.builder()
-			.id(menu.getId())
-			.storeId(menu.getStore().getId())
-			.name(menu.getName())
-			.description(menu.getDescription())
-			.price(menu.getPrice())
-			.createdAt(menu.getCreatedAt())
-			.updatedAt(menu.getUpdatedAt())
-			.deletedAt(menu.getDeletedAt())
-			.build();
 	}
 }
