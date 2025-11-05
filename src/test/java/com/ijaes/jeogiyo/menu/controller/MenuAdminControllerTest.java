@@ -347,4 +347,182 @@ class MenuAdminControllerTest {
 		assertTrue(result.getStatusCode().is2xxSuccessful());
 		assertNotNull(result.getBody());
 	}
+
+	@Test
+	@DisplayName("메뉴 등록 API - 서비스 호출 확인")
+	void createMenu_serviceInvocation() {
+		// given
+		CreateMenuRequest request = CreateMenuRequest.builder()
+			.name("순대국밥")
+			.description("맛있는 순대국밥")
+			.price(12000)
+			.aiDescription(false)
+			.build();
+
+		when(menuAdminService.createMenu(any(UUID.class), any(CreateMenuRequest.class)))
+			.thenReturn(testMenuResponse);
+
+		// when
+		menuAdminController.createMenu(storeId, request);
+
+		// then
+		verify(menuAdminService, times(1)).createMenu(storeId, request);
+	}
+
+	@Test
+	@DisplayName("메뉴 등록 API - 응답 상태 코드 200 OK")
+	void createMenu_responseStatusOk() {
+		// given
+		CreateMenuRequest request = CreateMenuRequest.builder()
+			.name("순대국밥")
+			.description("맛있는 순대국밥")
+			.price(12000)
+			.build();
+
+		when(menuAdminService.createMenu(storeId, request))
+			.thenReturn(testMenuResponse);
+
+		// when
+		ResponseEntity<MenuDetailResponse> result = menuAdminController.createMenu(storeId, request);
+
+		// then
+		assertEquals(200, result.getStatusCodeValue());
+		assertNotNull(result.getBody());
+	}
+
+	@Test
+	@DisplayName("메뉴 등록 API - 응답에 필수 정보 포함")
+	void createMenu_responseContainsRequiredFields() {
+		// given
+		CreateMenuRequest request = CreateMenuRequest.builder()
+			.name("순대국밥")
+			.description("맛있는 순대국밥")
+			.price(12000)
+			.build();
+
+		when(menuAdminService.createMenu(storeId, request))
+			.thenReturn(testMenuResponse);
+
+		// when
+		ResponseEntity<MenuDetailResponse> result = menuAdminController.createMenu(storeId, request);
+
+		// then
+		MenuDetailResponse response = result.getBody();
+		assertNotNull(response);
+		assertNotNull(response.getId());
+		assertNotNull(response.getStoreId());
+		assertNotNull(response.getName());
+		assertNotNull(response.getPrice());
+	}
+
+	@Test
+	@DisplayName("전체 메뉴 조회 API - 서비스 호출 확인")
+	void getAllMenus_serviceInvocation() {
+		// given
+		Page<MenuDetailResponse> emptyPage = new PageImpl<>(List.of());
+
+		when(menuAdminService.getAllMenus(anyInt(), anyInt()))
+			.thenReturn(emptyPage);
+
+		// when
+		menuAdminController.getAllMenus(0, 10);
+
+		// then
+		verify(menuAdminService, times(1)).getAllMenus(0, 10);
+	}
+
+	@Test
+	@DisplayName("전체 메뉴 조회 API - 올바른 응답 형식")
+	void getAllMenus_correctResponseFormat() {
+		// given
+		Page<MenuDetailResponse> expectedPage = new PageImpl<>(List.of());
+
+		when(menuAdminService.getAllMenus(anyInt(), anyInt()))
+			.thenReturn(expectedPage);
+
+		// when
+		ResponseEntity<Page<MenuDetailResponse>> result = menuAdminController.getAllMenus(0, 10);
+
+		// then
+		assertNotNull(result);
+		assertTrue(result.getStatusCode().is2xxSuccessful());
+		assertNotNull(result.getBody());
+	}
+
+	@Test
+	@DisplayName("메뉴 상세 조회 API - 서비스 호출 확인")
+	void getMenu_serviceInvocation() {
+		// given
+		when(menuAdminService.getMenu(any(UUID.class)))
+			.thenReturn(testMenuResponse);
+
+		// when
+		menuAdminController.getMenu(menuId);
+
+		// then
+		verify(menuAdminService, times(1)).getMenu(menuId);
+	}
+
+	@Test
+	@DisplayName("메뉴 상세 조회 API - 응답 상태 코드 200 OK")
+	void getMenu_responseStatusOk() {
+		// given
+		when(menuAdminService.getMenu(menuId))
+			.thenReturn(testMenuResponse);
+
+		// when
+		ResponseEntity<MenuDetailResponse> result = menuAdminController.getMenu(menuId);
+
+		// then
+		assertEquals(200, result.getStatusCodeValue());
+		assertNotNull(result.getBody());
+	}
+
+	@Test
+	@DisplayName("메뉴 삭제 API - 서비스 호출 확인")
+	void deleteMenu_serviceInvocation() {
+		// given
+		// when
+		menuAdminController.deleteMenu(menuId);
+
+		// then
+		verify(menuAdminService, times(1)).deleteMenu(menuId);
+	}
+
+	@Test
+	@DisplayName("메뉴 정보 수정 API - 서비스 호출 확인")
+	void updateMenu_serviceInvocation() {
+		// given
+		UpdateMenuRequest request = UpdateMenuRequest.builder()
+			.name("새로운 메뉴명")
+			.build();
+
+		when(menuAdminService.updateMenu(any(UUID.class), any(UpdateMenuRequest.class)))
+			.thenReturn(testMenuResponse);
+
+		// when
+		menuAdminController.updateMenu(menuId, request);
+
+		// then
+		verify(menuAdminService, times(1)).updateMenu(menuId, request);
+	}
+
+	@Test
+	@DisplayName("메뉴 정보 수정 API - 응답 상태 코드 200 OK")
+	void updateMenu_responseStatusOk() {
+		// given
+		UpdateMenuRequest request = UpdateMenuRequest.builder()
+			.name("새로운 메뉴명")
+			.build();
+
+		when(menuAdminService.updateMenu(menuId, request))
+			.thenReturn(testMenuResponse);
+
+		// when
+		ResponseEntity<MenuDetailResponse> result = menuAdminController.updateMenu(menuId, request);
+
+		// then
+		assertEquals(200, result.getStatusCodeValue());
+		assertNotNull(result.getBody());
+	}
 }
