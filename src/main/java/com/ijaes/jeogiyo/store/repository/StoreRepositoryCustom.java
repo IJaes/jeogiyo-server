@@ -22,4 +22,5 @@ public interface StoreRepositoryCustom {
 	Page<Store> findAllNotDeleted(Pageable pageable);
 
 	Page<Store> findAllIncludingDeleted(Pageable pageable);
+
 }

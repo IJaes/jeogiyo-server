@@ -17,4 +17,7 @@ public interface ReviewRepositoryCustom {
 
 	//3. 가게 아이디 기준으로 리뷰 전체 조회
 	Page<ReviewResponse> findReviewsByStoreID(UUID storeId, int page, int size);
+
+	Double calculateAverageRateByStoreId(UUID storeId);
+
 }

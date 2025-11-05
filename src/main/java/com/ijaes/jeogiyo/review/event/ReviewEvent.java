@@ -3,7 +3,9 @@ package com.ijaes.jeogiyo.review.event;
 import java.util.UUID;
 
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 
+@Getter
 @AllArgsConstructor
 public class ReviewEvent {
 
