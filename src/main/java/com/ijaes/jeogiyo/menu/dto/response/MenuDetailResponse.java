@@ -3,6 +3,8 @@ package com.ijaes.jeogiyo.menu.dto.response;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import com.ijaes.jeogiyo.menu.entity.Menu;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
@@ -30,5 +32,19 @@ public class MenuDetailResponse {
 	private LocalDateTime createdAt;
 	private LocalDateTime updatedAt;
 	private LocalDateTime deletedAt;
+
+	public static MenuDetailResponse from(Menu menu) {
+		return MenuDetailResponse.builder()
+			.id(menu.getId())
+			.storeId(menu.getStore().getId())
+			.name(menu.getName())
+			.description(menu.getDescription())
+			.price(menu.getPrice())
+			.createdAt(menu.getCreatedAt())
+			.updatedAt(menu.getUpdatedAt())
+			.deletedAt(menu.getDeletedAt())
+			.build();
+	}
+
 }
 

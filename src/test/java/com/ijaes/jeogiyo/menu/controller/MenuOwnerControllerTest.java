@@ -648,7 +648,7 @@ class MenuOwnerControllerTest {
 
 	@Test
 	@DisplayName("메뉴 삭제 API - 성공")
-	void deleteMenu_success() {
+	void softDeleteMenu_success() {
 		// given
 		UUID targetMenuId = UUID.randomUUID();
 
@@ -666,7 +666,7 @@ class MenuOwnerControllerTest {
 
 	@Test
 	@DisplayName("메뉴 삭제 API - 서비스 호출 확인")
-	void deleteMenu_serviceInvocation() {
+	void softDeleteMenu_serviceInvocation() {
 		// given
 		UUID targetMenuId = UUID.randomUUID();
 
