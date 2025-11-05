@@ -1,9 +1,10 @@
 package com.ijaes.jeogiyo.menu.service;
 
-import java.util.List;
 import java.util.UUID;
 
-import org.springframework.security.core.Authentication;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,23 +18,21 @@ import com.ijaes.jeogiyo.menu.entity.Menu;
 import com.ijaes.jeogiyo.menu.repository.MenuRepository;
 import com.ijaes.jeogiyo.store.entity.Store;
 import com.ijaes.jeogiyo.store.repository.StoreRepository;
-import com.ijaes.jeogiyo.user.entity.User;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class MenuOwnerService {
+public class MenuAdminService {
 
-	private final StoreRepository storeRepository;
 	private final MenuRepository menuRepository;
+	private final StoreRepository storeRepository;
 	private final GeminiService geminiService;
 
 	@Transactional
-	public MenuDetailResponse createMenu(CreateMenuRequest request, Authentication authentication) {
-		User owner = (User)authentication.getPrincipal();
-
-		Store store = storeRepository.findByOwnerId(owner.getId())
+	public MenuDetailResponse createMenu(UUID storeId, @Valid CreateMenuRequest request) {
+		Store store = storeRepository.findById(storeId)
 			.orElseThrow(() -> new CustomException(ErrorCode.STORE_NOT_FOUND));
 
 		String description = request.getDescription();
@@ -55,41 +54,23 @@ public class MenuOwnerService {
 	}
 
 	@Transactional(readOnly = true)
-	public List<MenuDetailResponse> getMyMenus(Authentication authentication) {
-		User owner = (User)authentication.getPrincipal();
+	public Page<MenuDetailResponse> getAllMenus(int page, int size) {
+		Pageable pageable = PageRequest.of(page, size);
+		Page<Menu> menus = menuRepository.findAllIncludingDeleted(pageable);
 
-		List<Menu> menus = menuRepository.findByOwnerId(owner.getId());
-
-		return menus.stream().map(MenuDetailResponse::from).toList();
+		return menus.map(MenuDetailResponse::from);
 	}
 
 	@Transactional(readOnly = true)
-	public MenuDetailResponse getMyMenu(UUID menuId, Authentication authentication) {
-		User owner = (User)authentication.getPrincipal();
-
-		Menu menu = menuRepository.findByIdAndOwnerId(menuId, owner.getId())
+	public MenuDetailResponse getMenu(UUID menuId) {
+		Menu menu = menuRepository.findById(menuId)
 			.orElseThrow(() -> new CustomException(ErrorCode.MENU_NOT_FOUND));
-
 		return MenuDetailResponse.from(menu);
 	}
 
 	@Transactional
-	public MenuDetailResponse updateMenu(UUID menuId, UpdateMenuRequest request, Authentication authentication) {
-		User owner = (User)authentication.getPrincipal();
-
-		Menu menu = menuRepository.findByIdAndOwnerId(menuId, owner.getId())
-			.orElseThrow(() -> new CustomException(ErrorCode.MENU_NOT_FOUND));
-
-		menu.update(request.getName(), request.getDescription(), request.getPrice());
-
-		return MenuDetailResponse.from(menu);
-	}
-
-	@Transactional
-	public void deleteMenu(UUID menuId, Authentication authentication) {
-		User owner = (User)authentication.getPrincipal();
-
-		Menu menu = menuRepository.findByIdAndOwnerId(menuId, owner.getId())
+	public void deleteMenu(UUID menuId) {
+		Menu menu = menuRepository.findById(menuId)
 			.orElseThrow(() -> new CustomException(ErrorCode.MENU_NOT_FOUND));
 
 		if (menu.isDeleted()) {
@@ -97,5 +78,15 @@ public class MenuOwnerService {
 		}
 
 		menu.softDelete();
+	}
+
+	@Transactional
+	public MenuDetailResponse updateMenu(UUID menuId, UpdateMenuRequest request) {
+		Menu menu = menuRepository.findById(menuId)
+			.orElseThrow(() -> new CustomException(ErrorCode.MENU_NOT_FOUND));
+
+		menu.update(request.getName(), request.getDescription(), request.getPrice());
+
+		return MenuDetailResponse.from(menu);
 	}
 }

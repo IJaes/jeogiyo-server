@@ -4,6 +4,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import com.ijaes.jeogiyo.menu.entity.Menu;
 
 public interface MenuRepositoryCustom {
@@ -15,4 +18,6 @@ public interface MenuRepositoryCustom {
 	List<Menu> findAllNotDeleted(UUID storeId);
 
 	Optional<Menu> findByIdNotDeleted(UUID menuId);
+
+	Page<Menu> findAllIncludingDeleted(Pageable pageable);
 }

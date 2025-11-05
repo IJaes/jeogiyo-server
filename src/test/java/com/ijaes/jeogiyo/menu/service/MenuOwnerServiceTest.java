@@ -56,13 +56,16 @@ class MenuOwnerServiceTest {
 
 	private UUID ownerId;
 	private UUID storeId;
+	private UUID menuId;
 	private User testOwner;
 	private Store testStore;
+	private Menu testMenu;
 
 	@BeforeEach
 	void setUp() {
 		ownerId = UUID.randomUUID();
 		storeId = UUID.randomUUID();
+		menuId = UUID.randomUUID();
 
 		testOwner = User.builder()
 			.id(ownerId)
@@ -85,6 +88,14 @@ class MenuOwnerServiceTest {
 			.rate(4.5)
 			.owner(testOwner)
 			.build();
+
+		testMenu = Menu.builder()
+			.id(menuId)
+			.store(testStore)
+			.name("순대국밥")
+			.description("속이 꽉 찬 순대와 1200시간 이상 끓인 육수")
+			.price(12000)
+			.build();
 	}
 
 	@Test
@@ -97,26 +108,18 @@ class MenuOwnerServiceTest {
 			.price(12000)
 			.build();
 
-		Menu savedMenu = Menu.builder()
-			.id(UUID.randomUUID())
-			.store(testStore)
-			.name(request.getName())
-			.description(request.getDescription())
-			.price(request.getPrice())
-			.build();
-
 		when(authentication.getPrincipal()).thenReturn(testOwner);
 		when(storeRepository.findByOwnerId(ownerId)).thenReturn(Optional.of(testStore));
-		when(menuRepository.save(any(Menu.class))).thenReturn(savedMenu);
+		when(menuRepository.save(any(Menu.class))).thenReturn(testMenu);
 
 		// when
 		MenuDetailResponse result = menuOwnerService.createMenu(request, authentication);
 
 		// then
 		assertNotNull(result);
-		assertEquals(savedMenu.getId(), result.getId());
+		assertEquals(menuId, result.getId());
 		assertEquals("순대국밥", result.getName());
-		assertEquals("속이 꽌 찬 순대와 1200시간 이상 끓인 육수", result.getDescription());
+		assertEquals("속이 꽉 찬 순대와 1200시간 이상 끓인 육수", result.getDescription());
 		assertEquals(12000, result.getPrice());
 		assertEquals(storeId, result.getStoreId());
 
@@ -311,6 +314,7 @@ class MenuOwnerServiceTest {
 		CreateMenuRequest request = CreateMenuRequest.builder()
 			.name("순대국밥")
 			.price(12000)
+			.aiDescription(false)
 			.build();
 
 		Menu savedMenu = Menu.builder()
@@ -333,6 +337,76 @@ class MenuOwnerServiceTest {
 		assertEquals("순대국밥", result.getName());
 		assertNull(result.getDescription());
 		assertEquals(12000, result.getPrice());
+		verify(geminiService, times(0)).generateMenuDescription(any());
+	}
+
+	@Test
+	@DisplayName("메뉴 등록 - AI 설명 생성 사용")
+	void createMenu_withAiDescription() {
+		// given
+		CreateMenuRequest request = CreateMenuRequest.builder()
+			.name("순대국밥")
+			.description(null)
+			.price(12000)
+			.aiDescription(true)
+			.build();
+
+		String aiDescription = "AI가 생성한 메뉴 설명입니다.";
+		Menu savedMenu = Menu.builder()
+			.id(UUID.randomUUID())
+			.store(testStore)
+			.name(request.getName())
+			.description(aiDescription)
+			.price(request.getPrice())
+			.build();
+
+		when(authentication.getPrincipal()).thenReturn(testOwner);
+		when(storeRepository.findByOwnerId(ownerId)).thenReturn(Optional.of(testStore));
+		when(geminiService.generateMenuDescription("순대국밥")).thenReturn(aiDescription);
+		when(menuRepository.save(any(Menu.class))).thenReturn(savedMenu);
+
+		// when
+		MenuDetailResponse result = menuOwnerService.createMenu(request, authentication);
+
+		// then
+		assertNotNull(result);
+		assertEquals("순대국밥", result.getName());
+		assertEquals(aiDescription, result.getDescription());
+		verify(geminiService, times(1)).generateMenuDescription("순대국밥");
+		verify(menuRepository, times(1)).save(any(Menu.class));
+	}
+
+	@Test
+	@DisplayName("메뉴 등록 - AI 플래그가 true여도 description이 있으면 AI 호출 안함")
+	void createMenu_aiTrueButDescriptionExists() {
+		// given
+		CreateMenuRequest request = CreateMenuRequest.builder()
+			.name("순대국밥")
+			.description("이미 있는 설명")
+			.price(12000)
+			.aiDescription(true)
+			.build();
+
+		Menu savedMenu = Menu.builder()
+			.id(UUID.randomUUID())
+			.store(testStore)
+			.name(request.getName())
+			.description(request.getDescription())
+			.price(request.getPrice())
+			.build();
+
+		when(authentication.getPrincipal()).thenReturn(testOwner);
+		when(storeRepository.findByOwnerId(ownerId)).thenReturn(Optional.of(testStore));
+		when(menuRepository.save(any(Menu.class))).thenReturn(savedMenu);
+
+		// when
+		MenuDetailResponse result = menuOwnerService.createMenu(request, authentication);
+
+		// then
+		assertNotNull(result);
+		assertEquals("이미 있는 설명", result.getDescription());
+		verify(geminiService, times(0)).generateMenuDescription(any());
+		verify(menuRepository, times(1)).save(any(Menu.class));
 	}
 
 	@Test
@@ -416,17 +490,8 @@ class MenuOwnerServiceTest {
 	@DisplayName("메뉴 조회 - 성공 (단일 메뉴)")
 	void getMyMenus_success_singleMenu() {
 		// given
-		UUID menuId = UUID.randomUUID();
-		Menu menu = Menu.builder()
-			.id(menuId)
-			.store(testStore)
-			.name("순대국밥")
-			.description("뜨끈한 국밥")
-			.price(12000)
-			.build();
-
 		when(authentication.getPrincipal()).thenReturn(testOwner);
-		when(menuRepository.findByOwnerId(ownerId)).thenReturn(Arrays.asList(menu));
+		when(menuRepository.findByOwnerId(ownerId)).thenReturn(Arrays.asList(testMenu));
 
 		// when
 		List<MenuDetailResponse> result = menuOwnerService.getMyMenus(authentication);
@@ -445,17 +510,8 @@ class MenuOwnerServiceTest {
 	@DisplayName("메뉴 조회 - 응답에 모든 필드 포함 확인")
 	void getMyMenus_responseContainsAllFields() {
 		// given
-		UUID menuId = UUID.randomUUID();
-		Menu menu = Menu.builder()
-			.id(menuId)
-			.store(testStore)
-			.name("순대국밥")
-			.description("뜨끈한 국밥")
-			.price(12000)
-			.build();
-
 		when(authentication.getPrincipal()).thenReturn(testOwner);
-		when(menuRepository.findByOwnerId(ownerId)).thenReturn(Arrays.asList(menu));
+		when(menuRepository.findByOwnerId(ownerId)).thenReturn(Arrays.asList(testMenu));
 
 		// when
 		List<MenuDetailResponse> result = menuOwnerService.getMyMenus(authentication);
@@ -475,18 +531,9 @@ class MenuOwnerServiceTest {
 	@DisplayName("특정 메뉴 조회 - 성공")
 	void getMyMenu_success() {
 		// given
-		UUID menuId = UUID.randomUUID();
-		Menu menu = Menu.builder()
-			.id(menuId)
-			.store(testStore)
-			.name("순대국밥")
-			.description("뜨끈한 국밥")
-			.price(12000)
-			.build();
-
 		when(authentication.getPrincipal()).thenReturn(testOwner);
 		when(menuRepository.findByIdAndOwnerId(menuId, ownerId))
-			.thenReturn(Optional.of(menu));
+			.thenReturn(Optional.of(testMenu));
 
 		// when
 		MenuDetailResponse result = menuOwnerService.getMyMenu(menuId, authentication);
@@ -495,7 +542,7 @@ class MenuOwnerServiceTest {
 		assertNotNull(result);
 		assertEquals(menuId, result.getId());
 		assertEquals("순대국밥", result.getName());
-		assertEquals("뜨끈한 국밥", result.getDescription());
+		assertEquals("속이 꽉 찬 순대와 1200시간 이상 끓인 육수", result.getDescription());
 		assertEquals(12000, result.getPrice());
 		assertEquals(storeId, result.getStoreId());
 
@@ -525,18 +572,9 @@ class MenuOwnerServiceTest {
 	@DisplayName("특정 메뉴 조회 - 응답에 모든 필드 포함")
 	void getMyMenu_responseContainsAllFields() {
 		// given
-		UUID menuId = UUID.randomUUID();
-		Menu menu = Menu.builder()
-			.id(menuId)
-			.store(testStore)
-			.name("순대국밥")
-			.description("뜨끈한 국밥")
-			.price(12000)
-			.build();
-
 		when(authentication.getPrincipal()).thenReturn(testOwner);
 		when(menuRepository.findByIdAndOwnerId(menuId, ownerId))
-			.thenReturn(Optional.of(menu));
+			.thenReturn(Optional.of(testMenu));
 
 		// when
 		MenuDetailResponse result = menuOwnerService.getMyMenu(menuId, authentication);
@@ -553,15 +591,6 @@ class MenuOwnerServiceTest {
 	@DisplayName("메뉴 수정 - 성공 (전체 필드)")
 	void updateMenu_success_allFields() {
 		// given
-		UUID menuId = UUID.randomUUID();
-		Menu existingMenu = Menu.builder()
-			.id(menuId)
-			.store(testStore)
-			.name("순대국밥")
-			.description("원래 설명")
-			.price(12000)
-			.build();
-
 		UpdateMenuRequest request = UpdateMenuRequest.builder()
 			.name("특제 순대국밥")
 			.description("새로운 설명")
@@ -569,7 +598,7 @@ class MenuOwnerServiceTest {
 			.build();
 
 		when(authentication.getPrincipal()).thenReturn(testOwner);
-		when(menuRepository.findByIdAndOwnerId(menuId, ownerId)).thenReturn(Optional.of(existingMenu));
+		when(menuRepository.findByIdAndOwnerId(menuId, ownerId)).thenReturn(Optional.of(testMenu));
 
 		// when
 		MenuDetailResponse result = menuOwnerService.updateMenu(menuId, request, authentication);
@@ -587,28 +616,19 @@ class MenuOwnerServiceTest {
 	@DisplayName("메뉴 수정 - 성공 (부분 수정 - 가격만)")
 	void updateMenu_success_priceOnly() {
 		// given
-		UUID menuId = UUID.randomUUID();
-		Menu existingMenu = Menu.builder()
-			.id(menuId)
-			.store(testStore)
-			.name("순대국밥")
-			.description("맛있는 국밥")
-			.price(12000)
-			.build();
-
 		UpdateMenuRequest request = UpdateMenuRequest.builder()
 			.price(15000)
 			.build();
 
 		when(authentication.getPrincipal()).thenReturn(testOwner);
-		when(menuRepository.findByIdAndOwnerId(menuId, ownerId)).thenReturn(Optional.of(existingMenu));
+		when(menuRepository.findByIdAndOwnerId(menuId, ownerId)).thenReturn(Optional.of(testMenu));
 
 		// when
 		MenuDetailResponse result = menuOwnerService.updateMenu(menuId, request, authentication);
 
 		// then
 		assertEquals("순대국밥", result.getName());
-		assertEquals("맛있는 국밥", result.getDescription());
+		assertEquals("속이 꽉 찬 순대와 1200시간 이상 끓인 육수", result.getDescription());
 		assertEquals(15000, result.getPrice());
 	}
 
@@ -635,33 +655,24 @@ class MenuOwnerServiceTest {
 
 	@Test
 	@DisplayName("메뉴 삭제 - 성공")
-	void deleteMenu_success() {
+	void softDeleteMenu_success() {
 		// given
-		UUID menuId = UUID.randomUUID();
-		Menu menu = Menu.builder()
-			.id(menuId)
-			.store(testStore)
-			.name("순대국밥")
-			.description("맛있는 국밥")
-			.price(12000)
-			.build();
-
 		when(authentication.getPrincipal()).thenReturn(testOwner);
 		when(menuRepository.findByIdAndOwnerId(menuId, ownerId))
-			.thenReturn(Optional.of(menu));
+			.thenReturn(Optional.of(testMenu));
 
 		// when
 		menuOwnerService.deleteMenu(menuId, authentication);
 
 		// then
-		assertTrue(menu.isDeleted());
-		assertNotNull(menu.getDeletedAt());
+		assertTrue(testMenu.isDeleted());
+		assertNotNull(testMenu.getDeletedAt());
 		verify(menuRepository, times(1)).findByIdAndOwnerId(menuId, ownerId);
 	}
 
 	@Test
 	@DisplayName("메뉴 삭제 - 실패 (메뉴 없음)")
-	void deleteMenu_fail_menuNotFound() {
+	void softDeleteMenu_fail_menuNotFound() {
 		// given
 		UUID menuId = UUID.randomUUID();
 
@@ -680,21 +691,13 @@ class MenuOwnerServiceTest {
 
 	@Test
 	@DisplayName("메뉴 삭제 - 실패 (이미 삭제된 메뉴)")
-	void deleteMenu_fail_alreadyDeleted() {
+	void softDeleteMenu_fail_alreadyDeleted() {
 		// given
-		UUID menuId = UUID.randomUUID();
-		Menu menu = Menu.builder()
-			.id(menuId)
-			.store(testStore)
-			.name("순대국밥")
-			.description("맛있는 국밥")
-			.price(12000)
-			.build();
-		menu.delete();
+		testMenu.softDelete();
 
 		when(authentication.getPrincipal()).thenReturn(testOwner);
 		when(menuRepository.findByIdAndOwnerId(menuId, ownerId))
-			.thenReturn(Optional.of(menu));
+			.thenReturn(Optional.of(testMenu));
 
 		// when & then
 		CustomException exception = assertThrows(CustomException.class, () -> {
