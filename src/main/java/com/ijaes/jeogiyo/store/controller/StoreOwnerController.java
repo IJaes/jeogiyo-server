@@ -29,21 +29,28 @@ public class StoreOwnerController {
 
 	@PostMapping
 	@Operation(summary = "매장 생성", description = "매장을 생성합니다", security = @SecurityRequirement(name = "bearer-jwt"))
-	public ResponseEntity<StoreResponse> createStore(Authentication authentication, @RequestBody CreateStoreRequest request) {
+	public ResponseEntity<StoreResponse> createStore(
+		Authentication authentication,
+		@RequestBody CreateStoreRequest request
+	) {
 		StoreResponse storeResponse = storeService.createStore(authentication, request);
 		return ResponseEntity.ok(storeResponse);
 	}
 
 	@GetMapping
 	@Operation(summary = "매장 조회", description = "본인의 매장을 조회합니다", security = @SecurityRequirement(name = "bearer-jwt"))
-	public ResponseEntity<StoreResponse> myStore(Authentication authentication) {
+	public ResponseEntity<StoreResponse> myStore(
+		Authentication authentication
+	) {
 		StoreResponse storeResponse = storeService.myStore(authentication);
 		return ResponseEntity.ok(storeResponse);
 	}
 
 	@PatchMapping
 	@Operation(summary = "매장 정보 수정", description = "본인의 매장 정보를 부분적으로 수정합니다", security = @SecurityRequirement(name = "bearer-jwt"))
-	public ResponseEntity<StoreResponse> updateStore(Authentication authentication, @RequestBody UpdateStoreRequest request) {
+	public ResponseEntity<StoreResponse> updateStore(
+		Authentication authentication,
+		@RequestBody UpdateStoreRequest request) {
 		StoreResponse storeResponse = storeService.updateStore(authentication, request);
 		return ResponseEntity.ok(storeResponse);
 	}

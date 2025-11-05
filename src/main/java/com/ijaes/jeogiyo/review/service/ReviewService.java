@@ -2,6 +2,7 @@ package com.ijaes.jeogiyo.review.service;
 
 import java.util.UUID;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
@@ -13,6 +14,8 @@ import com.ijaes.jeogiyo.review.dto.request.UpdateReviewRequest;
 import com.ijaes.jeogiyo.review.dto.response.CreateReviewResponse;
 import com.ijaes.jeogiyo.review.dto.response.ReviewResponse;
 import com.ijaes.jeogiyo.review.entity.Review;
+import com.ijaes.jeogiyo.review.event.EventType;
+import com.ijaes.jeogiyo.review.event.ReviewEvent;
 import com.ijaes.jeogiyo.review.repository.ReviewRepository;
 import com.ijaes.jeogiyo.review.repository.ReviewRepositoryCustomImpl;
 import com.ijaes.jeogiyo.store.entity.Store;
@@ -31,6 +34,7 @@ public class ReviewService {
 	private final UserRepository userRepository;
 	private final StoreRepository storeRepository;
 	private final ReviewRepositoryCustomImpl reviewRepositoryCustomImpl;
+	private final ApplicationEventPublisher eventPublisher;
 
 	//1. 리뷰 생성
 	public CreateReviewResponse createReview(Authentication authentication, CreateReviewRequest request) {
@@ -56,7 +60,13 @@ public class ReviewService {
 		// db 저장
 		Review savedReview = reviewRepository.save(newReview);
 
-		// 여기서 이벤트 발행 : 리뷰 작성 완료 알려서 store에서 평점 업데이트 하도록
+		// type == Created 이벤트 발생
+		eventPublisher.publishEvent(new ReviewEvent(
+			savedReview.getStoreId(),
+			EventType.CREATED,
+			savedReview.getRate(),
+			null
+		));
 
 		return CreateReviewResponse.builder()
 			.reviewId(savedReview.getReviewId())
@@ -155,6 +165,10 @@ public class ReviewService {
 			throw new CustomException(ErrorCode.ACCESS_DENIED);
 		}
 
+		//업데이트 전 평점을 저장하기 위한 변수 선언
+		Integer oldRating = null;
+		boolean isRatingUpdated = false;
+
 		//데이터 업데이트
 		if (request.getTitle() != null) {
 			review.updateTitle(request.getTitle());
@@ -162,17 +176,34 @@ public class ReviewService {
 		if (request.getContent() != null) {
 			review.updateContent(request.getContent());
 		}
-		if (request.getRate() != null) {
+
+		//이전 평점과 새로운 평점이 다를 때만 업데이트
+		if (request.getRate() != null && !request.getRate().equals(review.getRate())) {
+			//이전 평점 저장
+			oldRating = review.getRate();
+
+			//평점 업데이트
 			review.updateRate(request.getRate());
 
-			//여기에 가게 평균 평점을 재계산하는 이벤트 처리
+			isRatingUpdated = true;
 		}
 
 		reviewRepository.save(review);
 
+		//평점에 변화가 있을 경우 type == UPDATED 인 이벤트 발생
+		if (isRatingUpdated) {
+			eventPublisher.publishEvent(new ReviewEvent(
+				review.getStoreId(),
+				EventType.UPDATED,
+				review.getRate(),
+				oldRating
+			));
+		}
+
 		//username을 가져옴
 		String reviewerName = ((User)authentication.getPrincipal()).getUsername();
 
+		//가게명 찾기
 		String storeName = storeRepository.findById(review.getStoreId())
 			.map(Store::getName)
 			.orElse("폐점된 가게");
@@ -193,10 +224,19 @@ public class ReviewService {
 			throw new CustomException(ErrorCode.ACCESS_DENIED);
 		}
 
+		//삭제될 평점 값 저장
+		Integer oldRating = review.getRate();
+
 		//삭제
 		review.softDelete();
 		reviewRepository.save(review);
 
-		//여기도 가게 평점 재계산 이벤트 처리
+		//type == Deleted인 이벤트 발생
+		eventPublisher.publishEvent(new ReviewEvent(
+			review.getStoreId(),
+			EventType.DELETED,
+			null,
+			oldRating
+		));
 	}
 }

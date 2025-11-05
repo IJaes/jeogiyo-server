@@ -1,5 +1,6 @@
 package com.ijaes.jeogiyo.menu.entity;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import com.ijaes.jeogiyo.common.entity.BaseEntity;
@@ -38,9 +39,25 @@ public class Menu extends BaseEntity {
 	@Column(nullable = false)
 	private String name;
 
-	@Column(nullable = false)
+	@Column(nullable = true)
 	private String description;
 
 	@Column(nullable = false)
 	private Integer price;
+
+	public void update(String name, String description, Integer price) {
+		if (name != null && !name.isBlank()) {
+			this.name = name;
+		}
+		if (description != null && !description.isBlank()) {
+			this.description = description;
+		}
+		if (price != null) {
+			this.price = price;
+		}
+	}
+
+	public void softDelete() {
+		this.setDeletedAt(LocalDateTime.now());
+	}
 }
