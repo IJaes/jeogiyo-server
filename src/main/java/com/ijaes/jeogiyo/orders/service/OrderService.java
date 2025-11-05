@@ -24,7 +24,7 @@ public class OrderService {
 
 	// 결제 승인 요청
 	public void orderProcess(UUID orderId, int amount, String username) {
-		orderId = UUID.fromString("82671ED9-B61A-11F0-97EA-EED0BD4D019");
+		orderId = UUID.fromString("82671ED9-B61A-11F0-97EA-EED0BD4D020");
 		amount = 1;
 		username = "test2";
 		eventPublisher.publishEvent(new OrderRequest(orderId, amount, username));

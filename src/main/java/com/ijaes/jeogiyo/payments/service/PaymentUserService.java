@@ -28,7 +28,6 @@ import com.ijaes.jeogiyo.common.exception.CustomException;
 import com.ijaes.jeogiyo.common.exception.ErrorCode;
 import com.ijaes.jeogiyo.orders.dto.request.OrderRequest;
 import com.ijaes.jeogiyo.orders.dto.request.OrderUserCancelRequest;
-import com.ijaes.jeogiyo.orders.repository.OrderRepository;
 import com.ijaes.jeogiyo.payments.entity.Payment;
 import com.ijaes.jeogiyo.payments.entity.PaymentStatus;
 import com.ijaes.jeogiyo.payments.repository.PaymentRepository;
@@ -42,7 +41,6 @@ import lombok.RequiredArgsConstructor;
 public class PaymentUserService {
 
 	private final PaymentRepository paymentRepository;
-	private final OrderRepository orderRepository;
 	private final ObjectMapper objectMapper;
 
 	@Value("${toss.secret-key}")
@@ -63,7 +61,7 @@ public class PaymentUserService {
 		// int orderAmount = order.getTotalPrice();
 
 		// 테스트
-		int orderAmount = 123;
+		int orderAmount = 1;
 
 		if (orderAmount != event.getAmount()) {
 			throw new CustomException(ErrorCode.PAYMENT_AMOUNT_MISMATCH);
