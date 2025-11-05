@@ -112,7 +112,7 @@ class OrderDomainTest {
 		assertThat(order.getOrderStatus()).isEqualTo(WAITING);
 
 		// when
-		order.rejectByOwner();
+		order.rejectByOwner(RejectReasonCode.CLOSED_EARLY);
 
 		// then
 		assertThat(order.getOrderStatus()).isEqualTo(REJECTED);
@@ -124,7 +124,7 @@ class OrderDomainTest {
 		ReflectionTestUtils.setField(order, "orderStatus", ACCEPTED);
 
 		// when & then: WAITING이 아니므로 예외 발생 + 상태 불변
-		assertThatThrownBy(order::rejectByOwner)
+		assertThatThrownBy(() -> order.rejectByOwner(RejectReasonCode.OUT_OF_STOCK))
 			.isInstanceOf(CustomException.class)
 			.extracting("errorCode")
 			.isEqualTo(ORDER_NOT_WAITING);

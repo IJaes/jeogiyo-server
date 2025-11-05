@@ -10,7 +10,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import com.ijaes.jeogiyo.orders.entity.Order;
 import com.ijaes.jeogiyo.orders.entity.OrderStatus;
 
-public interface OrderRepository extends JpaRepository<Order, UUID>, OrderRepositoryCustom {
+public interface OrderRepository extends JpaRepository<Order, UUID> {
 	//간단한 CRUD, 페이징 쿼리(동적 쿼리x)
 
 	/** 기본 CRUD 조회 */

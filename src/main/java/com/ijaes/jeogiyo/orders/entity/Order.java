@@ -60,6 +60,10 @@ public class Order extends BaseEntity {
 	@Column(name = "transaction_id")
 	private String transactionId;
 
+	public void delete() {
+		this.setDeletedAt(LocalDateTime.now());
+	}
+
 	@Builder
 	private Order(UUID userId, UUID storeId, int totalPrice, String transactionId) {
 		this.userId = Objects.requireNonNull(userId);
@@ -84,9 +88,11 @@ public class Order extends BaseEntity {
 	}
 
 	// 사장님이 주문 거절을 원할 때(REJECTED)
-	public void rejectByOwner() {
+	public void rejectByOwner(RejectReasonCode reasonCode) {
 		// 주문 상태가 WAITING이 아닌 경우
 		requireWaiting(ORDER_NOT_WAITING);
+		this.rejectReasonCode = reasonCode;
+		this.rejectedDate = LocalDateTime.now();
 		this.orderStatus = REJECTED;
 	}
 
