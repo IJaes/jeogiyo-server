@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.security.core.Authentication;
@@ -25,6 +26,7 @@ import com.ijaes.jeogiyo.review.dto.request.UpdateReviewRequest;
 import com.ijaes.jeogiyo.review.dto.response.CreateReviewResponse;
 import com.ijaes.jeogiyo.review.dto.response.ReviewResponse;
 import com.ijaes.jeogiyo.review.entity.Review;
+import com.ijaes.jeogiyo.review.event.ReviewEvent;
 import com.ijaes.jeogiyo.review.repository.ReviewRepository;
 import com.ijaes.jeogiyo.review.repository.ReviewRepositoryCustomImpl;
 import com.ijaes.jeogiyo.store.entity.Store;
@@ -45,6 +47,8 @@ public class ReviewServiceTest {
 	private ReviewRepositoryCustomImpl reviewRepositoryCustomImpl;
 	@Mock
 	private Authentication authentication;
+	@Mock
+	private ApplicationEventPublisher eventPublisher;
 
 	@InjectMocks
 	private ReviewService reviewService;
@@ -90,6 +94,7 @@ public class ReviewServiceTest {
 		assertThat(response).isNotNull();
 		assertThat(response.getStoreId()).isEqualTo(storeId);
 		verify(reviewRepository).save(any(Review.class));
+		verify(eventPublisher).publishEvent(any(ReviewEvent.class));
 	}
 
 	//1-2. 리뷰 생성 실패
@@ -191,6 +196,7 @@ public class ReviewServiceTest {
 		assertThat(response.getTitle()).isEqualTo("new title");
 		assertThat(response.getRate()).isEqualTo(5);
 		verify(reviewRepository).save(any(Review.class));
+		verify(eventPublisher).publishEvent(any(ReviewEvent.class));
 	}
 
 	//5-1. 리뷰 삭제 성공
@@ -212,6 +218,7 @@ public class ReviewServiceTest {
 
 		assertThat(review.isDeleted()).isTrue();
 		verify(reviewRepository).save(any(Review.class));
+		verify(eventPublisher).publishEvent(any(ReviewEvent.class));
 	}
 
 	//5-2. 리뷰 삭제 실패
