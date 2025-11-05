@@ -39,7 +39,8 @@ public class StoreAdminController {
 		@RequestParam(defaultValue = "0") int page,
 		@RequestParam(defaultValue = "10") int size,
 		@RequestParam(defaultValue = "createdAt") String sortBy,
-		@RequestParam(defaultValue = "DESC") String direction) {
+		@RequestParam(defaultValue = "DESC") String direction
+	) {
 		Page<StoreResponse> response = storeAdminService.getAllStores(page, size, sortBy, direction);
 		return ResponseEntity.ok(response);
 	}
@@ -49,7 +50,8 @@ public class StoreAdminController {
 	public ResponseEntity<StoreResponse> updateStore(
 		@Parameter(description = "매장 ID")
 		@PathVariable UUID storeId,
-		@Valid @RequestBody UpdateStoreRequest request) {
+		@Valid @RequestBody UpdateStoreRequest request
+	) {
 		StoreResponse response = storeAdminService.updateStore(storeId, request);
 		return ResponseEntity.ok(response);
 	}
@@ -58,7 +60,8 @@ public class StoreAdminController {
 	@Operation(summary = "특정 매장 소프트 삭제", description = "MANAGER 역할의 관리자가 특정 매장을 소프트 삭제합니다 (실제 데이터는 유지)", security = @SecurityRequirement(name = "bearer-jwt"))
 	public ResponseEntity<Void> deleteStore(
 		@Parameter(description = "매장 ID")
-		@PathVariable UUID storeId) {
+		@PathVariable UUID storeId
+	) {
 		storeAdminService.deleteStore(storeId);
 		return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
 	}

@@ -39,7 +39,8 @@ public class MenuOwnerController {
 	@Operation(summary = "메뉴 등록", description = "메뉴를 등록합니다", security = @SecurityRequirement(name = "bearer-jwt"))
 	public ResponseEntity<MenuDetailResponse> createMenu(
 		@Valid @RequestBody CreateMenuRequest request,
-		Authentication authentication) {
+		Authentication authentication
+	) {
 		MenuDetailResponse menuDetailResponse = menuOwnerService.createMenu(request, authentication);
 		return ResponseEntity.ok(menuDetailResponse);
 	}
@@ -47,7 +48,8 @@ public class MenuOwnerController {
 	@GetMapping
 	@Operation(summary = "본인 매장의 전체 메뉴 조회", description = "본인 매장에 등록된 전체 메뉴를 조회합니다 (삭제된 메뉴 포함)", security = @SecurityRequirement(name = "bearer-jwt"))
 	public ResponseEntity<List<MenuDetailResponse>> getMenus(
-		Authentication authentication) {
+		Authentication authentication
+	) {
 		List<MenuDetailResponse> menus = menuOwnerService.getMyMenus(authentication);
 		return ResponseEntity.ok(menus);
 	}
@@ -56,7 +58,8 @@ public class MenuOwnerController {
 	@Operation(summary = "특정 메뉴 조회", description = "매장에 등록된 특정 메뉴를 조회합니다", security = @SecurityRequirement(name = "bearer-jwt"))
 	public ResponseEntity<MenuDetailResponse> getMenu(
 		@Parameter(description = "메뉴 ID")
-		@PathVariable UUID menuId, Authentication authentication) {
+		@PathVariable UUID menuId, Authentication authentication
+	) {
 		MenuDetailResponse menuDetailResponse = menuOwnerService.getMyMenu(menuId, authentication);
 		return ResponseEntity.ok(menuDetailResponse);
 	}
@@ -67,7 +70,8 @@ public class MenuOwnerController {
 		@Parameter(description = "메뉴 ID")
 		@PathVariable UUID menuId,
 		@Valid @RequestBody UpdateMenuRequest request,
-		Authentication authentication) {
+		Authentication authentication
+	) {
 		MenuDetailResponse menuDetailResponse = menuOwnerService.updateMenu(menuId, request, authentication);
 		return ResponseEntity.ok(menuDetailResponse);
 	}
@@ -77,7 +81,8 @@ public class MenuOwnerController {
 	public ResponseEntity<Void> deleteMenu(
 		@Parameter(description = "메뉴 ID")
 		@PathVariable UUID menuId,
-		Authentication authentication) {
+		Authentication authentication
+	) {
 		menuOwnerService.deleteMenu(menuId, authentication);
 		return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
 	}

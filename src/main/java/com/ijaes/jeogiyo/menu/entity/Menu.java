@@ -6,7 +6,6 @@ import java.util.UUID;
 import com.ijaes.jeogiyo.common.entity.BaseEntity;
 import com.ijaes.jeogiyo.store.entity.Store;
 
-import ch.qos.logback.core.spi.LogbackLock;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -58,7 +57,7 @@ public class Menu extends BaseEntity {
 		}
 	}
 
-	public void delete() {
+	public void softDelete() {
 		this.setDeletedAt(LocalDateTime.now());
 	}
 }

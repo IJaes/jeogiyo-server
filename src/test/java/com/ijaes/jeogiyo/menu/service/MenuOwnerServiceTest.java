@@ -635,7 +635,7 @@ class MenuOwnerServiceTest {
 
 	@Test
 	@DisplayName("메뉴 삭제 - 성공")
-	void deleteMenu_success() {
+	void softDeleteMenu_success() {
 		// given
 		UUID menuId = UUID.randomUUID();
 		Menu menu = Menu.builder()
@@ -661,7 +661,7 @@ class MenuOwnerServiceTest {
 
 	@Test
 	@DisplayName("메뉴 삭제 - 실패 (메뉴 없음)")
-	void deleteMenu_fail_menuNotFound() {
+	void softDeleteMenu_fail_menuNotFound() {
 		// given
 		UUID menuId = UUID.randomUUID();
 
@@ -680,7 +680,7 @@ class MenuOwnerServiceTest {
 
 	@Test
 	@DisplayName("메뉴 삭제 - 실패 (이미 삭제된 메뉴)")
-	void deleteMenu_fail_alreadyDeleted() {
+	void softDeleteMenu_fail_alreadyDeleted() {
 		// given
 		UUID menuId = UUID.randomUUID();
 		Menu menu = Menu.builder()
@@ -690,7 +690,7 @@ class MenuOwnerServiceTest {
 			.description("맛있는 국밥")
 			.price(12000)
 			.build();
-		menu.delete();
+		menu.softDelete();
 
 		when(authentication.getPrincipal()).thenReturn(testOwner);
 		when(menuRepository.findByIdAndOwnerId(menuId, ownerId))

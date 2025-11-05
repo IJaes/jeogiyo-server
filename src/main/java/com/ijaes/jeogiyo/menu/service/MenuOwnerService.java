@@ -96,7 +96,7 @@ public class MenuOwnerService {
 			throw new CustomException(ErrorCode.MENU_ALREADY_DELETED);
 		}
 
-		menu.delete();
+		menu.softDelete();
 	}
 
 	private MenuDetailResponse toMenuResponse(Menu menu) {
