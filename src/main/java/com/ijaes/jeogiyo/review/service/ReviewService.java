@@ -24,6 +24,7 @@ import com.ijaes.jeogiyo.user.entity.Role;
 import com.ijaes.jeogiyo.user.entity.User;
 import com.ijaes.jeogiyo.user.repository.UserRepository;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -37,18 +38,25 @@ public class ReviewService {
 	private final ApplicationEventPublisher eventPublisher;
 
 	//1. 리뷰 생성
+	@Transactional
 	public CreateReviewResponse createReview(Authentication authentication, CreateReviewRequest request) {
 		User user = (User)authentication.getPrincipal();
 		UUID currentUserId = user.getId();
+
+		//가게 존재 여부 확인
+		storeRepository.findById(request.getStoreId())
+			.orElseThrow(() -> new CustomException(ErrorCode.STORE_NOT_FOUND));
 
 		// 리뷰 중복 작성 방지
 		if (reviewRepository.existsByOrderId(request.getOrderId())) {
 			throw new CustomException(ErrorCode.REVIEW_ALREADY_EXISTS);
 		}
 
+		System.out.println(request.getRate());
+
 		// 리뷰 객체 생성
 		Review newReview = Review.builder()
-			.reviewId(UUID.randomUUID())
+			// .reviewId(UUID.randomUUID())
 			.orderId(request.getOrderId())
 			.userId(currentUserId)
 			.storeId(request.getStoreId())
@@ -139,6 +147,11 @@ public class ReviewService {
 		}
 
 		Page<ReviewResponse> reviewPage = reviewRepositoryCustomImpl.findReviewsByUserId(userId, page, size);
+
+		//조회 결과가 비어있는 경우
+		if (reviewPage.isEmpty()) {
+			throw new CustomException(ErrorCode.REVIEW_NOT_FOUND);
+		}
 
 		return reviewPage;
 	}
