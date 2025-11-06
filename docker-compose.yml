@@ -32,7 +32,8 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRATION: ${JWT_EXPIRATION}
       SECRET_KEY: ${SECRET_KEY}
-      NAVER_API_KEY: ${NAVER_API_KEY}
+      NAVER_CLIENT_SECRET: ${NAVER_CLIENT_SECRET}
+      NAVER_CLIENT_ID: ${NAVER_CLIENT_ID}
     ports:
       - "8080:8080"
     restart: unless-stopped
