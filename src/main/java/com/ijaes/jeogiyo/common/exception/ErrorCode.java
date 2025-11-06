@@ -78,7 +78,11 @@ public enum ErrorCode {
 	PAYMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "P-004", "해당 결제 정보를 찾을 수 없습니다."),
 	PAYMENT_VERIFICATION_FAILED(HttpStatus.BAD_REQUEST, "P-005", "결제 검증에 실패했습니다."),
 	PAYMENT_CANCEL_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "P-006", "결제 취소 중 오류가 발생했습니다."),
-	PAYMENT_DB_SAVE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "P-007", "결제 DB 저장 중 오류가 발생했습니다.");
+	PAYMENT_DB_SAVE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "P-007", "결제 DB 저장 중 오류가 발생했습니다."),
+
+	// 위치 관련 (G-001)
+	ADDRESS_NOT_FOUND(HttpStatus.BAD_REQUEST, "G-001", "주소를 찾을 수 없습니다. 올바른 주소를 입력해주세요."),
+	GEOCODING_API_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "G-002", "지오코딩 API 호출 중 오류가 발생했습니다.");
 
 	private final HttpStatus httpStatus;
 	private final String code;
