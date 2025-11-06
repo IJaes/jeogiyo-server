@@ -42,4 +42,6 @@ generated/
 .env
 .env.local
 application-local.properties
-config-local/
+config-local/**/.DS_Store
+**/.DS_Store
+**/.DS_Store

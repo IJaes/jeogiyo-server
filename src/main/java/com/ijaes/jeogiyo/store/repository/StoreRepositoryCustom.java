@@ -23,4 +23,6 @@ public interface StoreRepositoryCustom {
 
 	Page<Store> findAllIncludingDeleted(Pageable pageable);
 
+	Page<Store> searchStores(String query, Pageable pageable);
+
 }

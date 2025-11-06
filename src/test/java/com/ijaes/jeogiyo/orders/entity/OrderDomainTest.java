@@ -85,64 +85,65 @@ class OrderDomainTest {
 		System.out.println(t.getMessage());
 
 		// 예외가 발생한 이후에도 상태값이 그대로 WAITING인지 확인
-		assertThat(order.getOrderStatus()).isEqualTo(WAITING);
+		assertThat(order.getOrderStatus()).isEqualTo(ACCEPTED);
 	}
 
 	@Test
 	void 취소_실패_주문대기_상태가_아님() {
 		// 시간 요인은 통과(5분 이내), 상태는 ACCEPTED 상태
 		setCreatedAtAgo(order, 4, 0, FIXED_NOW);
-		ReflectionTestUtils.setField(order, "orderStatus", ACCEPTED);
+		ReflectionTestUtils.setField(order, "orderStatus", PAID);
 
 		// 상태가 원인으로 에러가 터져야 하는 로직
 		// WAITING상태가 아니기 때문에 ORDER_NOT_WAITING 에러 발생
 		assertThatThrownBy(() -> order.cancelByUser(FIXED_NOW))
 			.isInstanceOf(CustomException.class)
 			.extracting("errorCode")
-			.isEqualTo(ORDER_NOT_WAITING);
+			.isEqualTo(ORDER_NOT_ACCEPTED);
 
 		// 상태 불변 확인 (여전히 ACCEPTED)
-		assertThat(order.getOrderStatus()).isEqualTo(ACCEPTED);
+		assertThat(order.getOrderStatus()).isEqualTo(PAID);
 	}
 
 	// ========== 거절(REJECT) - 사장님 ==========
 	@Test
 	void 거절_성공() {
 		// 주문 대기 상태에서 사장님이 거절 성공하는 케이스
-		assertThat(order.getOrderStatus()).isEqualTo(WAITING);
+		assertThat(order.getOrderStatus()).isEqualTo(ACCEPTED);
 
 		// when
-		order.rejectByOwner();
+		order.rejectByOwner(RejectReasonCode.CLOSED_EARLY);
 
 		// then
 		assertThat(order.getOrderStatus()).isEqualTo(REJECTED);
 	}
 
 	@Test
-	void 거절_실패_WAITING_아님() {
-		// given: WAITING이 아닌 상태
-		ReflectionTestUtils.setField(order, "orderStatus", ACCEPTED);
+	void 거절_실패_ACCEPTED_아님() {
+		// given: ACCEPTED이 아닌 상태
+		ReflectionTestUtils.setField(order, "orderStatus", PAID);
 
-		// when & then: WAITING이 아니므로 예외 발생 + 상태 불변
-		assertThatThrownBy(order::rejectByOwner)
+		// when & then: ACCEPTED이 아니므로 예외 발생 + 상태 불변
+		assertThatThrownBy(() -> order.rejectByOwner(RejectReasonCode.OUT_OF_STOCK))
 			.isInstanceOf(CustomException.class)
 			.extracting("errorCode")
-			.isEqualTo(ORDER_NOT_WAITING);
+			.isEqualTo(ORDER_NOT_ACCEPTED);
 
 		// 상태 변화x (ACCEPTED)
-		assertThat(order.getOrderStatus()).isEqualTo(ACCEPTED);
+		assertThat(order.getOrderStatus()).isEqualTo(PAID);
 	}
 
 	// ========== 주문 상태 전이 ==========
 	@Test
 	void 점주_수락_후_조리_배달_완료_해피패스() {
-		// 아무런 문제나 오류 없이 WAITING -> COMPLETE
-		// given: 최초 상태는 WAITING
-		order.changeStatus(ACCEPTED);        // WAITING -> ACCEPTED
-		order.changeStatus(COOKING);        // ACCEPTED -> COOKING
+		// 아무런 문제나 오류 없이 ACCEPTED -> COMPLETE
+		// given: 최초 상태는 ACCEPTED
+		order.changeStatus(PAID);        // ACCEPTED -> PAID
+		order.changeStatus(COOKING);        // PAID -> COOKING
 		order.changeStatus(COOKED);            // COOKING -> COOKED
 		order.changeStatus(DELIVERING);        // COOKED -> DELIVERING
-		order.changeStatus(COMPLETED);        // DELIVERING -> COMPLETED
+		order.changeStatus(DELIVERED);        // DELIVERING -> DELIVERED
+		order.changeStatus(COMPLETED);        // DELIVERED -> COMPLETED
 
 		// when & then: COMPLETED로 전이 되었는지 체크
 		assertThat(order.getOrderStatus()).isEqualTo(COMPLETED);
@@ -151,13 +152,13 @@ class OrderDomainTest {
 	@Test
 	void 전이_가능성_체크() {
 		// 규칙: WAITING -> ACCEPTED만 허용, 그 외 전이는 금지
-		assertThat(WAITING.canTransitTo(ACCEPTED)).isTrue(); // 수락 - 사장님
-		assertThat(WAITING.canTransitTo(REJECTED)).isTrue(); // 거절 - 사장님
-		assertThat(WAITING.canTransitTo(CANCELED)).isTrue(); // 취소 - 일반 회원
+		assertThat(ACCEPTED.canTransitTo(PAID)).isTrue(); // 수락 - 사장님
+		assertThat(ACCEPTED.canTransitTo(REJECTED)).isTrue(); // 거절 - 사장님
+		assertThat(ACCEPTED.canTransitTo(CANCELED)).isTrue(); // 취소 - 일반 회원
 
-		assertThat(WAITING.canTransitTo(COOKING)).isFalse();
-		assertThat(WAITING.canTransitTo(COOKED)).isFalse();
-		assertThat(WAITING.canTransitTo(DELIVERING)).isFalse();
-		assertThat(WAITING.canTransitTo(COMPLETED)).isFalse();
+		assertThat(ACCEPTED.canTransitTo(COOKING)).isFalse();
+		assertThat(ACCEPTED.canTransitTo(COOKED)).isFalse();
+		assertThat(ACCEPTED.canTransitTo(DELIVERING)).isFalse();
+		assertThat(ACCEPTED.canTransitTo(COMPLETED)).isFalse();
 	}
 }
