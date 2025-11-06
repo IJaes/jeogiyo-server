@@ -18,6 +18,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 
 import com.ijaes.jeogiyo.store.dto.response.StoreDetailResponse;
@@ -283,5 +284,182 @@ class StoreUserControllerTest {
 		assertNotNull(result.getBody().getCategory());
 		assertNotNull(result.getBody().getRate());
 		assertNotNull(result.getBody().getOwner().getName());
+	}
+
+	@Test
+	@DisplayName("매장 검색 API - 매장명으로 검색 성공")
+	void searchStores_byStoreName_success() {
+		// given
+		StoreResponse store = StoreResponse.builder()
+			.id(storeId)
+			.businessNumber("123-45-67890")
+			.name("소문난 국밥집")
+			.address("서울시 강남구")
+			.description("맛있는 국밥")
+			.category("KOREAN")
+			.rate(4.5)
+			.ownerId(ownerId)
+			.build();
+
+		Page<StoreResponse> expectedPage = new PageImpl<>(java.util.List.of(store));
+
+		when(storeUserService.searchStores("국밥", 0, 10))
+			.thenReturn(expectedPage);
+
+		// when
+		ResponseEntity<Page<StoreResponse>> result = storeUserController.searchStores("국밥", 0, 10);
+
+		// then
+		assertNotNull(result);
+		assertEquals(200, result.getStatusCodeValue());
+		assertNotNull(result.getBody());
+		assertEquals(1, result.getBody().getTotalElements());
+		assertEquals("소문난 국밥집", result.getBody().getContent().get(0).getName());
+		verify(storeUserService, times(1)).searchStores("국밥", 0, 10);
+	}
+
+	@Test
+	@DisplayName("매장 검색 API - 메뉴명으로 검색 성공")
+	void searchStores_byMenuName_success() {
+		// given
+		StoreResponse store = StoreResponse.builder()
+			.id(storeId)
+			.businessNumber("123-45-67890")
+			.name("소문난 국밥집")
+			.address("서울시 강남구")
+			.description("맛있는 국밥")
+			.category("KOREAN")
+			.rate(4.5)
+			.ownerId(ownerId)
+			.build();
+
+		Page<StoreResponse> expectedPage = new PageImpl<>(java.util.List.of(store));
+
+		when(storeUserService.searchStores("김밥", 0, 10))
+			.thenReturn(expectedPage);
+
+		// when
+		ResponseEntity<Page<StoreResponse>> result = storeUserController.searchStores("김밥", 0, 10);
+
+		// then
+		assertNotNull(result);
+		assertEquals(200, result.getStatusCodeValue());
+		assertEquals(1, result.getBody().getTotalElements());
+		verify(storeUserService, times(1)).searchStores("김밥", 0, 10);
+	}
+
+	@Test
+	@DisplayName("매장 검색 API - 검색 결과 없음")
+	void searchStores_noResult() {
+		// given
+		Page<StoreResponse> emptyPage = new PageImpl<>(java.util.List.of());
+
+		when(storeUserService.searchStores("존재하지않음", 0, 10))
+			.thenReturn(emptyPage);
+
+		// when
+		ResponseEntity<Page<StoreResponse>> result = storeUserController.searchStores("존재하지않음", 0, 10);
+
+		// then
+		assertNotNull(result);
+		assertEquals(200, result.getStatusCodeValue());
+		assertEquals(0, result.getBody().getTotalElements());
+		assertTrue(result.getBody().getContent().isEmpty());
+	}
+
+	@Test
+	@DisplayName("매장 검색 API - 여러 검색 결과")
+	void searchStores_multipleResults() {
+		// given
+		StoreResponse store1 = StoreResponse.builder()
+			.id(storeId)
+			.businessNumber("123-45-67890")
+			.name("소문난 국밥집")
+			.address("서울시 강남구")
+			.description("맛있는 국밥")
+			.category("KOREAN")
+			.rate(4.5)
+			.ownerId(ownerId)
+			.build();
+
+		UUID store2Id = UUID.randomUUID();
+		StoreResponse store2 = StoreResponse.builder()
+			.id(store2Id)
+			.businessNumber("456-78-90123")
+			.name("유명한 국수당")
+			.address("서울시 마포구")
+			.description("맛있는 국수")
+			.category("KOREAN")
+			.rate(4.2)
+			.ownerId(UUID.randomUUID())
+			.build();
+
+		Page<StoreResponse> expectedPage = new PageImpl<>(java.util.List.of(store1, store2));
+
+		when(storeUserService.searchStores("국", 0, 10))
+			.thenReturn(expectedPage);
+
+		// when
+		ResponseEntity<Page<StoreResponse>> result = storeUserController.searchStores("국", 0, 10);
+
+		// then
+		assertEquals(2, result.getBody().getTotalElements());
+		assertEquals("소문난 국밥집", result.getBody().getContent().get(0).getName());
+		assertEquals("유명한 국수당", result.getBody().getContent().get(1).getName());
+	}
+
+	@Test
+	@DisplayName("매장 검색 API - 페이지네이션")
+	void searchStores_withPagination() {
+		// given
+		Page<StoreResponse> expectedPage = new PageImpl<>(java.util.List.of(), PageRequest.of(1, 5), 10);
+
+		when(storeUserService.searchStores("국", 1, 5))
+			.thenReturn(expectedPage);
+
+		// when
+		ResponseEntity<Page<StoreResponse>> result = storeUserController.searchStores("국", 1, 5);
+
+		// then
+		assertNotNull(result);
+		assertEquals(200, result.getStatusCodeValue());
+		assertEquals(10, result.getBody().getTotalElements());
+		verify(storeUserService, times(1)).searchStores("국", 1, 5);
+	}
+
+	@Test
+	@DisplayName("매장 검색 API - 기본 페이지 파라미터")
+	void searchStores_defaultPageParameters() {
+		// given
+		Page<StoreResponse> expectedPage = new PageImpl<>(java.util.List.of());
+
+		when(storeUserService.searchStores("국", 0, 10))
+			.thenReturn(expectedPage);
+
+		// when
+		ResponseEntity<Page<StoreResponse>> result = storeUserController.searchStores("국", 0, 10);
+
+		// then
+		assertNotNull(result);
+		assertEquals(200, result.getStatusCodeValue());
+		verify(storeUserService, times(1)).searchStores("국", 0, 10);
+	}
+
+	@Test
+	@DisplayName("매장 검색 API - 올바른 응답 형식")
+	void searchStores_correctResponseFormat() {
+		// given
+		Page<StoreResponse> expectedPage = new PageImpl<>(java.util.List.of());
+
+		when(storeUserService.searchStores(anyString(), anyInt(), anyInt()))
+			.thenReturn(expectedPage);
+
+		// when
+		ResponseEntity<Page<StoreResponse>> result = storeUserController.searchStores("검색어", 0, 10);
+
+		// then
+		assertNotNull(result);
+		assertTrue(result.getStatusCode().is2xxSuccessful());
+		assertNotNull(result.getBody());
 	}
 }
