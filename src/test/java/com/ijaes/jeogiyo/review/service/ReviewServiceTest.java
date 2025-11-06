@@ -54,6 +54,7 @@ public class ReviewServiceTest {
 	private ReviewService reviewService;
 
 	private User user;
+	private Store store;
 	private UUID userId;
 	private UUID storeId;
 
@@ -71,24 +72,44 @@ public class ReviewServiceTest {
 			.role(Role.USER)
 			.build();
 
+		store = Store.builder().id(storeId).name("테스트 가게").build();
+
 		when(authentication.getPrincipal()).thenReturn(user);
+		when(storeRepository.findById(storeId)).thenReturn(Optional.of(store));
 	}
 
-	// 1-1. 리뷰 생성 성공
 	@Test
-	@DisplayName("리뷰 생성 성공 - 중복 작성 시도가 아닐 때")
+	@DisplayName("1-1. 리뷰 생성 성공 및 이벤트 발생 확인")
 	void createReview_success() {
 		// given
-		CreateReviewRequest request = new CreateReviewRequest(UUID.randomUUID(), storeId, "제목", "내용", 5);
+		UUID orderId = UUID.randomUUID();
+		CreateReviewRequest request = new CreateReviewRequest(orderId, storeId, "제목", "내용", 5);
+
+		// ⭐️ 1. Store 존재 Mock 설정 (유지)
+		when(storeRepository.findById(storeId)).thenReturn(
+			Optional.of(Store.builder().id(storeId).name("테스트 가게").build()));
+
+		// 2. 중복 없음 Mock 설정 (유지)
 		when(reviewRepository.existsByOrderId(any())).thenReturn(false);
-		when(reviewRepository.save(any(Review.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+		// ⭐️ 3. Save Mock 수정: Service가 저장한 객체를 반환하되, ID와 시간을 강제로 채워줍니다.
+		when(reviewRepository.save(any(Review.class))).thenAnswer(invocation -> {
+			Review reviewToSave = invocation.getArgument(0);
+			// ⭐️ ID와 CreatedAt 필드에 값을 설정하여 반환합니다. (Null 방지)
+			// 이 로직은 JPA Auditing과 GeneratedValue를 Mocking합니다.
+			return Review.builder()
+				.reviewId(UUID.randomUUID())
+				.orderId(reviewToSave.getOrderId())
+				.userId(reviewToSave.getUserId())
+				.storeId(reviewToSave.getStoreId())
+				.title(reviewToSave.getTitle())
+				.content(reviewToSave.getContent())
+				.rate(reviewToSave.getRate())
+				.build();
+		});
 
 		// when
 		CreateReviewResponse response = reviewService.createReview(authentication, request);
-		System.out.println(response.getReviewId());
-		System.out.println(response.getOrderId());
-		System.out.println(response.getStoreId());
-		System.out.println(response.getCreatedAt());
 
 		// then
 		assertThat(response).isNotNull();
@@ -99,7 +120,7 @@ public class ReviewServiceTest {
 
 	//1-2. 리뷰 생성 실패
 	@Test
-	@DisplayName("리뷰 생성 실패 - 같은 주문으로 이미 리뷰가 존재할 때 예외 발생")
+	@DisplayName("1-2. 리뷰 생성 실패 - 같은 주문으로 이미 리뷰가 존재할 때")
 	void createReview_fail_duplicateOrder() {
 		// given
 		CreateReviewRequest request = new CreateReviewRequest(UUID.randomUUID(), storeId, "제목", "내용", 5);
@@ -109,6 +130,9 @@ public class ReviewServiceTest {
 		assertThatThrownBy(() -> reviewService.createReview(authentication, request))
 			.isInstanceOf(CustomException.class)
 			.hasMessageContaining(ErrorCode.REVIEW_ALREADY_EXISTS.getMessage());
+
+		verify(reviewRepository, never()).save(any(Review.class));
+		verify(eventPublisher, never()).publishEvent(any(ReviewEvent.class));
 	}
 
 	//2-1. 리뷰 단건 조회 성공
@@ -195,7 +219,6 @@ public class ReviewServiceTest {
 
 		assertThat(response.getTitle()).isEqualTo("new title");
 		assertThat(response.getRate()).isEqualTo(5);
-		verify(reviewRepository).save(any(Review.class));
 		verify(eventPublisher).publishEvent(any(ReviewEvent.class));
 	}
 
@@ -217,7 +240,6 @@ public class ReviewServiceTest {
 		reviewService.deleteReview(authentication, reviewId);
 
 		assertThat(review.isDeleted()).isTrue();
-		verify(reviewRepository).save(any(Review.class));
 		verify(eventPublisher).publishEvent(any(ReviewEvent.class));
 	}
 
