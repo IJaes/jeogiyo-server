@@ -240,4 +240,122 @@ class StoreUserServiceTest {
 		assertEquals("소문난 국밥집", result.getContent().get(0).getName());
 		assertEquals("유명한 라면집", result.getContent().get(1).getName());
 	}
+
+	@Test
+	@DisplayName("매장 검색 - 매장명으로 검색 성공")
+	void searchStores_byStoreName_success() {
+		// given
+		String query = "국밥";
+		Pageable pageable = PageRequest.of(0, 10);
+		Page<Store> searchResult = new PageImpl<>(List.of(testStore), pageable, 1);
+
+		when(storeRepository.searchStores(query, pageable)).thenReturn(searchResult);
+
+		// when
+		Page<StoreResponse> result = storeUserService.searchStores(query, 0, 10);
+
+		// then
+		assertNotNull(result);
+		assertEquals(1, result.getTotalElements());
+		assertEquals("소문난 국밥집", result.getContent().get(0).getName());
+	}
+
+	@Test
+	@DisplayName("매장 검색 - 메뉴명으로 검색 성공")
+	void searchStores_byMenuName_success() {
+		// given
+		String query = "김밥";
+		Pageable pageable = PageRequest.of(0, 10);
+		Page<Store> searchResult = new PageImpl<>(List.of(testStore), pageable, 1);
+
+		when(storeRepository.searchStores(query, pageable)).thenReturn(searchResult);
+
+		// when
+		Page<StoreResponse> result = storeUserService.searchStores(query, 0, 10);
+
+		// then
+		assertNotNull(result);
+		assertEquals(1, result.getTotalElements());
+		assertEquals("소문난 국밥집", result.getContent().get(0).getName());
+	}
+
+	@Test
+	@DisplayName("매장 검색 - 검색 결과 없음")
+	void searchStores_noResult() {
+		// given
+		String query = "존재하지않는음식";
+		Pageable pageable = PageRequest.of(0, 10);
+		Page<Store> emptyResult = new PageImpl<>(List.of(), pageable, 0);
+
+		when(storeRepository.searchStores(query, pageable)).thenReturn(emptyResult);
+
+		// when
+		Page<StoreResponse> result = storeUserService.searchStores(query, 0, 10);
+
+		// then
+		assertNotNull(result);
+		assertEquals(0, result.getTotalElements());
+		assertTrue(result.getContent().isEmpty());
+	}
+
+	@Test
+	@DisplayName("매장 검색 - 여러 매장 검색 결과")
+	void searchStores_multipleResults() {
+		// given
+		User owner2 = User.builder()
+			.id(UUID.randomUUID())
+			.username("owner2@test.com")
+			.password("password")
+			.name("사장님2")
+			.address("서울시 마포구")
+			.phoneNumber("010-9876-5432")
+			.isOwner(true)
+			.role(Role.OWNER)
+			.build();
+
+		Store store2 = Store.builder()
+			.id(UUID.randomUUID())
+			.businessNumber("456-78-90123")
+			.name("유명한 국수당")
+			.address("서울시 마포구 홍대")
+			.description("맛있는 국수")
+			.category(Category.KOREAN)
+			.rate(4.2)
+			.owner(owner2)
+			.build();
+
+		String query = "국";
+		Pageable pageable = PageRequest.of(0, 10);
+		Page<Store> searchResult = new PageImpl<>(List.of(testStore, store2), pageable, 2);
+
+		when(storeRepository.searchStores(query, pageable)).thenReturn(searchResult);
+
+		// when
+		Page<StoreResponse> result = storeUserService.searchStores(query, 0, 10);
+
+		// then
+		assertEquals(2, result.getTotalElements());
+		assertEquals("소문난 국밥집", result.getContent().get(0).getName());
+		assertEquals("유명한 국수당", result.getContent().get(1).getName());
+	}
+
+	@Test
+	@DisplayName("매장 검색 - 페이지네이션")
+	void searchStores_withPagination() {
+		// given
+		String query = "국";
+		Pageable pageable = PageRequest.of(1, 5);
+		Page<Store> searchResult = new PageImpl<>(List.of(testStore), pageable, 10);
+
+		when(storeRepository.searchStores(query, pageable)).thenReturn(searchResult);
+
+		// when
+		Page<StoreResponse> result = storeUserService.searchStores(query, 1, 5);
+
+		// then
+		assertNotNull(result);
+		assertEquals(10, result.getTotalElements());
+		assertEquals(1, result.getNumber());
+		assertEquals(5, result.getSize());
+	}
 }
