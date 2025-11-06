@@ -45,6 +45,12 @@ public class Store extends BaseEntity {
 	@Column(nullable = false)
 	private String address;
 
+	@Column(nullable = true)
+	private Double latitude;
+
+	@Column(nullable = true)
+	private Double longitude;
+
 	@Column(nullable = false)
 	private String description;
 
@@ -65,6 +71,11 @@ public class Store extends BaseEntity {
 
 	public void updateAddress(String newAddress) {
 		this.address = newAddress;
+	}
+
+	public void updateCoordinates(Double latitude, Double longitude) {
+		this.latitude = latitude;
+		this.longitude = longitude;
 	}
 
 	public void updateDescription(String newDescription) {
