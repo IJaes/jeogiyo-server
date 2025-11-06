@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.ijaes.jeogiyo.common.exception.CustomException;
 import com.ijaes.jeogiyo.common.exception.ErrorCode;
+import com.ijaes.jeogiyo.gemini.service.GeminiService;
 import com.ijaes.jeogiyo.review.dto.request.CreateReviewRequest;
 import com.ijaes.jeogiyo.review.dto.request.UpdateReviewRequest;
 import com.ijaes.jeogiyo.review.dto.response.CreateReviewResponse;
@@ -35,6 +36,7 @@ public class ReviewService {
 	private final StoreRepository storeRepository;
 	private final ReviewRepositoryCustomImpl reviewRepositoryCustomImpl;
 	private final ApplicationEventPublisher eventPublisher;
+	private final GeminiService geminiService;
 
 	//1. 리뷰 생성
 	@Transactional
@@ -51,7 +53,9 @@ public class ReviewService {
 			throw new CustomException(ErrorCode.REVIEW_ALREADY_EXISTS);
 		}
 
-		System.out.println(request.getRate());
+		//비속어 포함 여부 판단
+		boolean isAbusive = geminiService.checkAbuseInReview(request.getContent());
+		System.out.println("isAbusive: " + isAbusive);
 
 		// 리뷰 객체 생성
 		Review newReview = Review.builder()
@@ -61,6 +65,7 @@ public class ReviewService {
 			.title(request.getTitle())
 			.content(request.getContent())
 			.rate(request.getRate())
+			.isHidden(isAbusive)
 			.build();
 
 		// db 저장
@@ -183,11 +188,23 @@ public class ReviewService {
 		if (request.getTitle() != null) {
 			review.updateTitle(request.getTitle());
 		}
-		if (request.getContent() != null) {
-			review.updateContent(request.getContent());
-		}
 		if (request.getRate() != null) {
 			review.updateRate(request.getRate());
+		}
+
+		//리뷰 내용 수정 시 비속어 재탐지
+		if (request.getContent() != null && !request.getContent().equals(review.getContent())) {
+
+			//비속어 탐지
+			boolean isAbusive = geminiService.checkAbuseInReview(request.getContent());
+
+			//비속어 있으면 숨김 처리
+			if (isAbusive) {
+				review.hide();
+			}
+
+			//내용 업데이트
+			review.updateContent(request.getContent());
 		}
 
 		//가게 평균 평점 재계산
