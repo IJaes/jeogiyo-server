@@ -61,6 +61,7 @@ jobs:
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           JWT_EXPIRATION: ${{ secrets.JWT_EXPIRATION }}
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          NAVER_API_KEY: ${{ secrets.NAVER_API_KEY }}
         run: |
           missing=0
           check() { if [ -z "$1" ]; then echo "::error::Missing secret: $2"; missing=1; fi; }
@@ -75,6 +76,7 @@ jobs:
           check "$JWT_SECRET" JWT_SECRET
           check "$JWT_EXPIRATION" JWT_EXPIRATION
           check "$SECRET_KEY" SECRET_KEY
+          checj "$NAVER_API_KEY" NAVER_API_KEY
           if [ "$missing" -eq 1 ]; then exit 1; fi
 
       - name: Copy docker-compose.yml to remote server
@@ -110,4 +112,5 @@ jobs:
             echo "JWT_EXPIRATION=${{ secrets.JWT_EXPIRATION }}" >> .env
             echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}" >> .env
             echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env
+            echo "NAVER_API_KEY=${{ secrets.NAVER_API_KEY }}" >> .env
             sudo docker-compose up -d
