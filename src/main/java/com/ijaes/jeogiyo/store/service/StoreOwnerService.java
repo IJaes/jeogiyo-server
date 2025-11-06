@@ -4,6 +4,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.ijaes.jeogiyo.common.client.NaverGeocodeClient;
 import com.ijaes.jeogiyo.common.exception.CustomException;
 import com.ijaes.jeogiyo.common.exception.ErrorCode;
 import com.ijaes.jeogiyo.store.dto.request.CreateStoreRequest;
@@ -22,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 public class StoreOwnerService {
 
 	private final StoreRepository storeRepository;
+	private final NaverGeocodeClient naverGeocodeClient;
 
 	@Transactional
 	public StoreResponse createStore(Authentication authentication, CreateStoreRequest request) {
@@ -35,10 +37,14 @@ public class StoreOwnerService {
 		try {
 			Category category = Category.valueOf(request.getCategory().toUpperCase());
 
+			NaverGeocodeClient.Coordinates coordinates = naverGeocodeClient.addressToCoordinates(request.getAddress());
+
 			Store store = Store.builder()
 				.businessNumber(request.getBusinessNumber())
 				.name(request.getName())
 				.address(request.getAddress())
+				.latitude(coordinates.getLatitude())
+				.longitude(coordinates.getLongitude())
 				.description(request.getDescription())
 				.category(category)
 				.rate(0.0)
@@ -77,7 +83,9 @@ public class StoreOwnerService {
 		}
 
 		if (request.getAddress() != null && !request.getAddress().isBlank()) {
+			NaverGeocodeClient.Coordinates coordinates = naverGeocodeClient.addressToCoordinates(request.getAddress());
 			store.updateAddress(request.getAddress());
+			store.updateCoordinates(coordinates.getLatitude(), coordinates.getLongitude());
 		}
 
 		if (request.getDescription() != null && !request.getDescription().isBlank()) {
