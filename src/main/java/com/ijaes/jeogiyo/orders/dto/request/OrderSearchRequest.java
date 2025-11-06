@@ -19,7 +19,7 @@ public class OrderSearchRequest {
 	@Schema(description = "사용자 ID(일반 회원 필터)", example = "9b0db9d7-1d02-4d8e-9b51-2a0a0c1b2c3d")
 	private final UUID userId;
 
-	@Schema(description = "가게 ID(사장님 필터)", example = "6f6f3a5b-8e06-4c3c-a6f3-5c6d9a8b7c1e")
+	@Schema(description = "가게 ID(사장님 필터)", example = "3ea661d6-1513-4c94-9111-a676a1c3e903")
 	private final UUID storeId;
 
 	@Schema(

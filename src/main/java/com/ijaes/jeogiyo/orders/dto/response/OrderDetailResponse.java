@@ -33,7 +33,7 @@ public class OrderDetailResponse {
 	@Schema(description = "총 결제금액(원)")
 	private final int totalPrice;
 
-	@Schema(description = "toss 거래 ID")
+	@Schema(description = "toss 카드 ID")
 	private final String transactionId;
 
 	@Schema(description = "생성 시각", type = "string", format = "date-time")

@@ -44,7 +44,7 @@ public class Order extends BaseEntity {
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "status")
-	private OrderStatus orderStatus = WAITING;
+	private OrderStatus orderStatus = ACCEPTED;
 
 	// 거절 사유 저장
 	@Enumerated(EnumType.STRING)
@@ -78,8 +78,8 @@ public class Order extends BaseEntity {
 	/** == 도메인 규칙 == */
 	// 일반 사용자가 취소하는 로직
 	public void cancelByUser(LocalDateTime now) {
-		// WAITING 상태가 아닌데 변경하려고 하는 경우
-		requireWaiting(ORDER_NOT_WAITING);
+		// ACCEPTED 상태가 아닌데 변경하려고 하는 경우
+		requireACCEPTED(ORDER_NOT_ACCEPTED);
 		// 5분이 지나기 전에만 취소가 가능하게 설정
 		if (this.getCreatedAt().plusMinutes(5).isBefore(now))
 			throw new CustomException(ORDER_CANCEL_OVERTIME);
@@ -89,8 +89,8 @@ public class Order extends BaseEntity {
 
 	// 사장님이 주문 거절을 원할 때(REJECTED)
 	public void rejectByOwner(RejectReasonCode reasonCode) {
-		// 주문 상태가 WAITING이 아닌 경우
-		requireWaiting(ORDER_NOT_WAITING);
+		// 주문 상태가 ACCEPTED 아닌 경우
+		requireACCEPTED(ORDER_NOT_ACCEPTED);
 		this.rejectReasonCode = reasonCode;
 		this.rejectedDate = LocalDateTime.now();
 		this.orderStatus = REJECTED;
@@ -110,8 +110,8 @@ public class Order extends BaseEntity {
 
 	/** === 공통 가드(헬퍼) === */
 	// 주문 상태가 WAITING(주문 대기) 인지 검사
-	private void requireWaiting(ErrorCode code) {
-		requireStatus(WAITING, code);
+	private void requireACCEPTED(ErrorCode code) {
+		requireStatus(ACCEPTED, code);
 	}
 
 	// 현재 주문 상태와 예상한값(excepted)가 다를 경우 - 확장성 있게 설계하기 위해 requireWaiting 메서드와 분리.
