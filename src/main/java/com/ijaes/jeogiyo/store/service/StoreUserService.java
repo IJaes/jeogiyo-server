@@ -39,4 +39,11 @@ public class StoreUserService {
 		return storeRepository.findStoreDetailById(storeId)
 			.orElseThrow(() -> new CustomException(ErrorCode.STORE_NOT_FOUND));
 	}
+
+	@Transactional(readOnly = true)
+	public Page<StoreResponse> searchStores(String query, int page, int size) {
+		Pageable pageable = PageRequest.of(page, size);
+		Page<Store> stores = storeRepository.searchStores(query, pageable);
+		return stores.map(StoreResponse::fromEntity);
+	}
 }
