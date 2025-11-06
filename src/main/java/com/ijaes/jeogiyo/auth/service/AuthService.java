@@ -7,6 +7,7 @@ import com.ijaes.jeogiyo.auth.entity.TokenBlacklist;
 import com.ijaes.jeogiyo.auth.repository.TokenBlacklistRepository;
 import com.ijaes.jeogiyo.auth.security.JwtUtil;
 import com.ijaes.jeogiyo.auth.validator.SignUpValidator;
+import com.ijaes.jeogiyo.common.client.NaverGeocodeClient;
 import com.ijaes.jeogiyo.common.exception.CustomException;
 import com.ijaes.jeogiyo.common.exception.ErrorCode;
 import com.ijaes.jeogiyo.user.entity.Role;
@@ -30,6 +31,7 @@ public class AuthService {
     private final JwtUtil jwtUtil;
     private final SignUpValidator signUpValidator;
     private final TokenBlacklistRepository tokenBlacklistRepository;
+    private final NaverGeocodeClient naverGeocodeClient;
 
     @Transactional
     public AuthResponse signUp(SignUpRequest request) {
@@ -39,22 +41,26 @@ public class AuthService {
             throw new CustomException(ErrorCode.DUPLICATE_USERNAME);
         }
 
+        NaverGeocodeClient.Coordinates coordinates = naverGeocodeClient.addressToCoordinates(request.getAddress());
+
         User user = User.builder()
-                .username(request.getUsername())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .name(request.getName())
-                .address(request.getAddress())
-                .phoneNumber(request.getPhoneNumber())
-                .isOwner(request.isOwner())
-                .role(request.isOwner() ? Role.OWNER : Role.USER)
-                .build();
+            .username(request.getUsername())
+            .password(passwordEncoder.encode(request.getPassword()))
+            .name(request.getName())
+            .address(request.getAddress())
+            .latitude(coordinates.getLatitude())
+            .longitude(coordinates.getLongitude())
+            .phoneNumber(request.getPhoneNumber())
+            .isOwner(request.isOwner())
+            .role(request.isOwner() ? Role.OWNER : Role.USER)
+            .build();
 
         userRepository.save(user);
 
         return AuthResponse.builder()
-                .message("회원가입이 성공했습니다.!")
-                .success(true)
-                .build();
+            .message("회원가입이 성공했습니다.!")
+            .success(true)
+            .build();
     }
 
     @Transactional(readOnly = true)
@@ -78,11 +84,11 @@ public class AuthService {
         String token = jwtUtil.generateToken(foundUser.getUsername());
 
         return AuthResponse.builder()
-                .message("로그인이 성공했습니다.")
-                .token(token)
-                .role(foundUser.getRole().getAuthority())
-                .success(true)
-                .build();
+            .message("로그인이 성공했습니다.")
+            .token(token)
+            .role(foundUser.getRole().getAuthority())
+            .success(true)
+            .build();
     }
 
     @Transactional
@@ -97,17 +103,17 @@ public class AuthService {
         String tokenHash = hashToken(token);
 
         TokenBlacklist tokenBlacklist = TokenBlacklist.builder()
-                .tokenHash(tokenHash)
-                .username(username)
-                .expirationAt(expirationAt)
-                .build();
+            .tokenHash(tokenHash)
+            .username(username)
+            .expirationAt(expirationAt)
+            .build();
 
         tokenBlacklistRepository.save(tokenBlacklist);
 
         return AuthResponse.builder()
-                .message("로그아웃이 성공했습니다.")
-                .success(true)
-                .build();
+            .message("로그아웃이 성공했습니다.")
+            .success(true)
+            .build();
     }
 
     private String hashToken(String token) {
