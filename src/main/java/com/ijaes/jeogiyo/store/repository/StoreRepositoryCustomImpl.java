@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
+import com.ijaes.jeogiyo.review.entity.QReview;
 import com.ijaes.jeogiyo.store.dto.response.StoreDetailResponse;
 import com.ijaes.jeogiyo.store.entity.QStore;
 import com.ijaes.jeogiyo.store.entity.Store;
