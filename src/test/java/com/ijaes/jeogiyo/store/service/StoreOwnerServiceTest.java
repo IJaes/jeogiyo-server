@@ -18,6 +18,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.Authentication;
 
+import com.ijaes.jeogiyo.common.client.NaverGeocodeClient;
 import com.ijaes.jeogiyo.common.exception.CustomException;
 import com.ijaes.jeogiyo.common.exception.ErrorCode;
 import com.ijaes.jeogiyo.store.dto.request.CreateStoreRequest;
@@ -34,6 +35,9 @@ class StoreOwnerServiceTest {
 
 	@Mock
 	private StoreRepository storeRepository;
+
+	@Mock
+	private NaverGeocodeClient naverGeocodeClient;
 
 	@InjectMocks
 	private StoreOwnerService storeOwnerService;
@@ -56,6 +60,8 @@ class StoreOwnerServiceTest {
 			.name("김사장")
 			.phoneNumber("010-1234-5678")
 			.address("서울시 강남구")
+			.latitude(37.4979)
+			.longitude(127.0276)
 			.isOwner(true)
 			.role(Role.OWNER)
 			.build();
@@ -73,18 +79,29 @@ class StoreOwnerServiceTest {
 			.businessNumber("123-45-67890")
 			.name("소문난 국밥집")
 			.address("서울시 강남구 역삼동")
+			.latitude(37.4979)
+			.longitude(127.0276)
 			.description("뜨근뜨끈한 국물 한 사발 먹고 가세요")
 			.category(Category.KOREAN)
 			.rate(0.0)
-		.owner(ownerUser)
-			
+			.owner(ownerUser)
 			.build();
+	}
+
+	private void setupNaverGeocodeClientMock() {
+		NaverGeocodeClient.Coordinates coordinates = NaverGeocodeClient.Coordinates.builder()
+			.latitude(37.4979)
+			.longitude(127.0276)
+			.build();
+		when(naverGeocodeClient.addressToCoordinates(any(String.class)))
+			.thenReturn(coordinates);
 	}
 
 	@Test
 	@DisplayName("매장 생성 - 성공")
 	void createStore_success() {
 		// given
+		setupNaverGeocodeClientMock();
 		when(authentication.getPrincipal()).thenReturn(ownerUser);
 		when(storeRepository.existsByOwnerId(ownerId)).thenReturn(false);
 		when(storeRepository.save(any(Store.class))).thenReturn(testStore);
@@ -234,6 +251,7 @@ class StoreOwnerServiceTest {
 	@DisplayName("매장 생성 - 모든 카테고리 지원")
 	void createStore_allCategories() {
 		// given
+		setupNaverGeocodeClientMock();
 		String[] categories = {"KOREAN", "JAPANESE", "CHINESE", "ITALIAN"};
 
 		for (String category : categories) {
@@ -253,11 +271,12 @@ class StoreOwnerServiceTest {
 				.businessNumber("123-45-67890")
 				.name("소문난 국밥집")
 				.address("서울시 강남구 역삼동")
+				.latitude(37.4979)
+				.longitude(127.0276)
 				.description("뜨근뜨끈한 국물 한 사발 먹고 가세요")
 				.category(Category.valueOf(category))
 				.rate(0.0)
-		.owner(ownerUser)
-				
+				.owner(ownerUser)
 				.build();
 
 			when(storeRepository.save(any(Store.class))).thenReturn(store);
@@ -275,6 +294,7 @@ class StoreOwnerServiceTest {
 	@DisplayName("매장 정보 수정 - 성공 (모든 필드 수정)")
 	void updateStore_success_allFields() {
 		// given
+		setupNaverGeocodeClientMock();
 		when(authentication.getPrincipal()).thenReturn(ownerUser);
 		when(storeRepository.findByOwnerId(ownerId)).thenReturn(Optional.of(testStore));
 
@@ -291,10 +311,12 @@ class StoreOwnerServiceTest {
 			.businessNumber(testStore.getBusinessNumber())
 			.name("새로운 가게명")
 			.address("서울시 마포구 홍대")
+			.latitude(37.4979)
+			.longitude(127.0276)
 			.description("새로운 설명")
 			.category(Category.JAPANESE)
 			.rate(testStore.getRate())
-			
+			.owner(ownerUser)
 			.build();
 
 		when(storeRepository.save(any(Store.class))).thenReturn(updatedStore);

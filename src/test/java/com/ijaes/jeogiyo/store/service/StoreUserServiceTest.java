@@ -21,6 +21,8 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import com.ijaes.jeogiyo.common.exception.CustomException;
 import com.ijaes.jeogiyo.common.exception.ErrorCode;
@@ -46,6 +48,7 @@ class StoreUserServiceTest {
 	private UUID storeId;
 	private UUID ownerId;
 	private User testOwner;
+	private User testUser;
 
 	@BeforeEach
 	void setUp() {
@@ -58,9 +61,23 @@ class StoreUserServiceTest {
 			.password("password")
 			.name("사장님")
 			.address("서울시 강남구")
+			.latitude(37.4979)
+			.longitude(127.0276)
 			.phoneNumber("010-1234-5678")
 			.isOwner(true)
 			.role(Role.OWNER)
+			.build();
+
+		testUser = User.builder()
+			.id(UUID.randomUUID())
+			.username("user@test.com")
+			.password("password")
+			.name("테스트 사용자")
+			.address("서울시 강남구")
+			.latitude(37.4979)
+			.longitude(127.0276)
+			.phoneNumber("010-1111-1111")
+			.role(Role.USER)
 			.build();
 
 		testStore = Store.builder()
@@ -68,6 +85,8 @@ class StoreUserServiceTest {
 			.businessNumber("123-45-67890")
 			.name("소문난 국밥집")
 			.address("서울시 강남구 역삼동")
+			.latitude(37.4979)
+			.longitude(127.0276)
 			.description("뜨근뜨끈한 국물 한 사발 먹고 가세요")
 			.category(Category.KOREAN)
 			.rate(4.5)
@@ -90,7 +109,8 @@ class StoreUserServiceTest {
 		when(storeRepository.findAllNotDeleted(any(Pageable.class))).thenReturn(storePage);
 
 		// when
-		Page<StoreResponse> result = storeUserService.getAllStores(page, size, sortBy, direction);
+		Authentication authentication = createMockAuthentication();
+		Page<StoreResponse> result = storeUserService.getAllStores(page, size, sortBy, direction, authentication);
 
 		// then
 		assertNotNull(result);
@@ -114,7 +134,8 @@ class StoreUserServiceTest {
 		when(storeRepository.findAllNotDeleted(any(Pageable.class))).thenReturn(storePage);
 
 		// when
-		Page<StoreResponse> result = storeUserService.getAllStores(page, size, sortBy, direction);
+		Authentication authentication = createMockAuthentication();
+		Page<StoreResponse> result = storeUserService.getAllStores(page, size, sortBy, direction, authentication);
 
 		// then
 		assertNotNull(result);
@@ -132,7 +153,8 @@ class StoreUserServiceTest {
 		when(storeRepository.findAllNotDeleted(any(Pageable.class))).thenReturn(emptyPage);
 
 		// when
-		Page<StoreResponse> result = storeUserService.getAllStores(0, 10, "rate", "DESC");
+		Authentication authentication = createMockAuthentication();
+		Page<StoreResponse> result = storeUserService.getAllStores(0, 10, "rate", "DESC", authentication);
 
 		// then
 		assertNotNull(result);
@@ -211,6 +233,8 @@ class StoreUserServiceTest {
 			.password("password")
 			.name("사장님2")
 			.address("서울시 마포구")
+			.latitude(37.5505)
+			.longitude(126.9552)
 			.phoneNumber("010-9876-5432")
 			.isOwner(true)
 			.role(Role.OWNER)
@@ -221,6 +245,8 @@ class StoreUserServiceTest {
 			.businessNumber("456-78-90123")
 			.name("유명한 라면집")
 			.address("서울시 마포구 홍대")
+			.latitude(37.5505)
+			.longitude(126.9552)
 			.description("맛있는 라면")
 			.category(Category.JAPANESE)
 			.rate(4.2)
@@ -233,11 +259,20 @@ class StoreUserServiceTest {
 		when(storeRepository.findAllNotDeleted(any(Pageable.class))).thenReturn(storePage);
 
 		// when
-		Page<StoreResponse> result = storeUserService.getAllStores(0, 10, "rate", "DESC");
+		Authentication authentication = createMockAuthentication();
+		Page<StoreResponse> result = storeUserService.getAllStores(0, 10, "rate", "DESC", authentication);
 
 		// then
 		assertEquals(2, result.getTotalElements());
 		assertEquals("소문난 국밥집", result.getContent().get(0).getName());
 		assertEquals("유명한 라면집", result.getContent().get(1).getName());
+	}
+
+	private Authentication createMockAuthentication() {
+		return new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+			testUser,
+			null,
+			java.util.Collections.singleton(new SimpleGrantedAuthority("ROLE_USER"))
+		);
 	}
 }

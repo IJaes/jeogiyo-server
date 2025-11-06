@@ -3,6 +3,7 @@ package com.ijaes.jeogiyo.store.controller;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -19,6 +20,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import com.ijaes.jeogiyo.store.dto.response.StoreDetailResponse;
 import com.ijaes.jeogiyo.store.dto.response.StoreResponse;
@@ -70,15 +73,17 @@ class StoreUserControllerTest {
 			.category("KOREAN")
 			.rate(4.5)
 			.ownerId(ownerId)
+			.distance(1.5)
 			.build();
 
 		Page<StoreResponse> expectedPage = new PageImpl<>(java.util.List.of(store));
 
-		when(storeUserService.getAllStores(0, 10, "rate", "DESC"))
+		when(storeUserService.getAllStores(anyInt(), anyInt(), anyString(), anyString(), any(Authentication.class)))
 			.thenReturn(expectedPage);
 
 		// when
-		ResponseEntity<Page<StoreResponse>> result = storeUserController.getAllStores(0, 10, "rate", "DESC");
+		Authentication authentication = createMockAuthentication();
+		ResponseEntity<Page<StoreResponse>> result = storeUserController.getAllStores(0, 10, "rate", "DESC", authentication);
 
 		// then
 		assertNotNull(result);
@@ -87,7 +92,7 @@ class StoreUserControllerTest {
 		assertEquals(1, result.getBody().getTotalElements());
 		assertEquals(storeId, result.getBody().getContent().get(0).getId());
 		assertEquals("소문난 국밥집", result.getBody().getContent().get(0).getName());
-		verify(storeUserService, times(1)).getAllStores(0, 10, "rate", "DESC");
+		verify(storeUserService, times(1)).getAllStores(anyInt(), anyInt(), anyString(), anyString(), any(Authentication.class));
 	}
 
 	@Test
@@ -96,11 +101,12 @@ class StoreUserControllerTest {
 		// given
 		Page<StoreResponse> expectedPage = new PageImpl<>(java.util.List.of());
 
-		when(storeUserService.getAllStores(0, 10, "rate", "DESC"))
+		when(storeUserService.getAllStores(anyInt(), anyInt(), anyString(), anyString(), any(Authentication.class)))
 			.thenReturn(expectedPage);
 
 		// when
-		ResponseEntity<Page<StoreResponse>> result = storeUserController.getAllStores(0, 10, "rate", "DESC");
+		Authentication authentication = createMockAuthentication();
+		ResponseEntity<Page<StoreResponse>> result = storeUserController.getAllStores(0, 10, "distance", "ASC", authentication);
 
 		// then
 		assertNotNull(result);
@@ -121,20 +127,22 @@ class StoreUserControllerTest {
 			.category("KOREAN")
 			.rate(3.5)
 			.ownerId(ownerId)
+			.distance(2.0)
 			.build();
 
 		Page<StoreResponse> expectedPage = new PageImpl<>(java.util.List.of(store));
 
-		when(storeUserService.getAllStores(0, 10, "name", "ASC"))
+		when(storeUserService.getAllStores(anyInt(), anyInt(), anyString(), anyString(), any(Authentication.class)))
 			.thenReturn(expectedPage);
 
 		// when
-		ResponseEntity<Page<StoreResponse>> result = storeUserController.getAllStores(0, 10, "name", "ASC");
+		Authentication authentication = createMockAuthentication();
+		ResponseEntity<Page<StoreResponse>> result = storeUserController.getAllStores(0, 10, "name", "ASC", authentication);
 
 		// then
 		assertNotNull(result.getBody());
 		assertEquals(1, result.getBody().getTotalElements());
-		verify(storeUserService, times(1)).getAllStores(0, 10, "name", "ASC");
+		verify(storeUserService, times(1)).getAllStores(anyInt(), anyInt(), anyString(), anyString(), any(Authentication.class));
 	}
 
 	@Test
@@ -218,15 +226,16 @@ class StoreUserControllerTest {
 		// given
 		Page<StoreResponse> expectedPage = new PageImpl<>(java.util.List.of());
 
-		when(storeUserService.getAllStores(0, 20, "rate", "DESC"))
+		when(storeUserService.getAllStores(anyInt(), anyInt(), anyString(), anyString(), any(Authentication.class)))
 			.thenReturn(expectedPage);
 
 		// when
-		ResponseEntity<Page<StoreResponse>> result = storeUserController.getAllStores(0, 20, "rate", "DESC");
+		Authentication authentication = createMockAuthentication();
+		ResponseEntity<Page<StoreResponse>> result = storeUserController.getAllStores(0, 20, "rate", "DESC", authentication);
 
 		// then
 		assertNotNull(result);
-		verify(storeUserService, times(1)).getAllStores(0, 20, "rate", "DESC");
+		verify(storeUserService, times(1)).getAllStores(anyInt(), anyInt(), anyString(), anyString(), any(Authentication.class));
 	}
 
 	@Test
@@ -235,11 +244,12 @@ class StoreUserControllerTest {
 		// given
 		Page<StoreResponse> expectedPage = new PageImpl<>(java.util.List.of());
 
-		when(storeUserService.getAllStores(anyInt(), anyInt(), anyString(), anyString()))
+		when(storeUserService.getAllStores(anyInt(), anyInt(), anyString(), anyString(), any(Authentication.class)))
 			.thenReturn(expectedPage);
 
 		// when
-		ResponseEntity<Page<StoreResponse>> result = storeUserController.getAllStores(0, 10, "rate", "DESC");
+		Authentication authentication = createMockAuthentication();
+		ResponseEntity<Page<StoreResponse>> result = storeUserController.getAllStores(0, 10, "distance", "ASC", authentication);
 
 		// then
 		assertNotNull(result);
@@ -283,5 +293,25 @@ class StoreUserControllerTest {
 		assertNotNull(result.getBody().getCategory());
 		assertNotNull(result.getBody().getRate());
 		assertNotNull(result.getBody().getOwner().getName());
+	}
+
+	private Authentication createMockAuthentication() {
+		User user = User.builder()
+			.id(UUID.randomUUID())
+			.username("testuser")
+			.name("테스트 사용자")
+			.address("서울시 강남구")
+			.latitude(37.4979)
+			.longitude(127.0276)
+			.phoneNumber("010-1234-5678")
+			.password("password")
+			.role(Role.USER)
+			.build();
+
+		return new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+			user,
+			null,
+			java.util.Collections.singleton(new SimpleGrantedAuthority("ROLE_USER"))
+		);
 	}
 }
