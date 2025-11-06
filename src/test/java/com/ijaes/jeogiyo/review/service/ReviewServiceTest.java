@@ -85,18 +85,14 @@ public class ReviewServiceTest {
 		UUID orderId = UUID.randomUUID();
 		CreateReviewRequest request = new CreateReviewRequest(orderId, storeId, "제목", "내용", 5);
 
-		// ⭐️ 1. Store 존재 Mock 설정 (유지)
 		when(storeRepository.findById(storeId)).thenReturn(
 			Optional.of(Store.builder().id(storeId).name("테스트 가게").build()));
 
-		// 2. 중복 없음 Mock 설정 (유지)
 		when(reviewRepository.existsByOrderId(any())).thenReturn(false);
 
-		// ⭐️ 3. Save Mock 수정: Service가 저장한 객체를 반환하되, ID와 시간을 강제로 채워줍니다.
 		when(reviewRepository.save(any(Review.class))).thenAnswer(invocation -> {
 			Review reviewToSave = invocation.getArgument(0);
-			// ⭐️ ID와 CreatedAt 필드에 값을 설정하여 반환합니다. (Null 방지)
-			// 이 로직은 JPA Auditing과 GeneratedValue를 Mocking합니다.
+
 			return Review.builder()
 				.reviewId(UUID.randomUUID())
 				.orderId(reviewToSave.getOrderId())
