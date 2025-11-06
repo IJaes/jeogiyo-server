@@ -30,6 +30,7 @@ public enum ErrorCode {
 	ACCESS_DENIED(HttpStatus.FORBIDDEN, "Z-001", "접근 권한이 없습니다."),
 	UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "Z-002", "인증이 필요합니다."),
 	OWNER_ROLE_REQUIRED(HttpStatus.FORBIDDEN, "Z-003", "OWNER 권한이 필요합니다."),
+	USER_ROLE_REQUIRED(HttpStatus.FORBIDDEN, "Z-004", "USER 권한이 필요합니다."),
 
 	// 리소스 관련 (R-xxx)
 	RESOURCE_NOT_FOUND(HttpStatus.NOT_FOUND, "R-001", "요청하신 리소스를 찾을 수 없습니다."),
@@ -70,7 +71,8 @@ public enum ErrorCode {
 	ORDER_CANCEL_OVERTIME(HttpStatus.BAD_REQUEST, "O-004", "주문 후 5분이 지나 취소할 수 없습니다."),
 	ORDER_USER_MISMATCH(HttpStatus.FORBIDDEN, "O-005", "본인 주문만 취소할 수 있습니다."),
 	ORDER_OWNER_MISMATCH(HttpStatus.FORBIDDEN, "O-006", "해당 매장 주문만 처리할 수 있습니다."),
-	ORDER_TOTAL_PRICE_INVALID(HttpStatus.BAD_REQUEST, "O-007", "합계 금액은 0원 이상이어야 합니다."),
+	ORDER_TOTAL_PRICE_INVALID(HttpStatus.BAD_REQUEST, "0-007", "합계 금액은 0원 이상이어야 합니다."),
+	ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "O-002", "주문을 찾을 수 없습니다."),
 	ORDER_ALREADY_DELETED(HttpStatus.BAD_REQUEST, "O-008", "이미 삭제된 주문입니다."), // 소프트 삭제된 주문에 대한 방어
 	ORDER_EVENT_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "O-009", "주문 이벤트 발행 중 오류가 발생했습니다."), // 메세지 수정
 
@@ -81,7 +83,9 @@ public enum ErrorCode {
 	PAYMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "P-004", "해당 결제 정보를 찾을 수 없습니다."),
 	PAYMENT_VERIFICATION_FAILED(HttpStatus.BAD_REQUEST, "P-005", "결제 검증에 실패했습니다."),
 	PAYMENT_CANCEL_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "P-006", "결제 취소 중 오류가 발생했습니다."),
-	PAYMENT_DB_SAVE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "P-007", "결제 DB 저장 중 오류가 발생했습니다.");
+	PAYMENT_DB_SAVE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "P-007", "결제 DB 저장 중 오류가 발생했습니다."),
+	PAYMENT_CALNCEL_EXPIRE(HttpStatus.BAD_REQUEST, "P-008", "결제 취소 시간이 지났습니다."),
+	PAYMENT_AMOUNT_MISMATCH(HttpStatus.BAD_REQUEST, "P-009", "결제 금액이 일치하지 않습니다.");
 
 	private final HttpStatus httpStatus;
 	private final String code;

@@ -8,4 +8,5 @@ public enum PaymentStatus {
 	REFUND, // 환불
 	REFUND_FAIL, // 환불실패
 	EXPIRED, //타임아웃
+	PROCESSING // 결제 처리 중
 }
