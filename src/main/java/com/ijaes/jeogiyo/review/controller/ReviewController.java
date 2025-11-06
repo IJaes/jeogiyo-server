@@ -45,12 +45,12 @@ public class ReviewController {
 
 	@GetMapping("/{reviewId}")
 	@Operation(summary = "리뷰 단건 조회", description = "특정 id에 해당하는 리뷰를 조회합니다.", security = @SecurityRequirement(name = "bearer-jwt"))
-	public ResponseEntity<ReviewResponse> getReview(Authentication authentication, @PathVariable UUID reviewId) {
-		ReviewResponse response = reviewService.getReview(authentication, reviewId);
+	public ResponseEntity<ReviewResponse> getReview(@PathVariable UUID reviewId) {
+		ReviewResponse response = reviewService.getReview(reviewId);
 		return ResponseEntity.ok(response);
 	}
 
-	@GetMapping("/{userId}")
+	@GetMapping("/users/{userId}")
 	@Operation(summary = "사용자별 리뷰 목록 조회", description = "특정 id가 작성한 전체 리뷰 목록을 조회합니다.", security = @SecurityRequirement(name = "bearer-jwt"))
 	public ResponseEntity<Page<ReviewResponse>> getUserReviews(Authentication authentication,
 		@PathVariable UUID userId,
@@ -61,7 +61,7 @@ public class ReviewController {
 		return ResponseEntity.ok(response);
 	}
 
-	@GetMapping("/{storeId}")
+	@GetMapping("/stores/{storeId}")
 	@Operation(summary = "가게별 리뷰 목록 조회", description = "특정 store에 작성된 전체 리뷰 목록을 조회합니다.", security = @SecurityRequirement(name = "bearer-jwt"))
 	public ResponseEntity<Page<ReviewResponse>> getStoreReviews(Authentication authentication,
 		@PathVariable UUID storeId,
