@@ -90,5 +90,6 @@ public class Review extends BaseEntity {
 
 	public void softDelete() {
 		this.setDeletedAt(LocalDateTime.now());
+		this.isDeleted = true;
 	}
 }

@@ -131,7 +131,7 @@ public class ReviewServiceTest {
 		when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 		when(storeRepository.findById(storeId)).thenReturn(Optional.of(store));
 
-		ReviewResponse response = reviewService.getReview(authentication, reviewId);
+		ReviewResponse response = reviewService.getReview(reviewId);
 
 		assertThat(response.getReviewerName()).isEqualTo("test_user");
 		assertThat(response.getStoreName()).isEqualTo("테스트 가게");
@@ -144,7 +144,7 @@ public class ReviewServiceTest {
 	void getReview_fail_notFound() {
 		when(reviewRepository.findById(any())).thenReturn(Optional.empty());
 
-		assertThatThrownBy(() -> reviewService.getReview(authentication, UUID.randomUUID()))
+		assertThatThrownBy(() -> reviewService.getReview(UUID.randomUUID()))
 			.isInstanceOf(CustomException.class)
 			.hasMessageContaining(ErrorCode.RESOURCE_NOT_FOUND.getMessage());
 	}

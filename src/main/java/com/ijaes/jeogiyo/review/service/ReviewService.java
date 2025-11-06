@@ -6,6 +6,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.ijaes.jeogiyo.common.exception.CustomException;
 import com.ijaes.jeogiyo.common.exception.ErrorCode;
@@ -14,7 +15,6 @@ import com.ijaes.jeogiyo.review.dto.request.UpdateReviewRequest;
 import com.ijaes.jeogiyo.review.dto.response.CreateReviewResponse;
 import com.ijaes.jeogiyo.review.dto.response.ReviewResponse;
 import com.ijaes.jeogiyo.review.entity.Review;
-import com.ijaes.jeogiyo.review.event.EventType;
 import com.ijaes.jeogiyo.review.event.ReviewEvent;
 import com.ijaes.jeogiyo.review.repository.ReviewRepository;
 import com.ijaes.jeogiyo.review.repository.ReviewRepositoryCustomImpl;
@@ -24,7 +24,6 @@ import com.ijaes.jeogiyo.user.entity.Role;
 import com.ijaes.jeogiyo.user.entity.User;
 import com.ijaes.jeogiyo.user.repository.UserRepository;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -56,7 +55,6 @@ public class ReviewService {
 
 		// 리뷰 객체 생성
 		Review newReview = Review.builder()
-			// .reviewId(UUID.randomUUID())
 			.orderId(request.getOrderId())
 			.userId(currentUserId)
 			.storeId(request.getStoreId())
@@ -68,12 +66,13 @@ public class ReviewService {
 		// db 저장
 		Review savedReview = reviewRepository.save(newReview);
 
-		// type == Created 이벤트 발생
+		//가게 평균 평점 재계산
+		Double averageRate = reviewRepositoryCustomImpl.calculateAverageRateByStoreId(request.getStoreId());
+
+		//이벤트 발행
 		eventPublisher.publishEvent(new ReviewEvent(
 			savedReview.getStoreId(),
-			EventType.CREATED,
-			savedReview.getRate(),
-			null
+			averageRate
 		));
 
 		return CreateReviewResponse.builder()
@@ -85,14 +84,15 @@ public class ReviewService {
 	}
 
 	//2. 리뷰 단건 조회
-	public ReviewResponse getReview(Authentication authentication, UUID reviewId) {
+	@Transactional(readOnly = true)
+	public ReviewResponse getReview(UUID reviewId) {
 		//리뷰 조회
 		Review review = reviewRepository.findById(reviewId)
 			.orElseThrow(() -> new CustomException(ErrorCode.RESOURCE_NOT_FOUND));
 
 		//삭제된 리뷰인지 확인
 		if (review.isDeleted()) {
-			throw new CustomException(ErrorCode.RESOURCE_NOT_FOUND);
+			throw new CustomException(ErrorCode.REVIEW_ALREADY_DELETED);
 		}
 
 		//리뷰 작성자 이름 조회(리뷰에 저장된 userid 사용해서 유저 엔티티 가져오기)
@@ -138,6 +138,7 @@ public class ReviewService {
 	}
 
 	//3. 사용자별 리뷰 전체 목록 조회(사용자가 자신이 작성한 리뷰 목록 조회)
+	@Transactional(readOnly = true)
 	public Page<ReviewResponse> getUserReviews(Authentication authentication, UUID userId, int page, int size) {
 		UUID currentUserId = ((User)authentication.getPrincipal()).getId();
 
@@ -148,16 +149,15 @@ public class ReviewService {
 
 		Page<ReviewResponse> reviewPage = reviewRepositoryCustomImpl.findReviewsByUserId(userId, page, size);
 
-		//조회 결과가 비어있는 경우
-		if (reviewPage.isEmpty()) {
-			throw new CustomException(ErrorCode.REVIEW_NOT_FOUND);
-		}
-
 		return reviewPage;
 	}
 
 	//4. 가게별 리뷰 전체 목록 조회
+	@Transactional(readOnly = true)
 	public Page<ReviewResponse> getStoreReviews(Authentication authentication, UUID storeId, int page, int size) {
+		storeRepository.findById(storeId)
+			.orElseThrow(() -> new CustomException(ErrorCode.STORE_NOT_FOUND));
+
 		//db에서 페이지 데이터 조회
 		Page<ReviewResponse> reviewPage = reviewRepositoryCustomImpl.findReviewsByStoreID(storeId, page, size);
 
@@ -165,6 +165,7 @@ public class ReviewService {
 	}
 
 	//5. 리뷰 수정
+	@Transactional
 	public ReviewResponse updateReview(Authentication authentication, UUID reviewId,
 		UpdateReviewRequest request) {
 		UUID currentUserId = ((User)authentication.getPrincipal()).getId();
@@ -178,10 +179,6 @@ public class ReviewService {
 			throw new CustomException(ErrorCode.ACCESS_DENIED);
 		}
 
-		//업데이트 전 평점을 저장하기 위한 변수 선언
-		Integer oldRating = null;
-		boolean isRatingUpdated = false;
-
 		//데이터 업데이트
 		if (request.getTitle() != null) {
 			review.updateTitle(request.getTitle());
@@ -189,29 +186,18 @@ public class ReviewService {
 		if (request.getContent() != null) {
 			review.updateContent(request.getContent());
 		}
-
-		//이전 평점과 새로운 평점이 다를 때만 업데이트
-		if (request.getRate() != null && !request.getRate().equals(review.getRate())) {
-			//이전 평점 저장
-			oldRating = review.getRate();
-
-			//평점 업데이트
+		if (request.getRate() != null) {
 			review.updateRate(request.getRate());
-
-			isRatingUpdated = true;
 		}
 
-		reviewRepository.save(review);
+		//가게 평균 평점 재계산
+		Double averageRate = reviewRepositoryCustomImpl.calculateAverageRateByStoreId(review.getStoreId());
 
-		//평점에 변화가 있을 경우 type == UPDATED 인 이벤트 발생
-		if (isRatingUpdated) {
-			eventPublisher.publishEvent(new ReviewEvent(
-				review.getStoreId(),
-				EventType.UPDATED,
-				review.getRate(),
-				oldRating
-			));
-		}
+		//이벤트 발행
+		eventPublisher.publishEvent(new ReviewEvent(
+			review.getStoreId(),
+			averageRate
+		));
 
 		//username을 가져옴
 		String reviewerName = ((User)authentication.getPrincipal()).getUsername();
@@ -225,6 +211,7 @@ public class ReviewService {
 	}
 
 	//6. 리뷰 삭제
+	@Transactional
 	public void deleteReview(Authentication authentication, UUID reviewId) {
 		UUID currentUserId = ((User)authentication.getPrincipal()).getId();
 
@@ -237,19 +224,16 @@ public class ReviewService {
 			throw new CustomException(ErrorCode.ACCESS_DENIED);
 		}
 
-		//삭제될 평점 값 저장
-		Integer oldRating = review.getRate();
-
 		//삭제
 		review.softDelete();
-		reviewRepository.save(review);
 
-		//type == Deleted인 이벤트 발생
+		//가게 평균 평점 재계산
+		Double averageRate = reviewRepositoryCustomImpl.calculateAverageRateByStoreId(review.getStoreId());
+
+		//이벤트 발행
 		eventPublisher.publishEvent(new ReviewEvent(
 			review.getStoreId(),
-			EventType.DELETED,
-			null,
-			oldRating
+			averageRate
 		));
 	}
 }
