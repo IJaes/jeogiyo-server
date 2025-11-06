@@ -9,42 +9,40 @@ import org.springframework.transaction.annotation.Transactional;
 import com.ijaes.jeogiyo.orders.dto.request.OrderOwnerCancelRequest;
 import com.ijaes.jeogiyo.orders.dto.request.OrderRequest;
 import com.ijaes.jeogiyo.orders.dto.request.OrderUserCancelRequest;
-import com.ijaes.jeogiyo.payments.entity.CanCelReason;
+import com.ijaes.jeogiyo.payments.entity.CancelReason;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
-
+@RequiredArgsConstructor
 @Transactional
 public class OrderService {
 
 	private final ApplicationEventPublisher eventPublisher;
 
-	public OrderService(ApplicationEventPublisher eventPublisher) {
-		this.eventPublisher = eventPublisher;
-	}
-
 	// 결제 승인 요청
-	public void orderProcess(UUID orderId, int amount, String username) {
-		orderId = UUID.fromString("82671ED9-B61A-11F0-97EA-EED0BD4D020");
-		amount = 1;
-		username = "test2";
-		eventPublisher.publishEvent(new OrderRequest(orderId, amount, username));
+	public void orderProcess(UUID orderId, int amount, UUID userId) {
+		orderId = UUID.fromString("82671ED9-B61A-11F0-97EA-EED0BD4D46");
+		amount = 100;
+		userId = UUID.fromString("08100bf7-58ea-4cc6-851e-fe48a7813654");
+		eventPublisher.publishEvent(new OrderRequest(orderId, amount, userId));
 	}
 
 	//	사용자 결제 취소 요청
-	public void orderCancel(UUID orderId, String paymentKey, CanCelReason canCelReason, String username) {
-		orderId = UUID.fromString("82671ED9-B61A-11F0-97EA-EED0BD4D018");
-		paymentKey = "tviva20251105153412HZBK4";
-		CanCelReason cancelReason = CanCelReason.USERCANCEL;
-		username = "test2";
-		eventPublisher.publishEvent(new OrderUserCancelRequest(orderId, paymentKey, canCelReason, username));
+	public void orderCancel(UUID orderId, String paymentKey, CancelReason canCelReason, UUID userId) {
+		orderId = UUID.fromString("82671ED9-B61A-11F0-97EA-EED0BD4D080");
+		paymentKey = "tviva20251105105118NaR73";
+		CancelReason cancelReason = CancelReason.USERCANCEL;
+		userId = UUID.fromString("08100bf7-58ea-4cc6-851e-fe48a7813654");
+		eventPublisher.publishEvent(new OrderUserCancelRequest(orderId, paymentKey, cancelReason, userId));
 	}
 
-	public void orderOwnerCancel(UUID orderId, String paymentKey, CanCelReason canCelReason, String username) {
-		orderId = UUID.fromString("82671ED9-B61A-11F0-97EA-EED0BD4D019");
-		paymentKey = "tviva20251105153702Ikrt3";
-		CanCelReason cancelReason = CanCelReason.STORECANCEL;
-		username = "owner";
-		eventPublisher.publishEvent(new OrderOwnerCancelRequest(orderId, paymentKey, canCelReason, username));
+	public void orderOwnerCancel(UUID orderId, String paymentKey, CancelReason canCelReason, UUID userId) {
+		orderId = UUID.fromString("82671ED9-B61A-11F0-97EA-EED0BD4D35");
+		paymentKey = "tviva20251106155446TxWp3";
+		CancelReason cancelReason = CancelReason.STORECANCEL;
+		userId = UUID.fromString("08100bf7-58ea-4cc6-851e-fe48a7813654");
+		eventPublisher.publishEvent(new OrderOwnerCancelRequest(orderId, paymentKey, canCelReason, userId));
 	}
 
 }

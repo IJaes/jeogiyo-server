@@ -31,7 +31,7 @@ public class PaymentOwnerController {
 	@Operation(summary = "결제 취소 요청", description = "가게에서 결제 취소 요청을 합니다.", security = @SecurityRequirement(name = "bearer-jwt"))
 	public ResponseEntity<?> cancelOwnerPayments(OrderOwnerCancelRequest event) {
 		orderService.orderOwnerCancel(event.getOrderId(), event.getPaymentKey(), event.getCanCelReason(),
-			event.getUsername());
+			event.getUserId());
 		return ResponseEntity.ok("결제취소");
 	}
 

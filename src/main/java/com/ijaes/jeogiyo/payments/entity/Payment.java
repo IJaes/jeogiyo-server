@@ -36,9 +36,6 @@ public class Payment extends BaseEntity {
 	@Column(nullable = false)
 	private UUID orderId;
 
-	@Column
-	private Long card;
-
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
 	private PaymentStatus status;
@@ -51,37 +48,30 @@ public class Payment extends BaseEntity {
 	private String log;
 
 	@Column
-	private String paymentMethod;
-
-	@Column(nullable = false)
 	private int paymentAmount;
-
-	@Column
-	private String bank;
 
 	@Column(nullable = false)
 	private String paymentKey;
 
+	@Column(nullable = false)
+	private String billingKey;
+
 	@Enumerated(EnumType.STRING)
 	@Column
-	private CanCelReason canCelReason;
+	private CancelReason cancelReason;
 
-	public void updatePaymentApprove(LocalDateTime approvedAt, String bank, String method) {
-		this.status = PaymentStatus.SUCCESS;
-		this.approvedAt = approvedAt;
-		this.bank = bank;
-		this.paymentMethod = method;
-	}
+	@Column
+	private int retryCount;
 
-	public void updatePaymentFail(String bank, String method, String log) {
-		this.bank = bank;
-		this.paymentMethod = method;
+	public void updateApprovePaymentFail(String log, String paymentKey) {
 		this.status = PaymentStatus.FAIL;
 		this.log = log;
+		this.paymentKey = paymentKey;
+
+		System.out.println(log + " 71 " + paymentKey);
 	}
 
-	public void updatePaymentFail(String log) {
-
+	public void updateCancelPaymentFail(String log) {
 		this.status = PaymentStatus.FAIL;
 		this.log = log;
 	}
@@ -91,14 +81,30 @@ public class Payment extends BaseEntity {
 	}
 
 	public void updateUserPaymentCancel() {
-		this.canCelReason = CanCelReason.USERCANCEL;
+		this.cancelReason = CancelReason.USERCANCEL;
 		this.status = PaymentStatus.CANCEL;
 	}
 
 	public void updateOwnerPaymentCancel() {
-		this.canCelReason = CanCelReason.STORECANCEL;
+		this.cancelReason = CancelReason.STORECANCEL;
 		this.status = PaymentStatus.CANCEL;
 	}
 
+	public void updatePaymentSuccess(String paymentKey) {
+		this.status = PaymentStatus.SUCCESS;
+		this.approvedAt = LocalDateTime.now();
+		this.paymentKey = paymentKey;
+	}
+
+	public void createOrderInfo(UUID orderId, String billingKey, int amount) {
+		this.orderId = orderId;
+		this.billingKey = billingKey;
+		this.paymentAmount = amount;
+		this.status = PaymentStatus.REQUESTED;
+	}
+
+	public void increaseRetryCount() {
+		this.retryCount++;
+	}
 }
 

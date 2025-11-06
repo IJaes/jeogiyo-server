@@ -8,12 +8,12 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 import java.util.Base64;
 import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -42,14 +42,20 @@ public class PaymentUserService {
 
 	private final PaymentRepository paymentRepository;
 	private final ObjectMapper objectMapper;
+	private final TaskScheduler taskScheduler;
+
+	// 결제시도 횟수
+	private final int MAX_RETRIES = 2;
+	// 20초마다 시도
+	private final long RETRY_DELAY_MS = 5 * 1000;
 
 	@Value("${toss.secret-key}")
 	private String secretKey;
 
 	@Async
-	@Transactional(propagation = Propagation.REQUIRES_NEW)
+	// @Transactional(propagation = Propagation.REQUIRES_NEW)
 	@TransactionalEventListener
-	public void createPaymentKey(OrderRequest event) {
+	public void createBaillingKey(OrderRequest event) throws Exception {
 
 		// 로그인, 권한 확인
 		getValidatedUser();
@@ -61,42 +67,46 @@ public class PaymentUserService {
 		// int orderAmount = order.getTotalPrice();
 
 		// 테스트
-		int orderAmount = 1;
+		int orderAmount = 100;
 
 		if (orderAmount != event.getAmount()) {
 			throw new CustomException(ErrorCode.PAYMENT_AMOUNT_MISMATCH);
 		}
+		String customerKey = event.getUserId().toString();
 
-		try {
-			// 결제키 발급
-			String paymentKey = createPayment(event.getOrderId(), orderAmount);
+		// 빌링 인증 authKey 발급
+		String billingKey = requestBillingAuthKey(customerKey);
 
-			//결제키 받은 후 결제요청 상태로 DB저장
-			Payment payment = Payment.builder()
-				.orderId(event.getOrderId())
-				.paymentKey(paymentKey)
-				.paymentAmount(orderAmount)
-				.status(PaymentStatus.REQUESTED)
-				.build();
-			paymentRepository.save(payment);
+		Payment payment = Payment.builder()
+			.orderId(event.getOrderId())
+			.billingKey(billingKey)
+			.paymentAmount(event.getAmount())
+			.status(PaymentStatus.REQUESTED)
+			.build();
+		paymentRepository.save(payment);
 
-		} catch (Exception e) {
-			throw new CustomException(ErrorCode.PAYMENT_KEY_GENERATION_FAILED);
-		}
+		// 빌링키로 결제 요청
+		requestBillingPayment(billingKey, event.getAmount(), event.getUserId(), event.getOrderId());
+
 	}
 
-	//결제키 발급 로직
-	private String createPayment(UUID orderId, int amount) throws Exception {
-		String url = "https://api.tosspayments.com/v1/payments";
+	// billingKey 발급
+	private String requestBillingAuthKey(String customerKey) throws IOException, InterruptedException {
+		String url = "https://api.tosspayments.com/v1/billing/authorizations/card";
 		String auth = secretKey.trim() + ":";
 		String encodedAuth = Base64.getEncoder().encodeToString(auth.getBytes(StandardCharsets.UTF_8));
 
-		String bodyJson = String.format(
-			"{\"method\":\"CARD\", \"amount\":%d, \"orderId\":\"%s\", \"orderName\":\"테스트 결제\", " +
-				"\"successUrl\":\"http://localhost:8080/v1/payments/resp/success\", " +
-				"\"failUrl\":\"http://localhost:8080/v1/payments/resp/fail\"}",
-			amount, orderId
+		// 테스트 카드 정보 (Toss 테스트용)
+		Map<String, Object> body = Map.of(
+			"customerKey", customerKey,
+			"cardNumber", "5365105152833310",           // Toss 테스트 카드
+			"cardExpirationYear", "28",                // YY 형식
+			"cardExpirationMonth", "03",               // MM 형식
+			"customerIdentityNumber", "990424"    // 생년월일 YYMMDD
+
 		);
+
+		String bodyJson = objectMapper.writeValueAsString(body);
 
 		HttpRequest request = HttpRequest.newBuilder()
 			.uri(URI.create(url))
@@ -107,28 +117,30 @@ public class PaymentUserService {
 
 		HttpResponse<String> response = HttpClient.newHttpClient()
 			.send(request, HttpResponse.BodyHandlers.ofString());
-		JsonNode jsonNode = objectMapper.readTree(response.body());
-
-		System.out.println("결제 UI : " + jsonNode.get("checkout").get("url").asText());
 
 		if (response.statusCode() != 200) {
 			throw new CustomException(ErrorCode.PAYMENT_KEY_GENERATION_FAILED);
 		}
 
-		return jsonNode.get("paymentKey").asText();
+		JsonNode node = objectMapper.readTree(response.body());
+
+		return node.get("billingKey").asText();
 	}
 
-	//결제 승인 처리
-	public void confirmPayment(String paymentKey, UUID orderId, int amount) throws Exception {
+	//  결제 요청
+	public void requestBillingPayment(String billingKey, int amount, UUID userId, UUID orderId) throws Exception {
+		Payment payment = (Payment)paymentRepository.findByBillingKey(billingKey)
+			.orElseThrow(() -> new CustomException(ErrorCode.PAYMENT_NOT_FOUND));
 
-		String url = "https://api.tosspayments.com/v1/payments/confirm";
+		String url = "https://api.tosspayments.com/v1/billing/" + billingKey;
 		String auth = secretKey.trim() + ":";
 		String encodedAuth = Base64.getEncoder().encodeToString(auth.getBytes(StandardCharsets.UTF_8));
 
 		String bodyJson = objectMapper.writeValueAsString(Map.of(
-			"paymentKey", paymentKey,
+			"amount", amount,
 			"orderId", orderId.toString(),
-			"amount", amount
+			"customerKey", userId.toString(),
+			"orderName", "테스트주문"
 		));
 
 		HttpRequest request = HttpRequest.newBuilder()
@@ -141,41 +153,89 @@ public class PaymentUserService {
 		HttpResponse<String> response = HttpClient.newHttpClient()
 			.send(request, HttpResponse.BodyHandlers.ofString());
 
-		Payment payment = (Payment)paymentRepository.findByPaymentKey(paymentKey)
-			.orElseThrow(() -> new CustomException(ErrorCode.PAYMENT_NOT_FOUND));
-
 		JsonNode jsonNode = objectMapper.readTree(response.body());
-
-		String bank = jsonNode.path("easyPay").path("provider").asText(null);
-		String method = jsonNode.path("method").asText(null);
+		System.out.println(jsonNode + " 162");
 
 		String log = jsonNode.path("message").asText(null);
 		String logMessage = (log != null) ? log : ErrorCode.PAYMENT_CONFIRMATION_FAILED.getMessage();
+		String paymentKey = jsonNode.path("paymentKey").asText();
+		System.out.println("171 log " + log);
 
 		try {
 			if (response.statusCode() == 200 && "DONE".equals(jsonNode.path("status").asText())) {
 				try {
-					// 결제 승인 완료 시
-					LocalDateTime approvedAt = OffsetDateTime.parse(jsonNode.get("approvedAt").asText(null))
-						.toLocalDateTime();
-					payment.updatePaymentApprove(approvedAt, bank, method);
+					// 결제 성공 시 DB 저장
+					payment.updatePaymentSuccess(paymentKey);
 					paymentRepository.save(payment);
-				} catch (Exception dbEx) {
+				} catch (Exception e) {
 					// 결제는 완료되었으나 DB 저장 실패 시
-					payment.updateLog("DB 저장 실패: " + dbEx.getMessage());
+					payment.updateLog("DB 저장 실패: " + e.getMessage());
+					// processPaymentWithRetry(billingKey, amount, userId, orderId);
 					throw new CustomException(ErrorCode.PAYMENT_DB_SAVE_FAILED);
 				}
 
 			} else {
-
-				payment.updatePaymentFail(bank, method, logMessage);
+				// String failMsg = jsonNode.path("message").asText(null);
+				payment.updateApprovePaymentFail(log, paymentKey);
 				paymentRepository.save(payment);
+				processPaymentWithRetry(billingKey, amount, userId, orderId, log);
+
+				throw new CustomException(ErrorCode.PAYMENT_CONFIRMATION_FAILED);
 			}
 		} catch (Exception e) {
-			payment.updatePaymentFail(bank, method, logMessage);
+			payment.updateApprovePaymentFail(logMessage, paymentKey);
 			paymentRepository.save(payment);
+			// processPaymentWithRetry(billingKey, amount, userId, orderId, logMessage);
+
 			throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
 		}
+
+	}
+
+	public void processPaymentWithRetry(String billingKey, int amount, UUID userId, UUID orderId, String log) throws
+		Exception {
+		Runnable retryTask = new Runnable() {
+			@Override
+			public void run() {
+				try {
+					Payment payment = (Payment)paymentRepository.findByOrderId(orderId)
+						.orElseThrow(() -> new CustomException(ErrorCode.PAYMENT_NOT_FOUND));
+
+					// 이미 최대 재시도 횟수를 초과했는지 확인
+					if (payment.getRetryCount() >= MAX_RETRIES) {
+						System.out.println("최대 재시도 횟수 초과, 결제 실패");
+						return;
+					}
+
+					// 결제 요청 시도
+					requestBillingPayment(billingKey, amount, userId, orderId);
+
+				} catch (Exception e) {
+					int currentRetry = 0;
+
+					// 재시도 로직 처리
+					if (currentRetry < MAX_RETRIES) {
+
+						Payment payment = (Payment)paymentRepository.findByOrderId(orderId)
+							.orElseThrow(() -> new CustomException(ErrorCode.PAYMENT_NOT_FOUND));
+
+						payment.increaseRetryCount();
+						paymentRepository.saveAndFlush(payment);
+
+						// 1분 이내에 재시도하려면
+						taskScheduler.schedule(this, new java.util.Date(System.currentTimeMillis() + RETRY_DELAY_MS));
+					} else {
+						// 최대 재시도 횟수에 도달한 경우
+						Payment payment = (Payment)paymentRepository.findByOrderId(orderId)
+							.orElseThrow(() -> new CustomException(ErrorCode.PAYMENT_NOT_FOUND));
+						payment.updateCancelPaymentFail(log);
+						paymentRepository.saveAndFlush(payment);
+					}
+				}
+			}
+		};
+
+		taskScheduler.schedule(retryTask, new java.util.Date(System.currentTimeMillis() + RETRY_DELAY_MS));
 	}
 
 	// 결제취소처리
@@ -221,14 +281,14 @@ public class PaymentUserService {
 				if (response.statusCode() == 200 && "CANCELED".equals(jsonNode.path("status").asText())) {
 					payment.updateUserPaymentCancel();
 				} else {
-					payment.updatePaymentFail(logMessage);
+					payment.updateCancelPaymentFail(logMessage);
 				}
 
 				paymentRepository.save(payment);
 
 			}
 		} catch (Exception e) {
-			payment.updatePaymentFail(e.getMessage());
+			payment.updateCancelPaymentFail(e.getMessage());
 			paymentRepository.save(payment);
 			throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
 		}
@@ -249,5 +309,6 @@ public class PaymentUserService {
 			throw new CustomException(ErrorCode.USER_ROLE_REQUIRED);
 		}
 	}
+
 }
 

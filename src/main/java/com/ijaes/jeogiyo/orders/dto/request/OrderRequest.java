@@ -14,6 +14,6 @@ import lombok.NoArgsConstructor;
 public class OrderRequest {
 	private UUID orderId;
 	private int amount;
-	private String username;
+	private UUID userId;
 
 }

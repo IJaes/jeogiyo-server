@@ -52,7 +52,6 @@ public class PaymentOwnerService {
 			.orElseThrow(() -> new CustomException(ErrorCode.PAYMENT_NOT_FOUND));
 
 		try {
-			// 3️⃣ 결제 취소 API 호출
 			String auth = secretKey.trim() + ":";
 			String encodedAuth = Base64.getEncoder().encodeToString(auth.getBytes(StandardCharsets.UTF_8));
 
@@ -75,13 +74,13 @@ public class PaymentOwnerService {
 			if (response.statusCode() == 200 && "CANCELED".equals(jsonNode.path("status").asText())) {
 				payment.updateOwnerPaymentCancel();
 			} else {
-				payment.updatePaymentFail(logMessage);
+				payment.updateCancelPaymentFail(logMessage);
 			}
 
 			paymentRepository.save(payment);
 
 		} catch (Exception e) {
-			payment.updatePaymentFail(e.getMessage());
+			payment.updateCancelPaymentFail(e.getMessage());
 			paymentRepository.save(payment);
 			throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
 		}
