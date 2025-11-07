@@ -163,6 +163,7 @@ public class ReviewRepositoryCustomImpl implements ReviewRepositoryCustom {
 		return new PageImpl<>(content, PageRequest.of(page, size), totalCount);
 	}
 
+	//4. 가게별 전체 평점의 평균 구하기
 	@Override
 	public Double calculateAverageRateByStoreId(UUID storeId) {
 		QReview review = QReview.review;

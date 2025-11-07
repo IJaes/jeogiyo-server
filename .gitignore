@@ -42,10 +42,9 @@ generated/
 .env
 .env.local
 application-local.properties
-config-local/
 
-#DS_Store
+config-local/**/.DS_Store
 .DS_Store
 ._.DS_Store
 **/.DS_Store
-**/._.DS_Store
+**/.DS_Store

@@ -27,8 +27,7 @@ public class ReviewEventListener {
 		Store store = storeRepository.findById(event.getStoreId())
 			.orElseThrow(() -> new CustomException(ErrorCode.STORE_NOT_FOUND));
 
-		Double averageRate = reviewRepositoryCustom.calculateAverageRateByStoreId(event.getStoreId());
-		store.updateRate(averageRate != null ? averageRate : 0.0);
+		store.updateRate(event.getAverageRate() != null ? event.getAverageRate() : 0.0);
 		storeRepository.save(store);
 	}
 }
