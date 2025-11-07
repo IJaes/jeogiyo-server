@@ -127,7 +127,6 @@ public class OrderService {
 		// order.rejectByOwner(reason);
 		order.rejectByOwner(order.getRejectReasonCode()); // 현재 구조 유지
 		publishOrderEvent(order.getId(), 0);
-		order.changeStatus(OrderStatus.REFUND); // 환불로 변경
 	}
 
 	// ========== 점주 상태 변경 ==========

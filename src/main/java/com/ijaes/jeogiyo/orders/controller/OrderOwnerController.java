@@ -101,7 +101,7 @@ public class OrderOwnerController {
 		return ResponseEntity.noContent().build();
 	}
 
-	@Operation(summary = "주문 거절", description = "점주가 ACCEPTED상태의 주문을 거절합니다.")
+	@Operation(summary = "주문 거절", description = "점주가 주문을 거절합니다.")
 	@PostMapping("/{orderId}/reject")
 	public ResponseEntity<Void> rejectByOwner(
 		@Parameter(description = "주문 ID", required = true)
