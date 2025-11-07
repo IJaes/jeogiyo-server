@@ -78,12 +78,12 @@ class StoreUserControllerTest {
 
 		Page<StoreResponse> expectedPage = new PageImpl<>(java.util.List.of(store));
 
-		when(storeUserService.getAllStores(anyInt(), anyInt(), anyString(), anyString(), any(Authentication.class)))
+		when(storeUserService.getAllStores(anyInt(), anyInt(), anyString(), any(Authentication.class)))
 			.thenReturn(expectedPage);
 
 		// when
 		Authentication authentication = createMockAuthentication();
-		ResponseEntity<Page<StoreResponse>> result = storeUserController.getAllStores(0, 10, "rate", "DESC", authentication);
+		ResponseEntity<Page<StoreResponse>> result = storeUserController.getAllStores(0, 10, "rate", authentication);
 
 		// then
 		assertNotNull(result);
@@ -92,7 +92,7 @@ class StoreUserControllerTest {
 		assertEquals(1, result.getBody().getTotalElements());
 		assertEquals(storeId, result.getBody().getContent().get(0).getId());
 		assertEquals("소문난 국밥집", result.getBody().getContent().get(0).getName());
-		verify(storeUserService, times(1)).getAllStores(anyInt(), anyInt(), anyString(), anyString(), any(Authentication.class));
+		verify(storeUserService, times(1)).getAllStores(anyInt(), anyInt(), anyString(), any(Authentication.class));
 	}
 
 	@Test
@@ -101,12 +101,12 @@ class StoreUserControllerTest {
 		// given
 		Page<StoreResponse> expectedPage = new PageImpl<>(java.util.List.of());
 
-		when(storeUserService.getAllStores(anyInt(), anyInt(), anyString(), anyString(), any(Authentication.class)))
+		when(storeUserService.getAllStores(anyInt(), anyInt(), anyString(), any(Authentication.class)))
 			.thenReturn(expectedPage);
 
 		// when
 		Authentication authentication = createMockAuthentication();
-		ResponseEntity<Page<StoreResponse>> result = storeUserController.getAllStores(0, 10, "distance", "ASC", authentication);
+		ResponseEntity<Page<StoreResponse>> result = storeUserController.getAllStores(0, 10, "distance", authentication);
 
 		// then
 		assertNotNull(result);
@@ -132,17 +132,17 @@ class StoreUserControllerTest {
 
 		Page<StoreResponse> expectedPage = new PageImpl<>(java.util.List.of(store));
 
-		when(storeUserService.getAllStores(anyInt(), anyInt(), anyString(), anyString(), any(Authentication.class)))
+		when(storeUserService.getAllStores(anyInt(), anyInt(), anyString(), any(Authentication.class)))
 			.thenReturn(expectedPage);
 
 		// when
 		Authentication authentication = createMockAuthentication();
-		ResponseEntity<Page<StoreResponse>> result = storeUserController.getAllStores(0, 10, "name", "ASC", authentication);
+		ResponseEntity<Page<StoreResponse>> result = storeUserController.getAllStores(0, 10, "name", authentication);
 
 		// then
 		assertNotNull(result.getBody());
 		assertEquals(1, result.getBody().getTotalElements());
-		verify(storeUserService, times(1)).getAllStores(anyInt(), anyInt(), anyString(), anyString(), any(Authentication.class));
+		verify(storeUserService, times(1)).getAllStores(anyInt(), anyInt(), anyString(), any(Authentication.class));
 	}
 
 	@Test
@@ -226,16 +226,16 @@ class StoreUserControllerTest {
 		// given
 		Page<StoreResponse> expectedPage = new PageImpl<>(java.util.List.of());
 
-		when(storeUserService.getAllStores(anyInt(), anyInt(), anyString(), anyString(), any(Authentication.class)))
+		when(storeUserService.getAllStores(anyInt(), anyInt(), anyString(), any(Authentication.class)))
 			.thenReturn(expectedPage);
 
 		// when
 		Authentication authentication = createMockAuthentication();
-		ResponseEntity<Page<StoreResponse>> result = storeUserController.getAllStores(0, 20, "rate", "DESC", authentication);
+		ResponseEntity<Page<StoreResponse>> result = storeUserController.getAllStores(0, 20, "rate", authentication);
 
 		// then
 		assertNotNull(result);
-		verify(storeUserService, times(1)).getAllStores(anyInt(), anyInt(), anyString(), anyString(), any(Authentication.class));
+		verify(storeUserService, times(1)).getAllStores(anyInt(), anyInt(), anyString(), any(Authentication.class));
 	}
 
 	@Test
@@ -244,12 +244,12 @@ class StoreUserControllerTest {
 		// given
 		Page<StoreResponse> expectedPage = new PageImpl<>(java.util.List.of());
 
-		when(storeUserService.getAllStores(anyInt(), anyInt(), anyString(), anyString(), any(Authentication.class)))
+		when(storeUserService.getAllStores(anyInt(), anyInt(), anyString(), any(Authentication.class)))
 			.thenReturn(expectedPage);
 
 		// when
 		Authentication authentication = createMockAuthentication();
-		ResponseEntity<Page<StoreResponse>> result = storeUserController.getAllStores(0, 10, "distance", "ASC", authentication);
+		ResponseEntity<Page<StoreResponse>> result = storeUserController.getAllStores(0, 10, "distance", authentication);
 
 		// then
 		assertNotNull(result);

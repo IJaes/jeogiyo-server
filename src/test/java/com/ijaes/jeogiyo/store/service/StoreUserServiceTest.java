@@ -2,7 +2,6 @@ package com.ijaes.jeogiyo.store.service;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -110,7 +109,7 @@ class StoreUserServiceTest {
 
 		// when
 		Authentication authentication = createMockAuthentication();
-		Page<StoreResponse> result = storeUserService.getAllStores(page, size, sortBy, direction, authentication);
+		Page<StoreResponse> result = storeUserService.getAllStores(page, size, sortBy, authentication);
 
 		// then
 		assertNotNull(result);
@@ -135,7 +134,7 @@ class StoreUserServiceTest {
 
 		// when
 		Authentication authentication = createMockAuthentication();
-		Page<StoreResponse> result = storeUserService.getAllStores(page, size, sortBy, direction, authentication);
+		Page<StoreResponse> result = storeUserService.getAllStores(page, size, sortBy, authentication);
 
 		// then
 		assertNotNull(result);
@@ -154,7 +153,7 @@ class StoreUserServiceTest {
 
 		// when
 		Authentication authentication = createMockAuthentication();
-		Page<StoreResponse> result = storeUserService.getAllStores(0, 10, "rate", "DESC", authentication);
+		Page<StoreResponse> result = storeUserService.getAllStores(0, 10, "rate", authentication);
 
 		// then
 		assertNotNull(result);
@@ -260,7 +259,7 @@ class StoreUserServiceTest {
 
 		// when
 		Authentication authentication = createMockAuthentication();
-		Page<StoreResponse> result = storeUserService.getAllStores(0, 10, "rate", "DESC", authentication);
+		Page<StoreResponse> result = storeUserService.getAllStores(0, 10, "rate", authentication);
 
 		// then
 		assertEquals(2, result.getTotalElements());

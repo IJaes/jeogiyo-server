@@ -34,11 +34,10 @@ public class StoreUserController {
 	public ResponseEntity<Page<StoreResponse>> getAllStores(
 		@Parameter(description = "페이지 번호 (0부터 시작)") @RequestParam(defaultValue = "0") int page,
 		@Parameter(description = "페이지 크기") @RequestParam(defaultValue = "10") int size,
-		@Parameter(description = "정렬 기준 (예: distance, name, rate)") @RequestParam(defaultValue = "distance") String sortBy,
-		@Parameter(description = "정렬 방향 (ASC 또는 DESC)") @RequestParam(defaultValue = "ASC") String direction,
+		@Parameter(description = "정렬 기준 (distance: 거리순, rate: 평점순)") @RequestParam(defaultValue = "distance") String sortBy,
 		Authentication authentication
 	) {
-		Page<StoreResponse> stores = storeUserService.getAllStores(page, size, sortBy, direction, authentication);
+		Page<StoreResponse> stores = storeUserService.getAllStores(page, size, sortBy, authentication);
 		return ResponseEntity.ok(stores);
 	}
 

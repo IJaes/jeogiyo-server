@@ -112,13 +112,23 @@ public class StoreRepositoryCustomImpl implements StoreRepositoryCustom {
 			.where(store.deletedAt.isNull())
 			.fetchOne();
 
-		var content = queryFactory
+		var query = queryFactory
 			.selectFrom(store)
 			.where(store.deletedAt.isNull())
-			.orderBy(store.createdAt.desc())
 			.offset(pageable.getOffset())
-			.limit(pageable.getPageSize())
-			.fetch();
+			.limit(pageable.getPageSize());
+
+		if (pageable.getSort().isSorted()) {
+			pageable.getSort().forEach(order -> {
+				if ("rate".equals(order.getProperty())) {
+					query.orderBy(order.isAscending() ? store.rate.asc() : store.rate.desc());
+				}
+			});
+		} else {
+			query.orderBy(store.createdAt.desc());
+		}
+
+		var content = query.fetch();
 
 		return new PageImpl<>(content, pageable, total == null ? 0 : total);
 	}

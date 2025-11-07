@@ -31,49 +31,58 @@ public class StoreUserService {
 	private final StoreRepository storeRepository;
 
 	@Transactional(readOnly = true)
-	public Page<StoreResponse> getAllStores(int page, int size, String sortBy, String direction, Authentication authentication) {
+	public Page<StoreResponse> getAllStores(int page, int size, String sortBy, Authentication authentication) {
 		User user = (User)authentication.getPrincipal();
 		Double userLatitude = user.getLatitude();
 		Double userLongitude = user.getLongitude();
 
-		Sort.Direction sortDirection = Sort.Direction.fromString(direction.toUpperCase());
-		Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sortBy));
-		Page<Store> stores = storeRepository.findAllNotDeleted(pageable);
-
-		List<StoreResponse> storesWithDistance = stores.stream()
-			.map(store -> {
-				double distance = calculateDistance(userLatitude, userLongitude, store.getLatitude(), store.getLongitude());
-				return StoreResponse.fromEntity(store, distance);
-			})
-			.collect(Collectors.toList());
-
 		if ("distance".equalsIgnoreCase(sortBy)) {
-			storesWithDistance.sort(Comparator.comparingDouble(StoreResponse::getDistance));
-			if ("DESC".equalsIgnoreCase(direction)) {
-				storesWithDistance.sort(Comparator.comparingDouble(StoreResponse::getDistance).reversed());
-			}
+			return getStoresSortedByDistance(page, size, userLatitude, userLongitude);
+		} else if ("rate".equalsIgnoreCase(sortBy)) {
+			return getStoresSortedByRate(page, size, userLatitude, userLongitude);
 		} else {
-			Pageable sortedPageable = PageRequest.of(page, size, Sort.by(sortDirection, sortBy));
-			Page<Store> sortedStores = storeRepository.findAllNotDeleted(sortedPageable);
-
-			storesWithDistance = sortedStores.stream()
-				.map(store -> {
-					double distance = calculateDistance(userLatitude, userLongitude, store.getLatitude(),
-						store.getLongitude());
-					return StoreResponse.fromEntity(store, distance);
-				})
-				.collect(Collectors.toList());
+			return getStoresSortedByDistance(page, size, userLatitude, userLongitude);
 		}
-
-
-
-		return new PageImpl<>(storesWithDistance, pageable, stores.getTotalElements());
 	}
 
 	@Transactional(readOnly = true)
 	public StoreDetailResponse getStoreDetail(UUID storeId) {
 		return storeRepository.findStoreDetailById(storeId)
 			.orElseThrow(() -> new CustomException(ErrorCode.STORE_NOT_FOUND));
+	}
+
+	private Page<StoreResponse> getStoresSortedByDistance(int page, int size, Double userLat, Double userLon) {
+		// Pageable unpaged = Pageable.unpaged();
+		Pageable largePageable = PageRequest.of(0, Integer.MAX_VALUE);
+		Page<Store> allStores = storeRepository.findAllNotDeleted(largePageable);
+
+		List<StoreResponse> sortedStores = allStores.getContent().stream()
+			.map(store -> {
+				double distance = calculateDistance(userLat, userLon, store.getLatitude(), store.getLongitude());
+				return StoreResponse.fromEntity(store, distance);
+			})
+			.sorted(Comparator.comparingDouble(StoreResponse::getDistance))
+			.collect(Collectors.toList());
+
+		int start = page * size;
+		int end = Math.min(start + size, sortedStores.size());
+		List<StoreResponse> pageResults = start <= sortedStores.size() ? sortedStores.subList(start, end) : List.of();
+
+		return new PageImpl<>(pageResults, PageRequest.of(page, size), sortedStores.size());
+	}
+
+	private Page<StoreResponse> getStoresSortedByRate(int page, int size, Double userLat, Double userLon) {
+		Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "rate"));
+		Page<Store> stores = storeRepository.findAllNotDeleted(pageable);
+
+		List<StoreResponse> storesWithDistance = stores.getContent().stream()
+			.map(store -> {
+				double distance = calculateDistance(userLat, userLon, store.getLatitude(), store.getLongitude());
+				return StoreResponse.fromEntity(store, distance);
+			})
+			.collect(Collectors.toList());
+
+		return new PageImpl<>(storesWithDistance, pageable, stores.getTotalElements());
 	}
 
 	private double calculateDistance(Double lat1, Double lon1, Double lat2, Double lon2) {
