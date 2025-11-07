@@ -21,6 +21,7 @@ import org.springframework.security.core.Authentication;
 
 import com.ijaes.jeogiyo.common.exception.CustomException;
 import com.ijaes.jeogiyo.common.exception.ErrorCode;
+import com.ijaes.jeogiyo.gemini.service.GeminiService;
 import com.ijaes.jeogiyo.review.dto.request.CreateReviewRequest;
 import com.ijaes.jeogiyo.review.dto.request.UpdateReviewRequest;
 import com.ijaes.jeogiyo.review.dto.response.CreateReviewResponse;
@@ -49,6 +50,8 @@ public class ReviewServiceTest {
 	private Authentication authentication;
 	@Mock
 	private ApplicationEventPublisher eventPublisher;
+	@Mock
+	private GeminiService geminiService;
 
 	@InjectMocks
 	private ReviewService reviewService;
@@ -89,6 +92,7 @@ public class ReviewServiceTest {
 			Optional.of(Store.builder().id(storeId).name("테스트 가게").build()));
 
 		when(reviewRepository.existsByOrderId(any())).thenReturn(false);
+		when(geminiService.checkAbuseInReview(anyString())).thenReturn(false);
 
 		when(reviewRepository.save(any(Review.class))).thenAnswer(invocation -> {
 			Review reviewToSave = invocation.getArgument(0);
@@ -112,6 +116,7 @@ public class ReviewServiceTest {
 		assertThat(response.getStoreId()).isEqualTo(storeId);
 		verify(reviewRepository).save(any(Review.class));
 		verify(eventPublisher).publishEvent(any(ReviewEvent.class));
+		verify(geminiService).checkAbuseInReview(anyString());
 	}
 
 	//1-2. 리뷰 생성 실패
@@ -210,6 +215,7 @@ public class ReviewServiceTest {
 		UpdateReviewRequest request = new UpdateReviewRequest("new title", "new content", 5);
 		when(reviewRepository.findById(reviewId)).thenReturn(Optional.of(review));
 		when(storeRepository.findById(storeId)).thenReturn(Optional.of(Store.builder().id(storeId).name("가게").build()));
+		when(geminiService.checkAbuseInReview("new content")).thenReturn(false);
 
 		ReviewResponse response = reviewService.updateReview(authentication, reviewId, request);
 

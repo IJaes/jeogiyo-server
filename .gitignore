@@ -45,3 +45,4 @@ application-local.properties
 config-local/**/.DS_Store
 **/.DS_Store
 **/.DS_Store
+jeogiyo-submodule/

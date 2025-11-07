@@ -201,7 +201,8 @@ public class ReviewService {
 			//비속어 있으면 숨김 처리
 			if (isAbusive) {
 				review.hide();
-			}
+			} else
+				review.show();
 
 			//내용 업데이트
 			review.updateContent(request.getContent());
