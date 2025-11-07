@@ -36,6 +36,10 @@ public class StoreUserService {
 		Double userLatitude = user.getLatitude();
 		Double userLongitude = user.getLongitude();
 
+		if (userLatitude == null || userLongitude == null) {
+			throw new CustomException(ErrorCode.USER_COORDINATES_NOT_FOUND);
+		}
+
 		if ("distance".equalsIgnoreCase(sortBy)) {
 			return getStoresSortedByDistance(page, size, userLatitude, userLongitude);
 		} else if ("rate".equalsIgnoreCase(sortBy)) {
@@ -52,11 +56,11 @@ public class StoreUserService {
 	}
 
 	private Page<StoreResponse> getStoresSortedByDistance(int page, int size, Double userLat, Double userLon) {
-		// Pageable unpaged = Pageable.unpaged();
 		Pageable largePageable = PageRequest.of(0, Integer.MAX_VALUE);
 		Page<Store> allStores = storeRepository.findAllNotDeleted(largePageable);
 
 		List<StoreResponse> sortedStores = allStores.getContent().stream()
+			.filter(store -> store.getLatitude() != null && store.getLongitude() != null)
 			.map(store -> {
 				double distance = calculateDistance(userLat, userLon, store.getLatitude(), store.getLongitude());
 				return StoreResponse.fromEntity(store, distance);
@@ -77,7 +81,9 @@ public class StoreUserService {
 
 		List<StoreResponse> storesWithDistance = stores.getContent().stream()
 			.map(store -> {
-				double distance = calculateDistance(userLat, userLon, store.getLatitude(), store.getLongitude());
+				double distance = (store.getLatitude() != null && store.getLongitude() != null)
+					? calculateDistance(userLat, userLon, store.getLatitude(), store.getLongitude())
+					: Double.MAX_VALUE;
 				return StoreResponse.fromEntity(store, distance);
 			})
 			.collect(Collectors.toList());
@@ -86,6 +92,10 @@ public class StoreUserService {
 	}
 
 	private double calculateDistance(Double lat1, Double lon1, Double lat2, Double lon2) {
+		if (lat1 == null || lon1 == null || lat2 == null || lon2 == null) {
+			return Double.MAX_VALUE;
+		}
+
 		double earthRadiusKm = 6371.0;
 
 		double dLat = Math.toRadians(lat2 - lat1);

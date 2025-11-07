@@ -80,9 +80,10 @@ public enum ErrorCode {
 	PAYMENT_CANCEL_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "P-006", "결제 취소 중 오류가 발생했습니다."),
 	PAYMENT_DB_SAVE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "P-007", "결제 DB 저장 중 오류가 발생했습니다."),
 
-	// 위치 관련 (G-001)
+	// 위치 관련 (G-xxx)
 	ADDRESS_NOT_FOUND(HttpStatus.BAD_REQUEST, "G-001", "주소를 찾을 수 없습니다. 올바른 주소를 입력해주세요."),
-	GEOCODING_API_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "G-002", "지오코딩 API 호출 중 오류가 발생했습니다.");
+	GEOCODING_API_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "G-002", "지오코딩 API 호출 중 오류가 발생했습니다."),
+	USER_COORDINATES_NOT_FOUND(HttpStatus.BAD_REQUEST, "G-003", "사용자의 좌표 정보가 없습니다. 주소를 먼저 설정해주세요.");
 
 	private final HttpStatus httpStatus;
 	private final String code;
