@@ -41,6 +41,23 @@ public class StoreResponse {
 	@Schema(description = "사장님 ID")
 	private UUID ownerId;
 
+	@Schema(description = "사용자로부터의 거리 (km)", example = "1.5")
+	private Double distance;
+
+	public static StoreResponse fromEntity(Store store, Double distance) {
+		return StoreResponse.builder()
+			.id(store.getId())
+			.businessNumber(store.getBusinessNumber())
+			.name(store.getName())
+			.address(store.getAddress())
+			.description(store.getDescription())
+			.category(store.getCategory().name())
+			.rate(store.getRate())
+			.ownerId(store.getOwner().getId())
+			.distance(distance)
+			.build();
+	}
+
 	public static StoreResponse fromEntity(Store store) {
 		return StoreResponse.builder()
 			.id(store.getId())

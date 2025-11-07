@@ -1,6 +1,7 @@
 package com.ijaes.jeogiyo.user.service;
 
 import com.ijaes.jeogiyo.auth.validator.SignUpValidator;
+import com.ijaes.jeogiyo.common.client.NaverGeocodeClient;
 import com.ijaes.jeogiyo.common.exception.CustomException;
 import com.ijaes.jeogiyo.common.exception.ErrorCode;
 import com.ijaes.jeogiyo.user.dto.request.UpdateAddressRequest;
@@ -23,11 +24,17 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final SignUpValidator signUpValidator;
+    private final NaverGeocodeClient naverGeocodeClient;
 
     @Transactional
     public UserUpdateResponse updateAddress(Authentication authentication, UpdateAddressRequest request) {
         User user = getAuthenticatedUser(authentication);
+
+        NaverGeocodeClient.Coordinates coordinates = naverGeocodeClient.addressToCoordinates(request.getAddress());
+
         user.updateAddress(request.getAddress());
+        user.updateCoordinates(coordinates.getLatitude(), coordinates.getLongitude());
+
         userRepository.save(user);
         return UserUpdateResponse.builder()
             .message("주소가 수정되었습니다.")

@@ -23,8 +23,10 @@ import com.ijaes.jeogiyo.orders.dto.response.OrderSummaryResponse;
 import com.ijaes.jeogiyo.orders.entity.Order;
 import com.ijaes.jeogiyo.orders.entity.OrderStatus;
 import com.ijaes.jeogiyo.orders.repository.OrderRepository;
+
 import com.ijaes.jeogiyo.payments.dto.response.PaymentApproveResponse;
 import com.ijaes.jeogiyo.payments.dto.response.PaymentCancelResponse;
+
 import com.ijaes.jeogiyo.payments.entity.CancelReason;
 import com.ijaes.jeogiyo.store.entity.Store;
 import com.ijaes.jeogiyo.store.repository.StoreRepository;
@@ -42,23 +44,7 @@ public class OrderService {
 	private final StoreRepository storeRepository;
 	private final ApplicationEventPublisher eventPublisher;
 
-	//	사용자 결제 취소 요청
-	// public void orderCancel(UUID orderId, String paymentKey, CancelReason canCelReason, UUID userId) {
-	// 	orderId = UUID.fromString("82671ED9-B61A-11F0-97EA-EED0BD4D080");
-	// 	paymentKey = "tviva20251105105118NaR73";
-	// 	CancelReason cancelReason = CancelReason.USERCANCEL;
-	// 	userId = UUID.fromString("08100bf7-58ea-4cc6-851e-fe48a7813654");
-	// 	eventPublisher.publishEvent(new OrderUserCancelRequest(orderId, paymentKey, cancelReason, userId));
-	// }
 
-	// public void orderOwnerCancel(UUID orderId, String paymentKey, CancelReason canCelReason, UUID userId) {
-	// 	orderId = UUID.fromString("82671ED9-B61A-11F0-97EA-EED0BD4D35");
-	// 	paymentKey = "tviva20251106155446TxWp3";
-	// 	CancelReason cancelReason = CancelReason.STORECANCEL;
-	// 	userId = UUID.fromString("08100bf7-58ea-4cc6-851e-fe48a7813654");
-	// 	eventPublisher.publishEvent(new OrderOwnerCancelRequest(orderId, paymentKey, canCelReason, userId));
-	//
-	// }
 
 	// ========== 생성 ==========
 	@Transactional
@@ -297,5 +283,5 @@ public class OrderService {
 		return auth.getAuthorities().stream()
 			.anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 	}
-
 }
+

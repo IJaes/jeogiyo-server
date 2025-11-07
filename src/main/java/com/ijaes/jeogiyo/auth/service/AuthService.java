@@ -1,122 +1,130 @@
 package com.ijaes.jeogiyo.auth.service;
 
-import com.ijaes.jeogiyo.auth.dto.response.AuthResponse;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.HexFormat;
+
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.ijaes.jeogiyo.auth.dto.request.LoginRequest;
 import com.ijaes.jeogiyo.auth.dto.request.SignUpRequest;
+import com.ijaes.jeogiyo.auth.dto.response.AuthResponse;
 import com.ijaes.jeogiyo.auth.entity.TokenBlacklist;
 import com.ijaes.jeogiyo.auth.repository.TokenBlacklistRepository;
 import com.ijaes.jeogiyo.auth.security.JwtUtil;
 import com.ijaes.jeogiyo.auth.validator.SignUpValidator;
+import com.ijaes.jeogiyo.common.client.NaverGeocodeClient;
 import com.ijaes.jeogiyo.common.exception.CustomException;
 import com.ijaes.jeogiyo.common.exception.ErrorCode;
 import com.ijaes.jeogiyo.user.entity.Role;
 import com.ijaes.jeogiyo.user.entity.User;
 import com.ijaes.jeogiyo.user.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.HexFormat;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
 public class AuthService {
 
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final JwtUtil jwtUtil;
-    private final SignUpValidator signUpValidator;
-    private final TokenBlacklistRepository tokenBlacklistRepository;
+	private final UserRepository userRepository;
+	private final PasswordEncoder passwordEncoder;
+	private final JwtUtil jwtUtil;
+	private final SignUpValidator signUpValidator;
+	private final TokenBlacklistRepository tokenBlacklistRepository;
+	private final NaverGeocodeClient naverGeocodeClient;
 
-    @Transactional
-    public AuthResponse signUp(SignUpRequest request) {
-        signUpValidator.validateSignUpRequest(request);
+	@Transactional
+	public AuthResponse signUp(SignUpRequest request) {
+		signUpValidator.validateSignUpRequest(request);
 
-        if (userRepository.existsByUsername(request.getUsername())) {
-            throw new CustomException(ErrorCode.DUPLICATE_USERNAME);
-        }
+		if (userRepository.existsByUsername(request.getUsername())) {
+			throw new CustomException(ErrorCode.DUPLICATE_USERNAME);
+		}
 
-        User user = User.builder()
-                .username(request.getUsername())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .name(request.getName())
-                .address(request.getAddress())
-                .phoneNumber(request.getPhoneNumber())
-                .isOwner(request.isOwner())
-                .role(request.isOwner() ? Role.OWNER : Role.USER)
-                .build();
+		NaverGeocodeClient.Coordinates coordinates = naverGeocodeClient.addressToCoordinates(request.getAddress());
 
-        userRepository.save(user);
+		User user = User.builder()
+			.username(request.getUsername())
+			.password(passwordEncoder.encode(request.getPassword()))
+			.name(request.getName())
+			.address(request.getAddress())
+			.latitude(coordinates.getLatitude())
+			.longitude(coordinates.getLongitude())
+			.phoneNumber(request.getPhoneNumber())
+			.isOwner(request.isOwner())
+			.role(request.isOwner() ? Role.OWNER : Role.USER)
+			.build();
 
-        return AuthResponse.builder()
-                .message("회원가입이 성공했습니다.!")
-                .success(true)
-                .build();
-    }
+		userRepository.save(user);
 
-    @Transactional(readOnly = true)
-    public AuthResponse login(LoginRequest request) {
-        var user = userRepository.findByUsername(request.getUsername());
+		return AuthResponse.builder()
+			.message("회원가입이 성공했습니다.!")
+			.success(true)
+			.build();
+	}
 
-        if (user.isEmpty()) {
-            throw new CustomException(ErrorCode.WRONG_ID_PW);
-        }
+	@Transactional(readOnly = true)
+	public AuthResponse login(LoginRequest request) {
+		var user = userRepository.findByUsername(request.getUsername());
 
-        User foundUser = user.get();
+		if (user.isEmpty()) {
+			throw new CustomException(ErrorCode.WRONG_ID_PW);
+		}
 
-        if (foundUser.getRole().equals(Role.BLOCK)) {
-            throw new CustomException(ErrorCode.BLOCKED_USER);
-        }
+		User foundUser = user.get();
 
-        if (!passwordEncoder.matches(request.getPassword(), foundUser.getPassword())) {
-            throw new CustomException(ErrorCode.WRONG_ID_PW);
-        }
+		if (foundUser.getRole().equals(Role.BLOCK)) {
+			throw new CustomException(ErrorCode.BLOCKED_USER);
+		}
 
-        String token = jwtUtil.generateToken(foundUser.getUsername());
+		if (!passwordEncoder.matches(request.getPassword(), foundUser.getPassword())) {
+			throw new CustomException(ErrorCode.WRONG_ID_PW);
+		}
 
-        return AuthResponse.builder()
-                .message("로그인이 성공했습니다.")
-                .token(token)
-                .role(foundUser.getRole().getAuthority())
-                .success(true)
-                .build();
-    }
+		String token = jwtUtil.generateToken(foundUser.getUsername());
 
-    @Transactional
-    public AuthResponse logout(String bearerToken) {
-        String token = bearerToken.startsWith("Bearer ") ? bearerToken.substring(7) : bearerToken;
-        String username = jwtUtil.extractUsername(token);
+		return AuthResponse.builder()
+			.message("로그인이 성공했습니다.")
+			.token(token)
+			.role(foundUser.getRole().getAuthority())
+			.success(true)
+			.build();
+	}
 
-        jwtUtil.validateToken(token);
+	@Transactional
+	public AuthResponse logout(String bearerToken) {
+		String token = bearerToken.startsWith("Bearer ") ? bearerToken.substring(7) : bearerToken;
+		String username = jwtUtil.extractUsername(token);
 
-        long expirationAt = jwtUtil.getTokenExpirationTime(token);
+		jwtUtil.validateToken(token);
 
-        String tokenHash = hashToken(token);
+		long expirationAt = jwtUtil.getTokenExpirationTime(token);
 
-        TokenBlacklist tokenBlacklist = TokenBlacklist.builder()
-                .tokenHash(tokenHash)
-                .username(username)
-                .expirationAt(expirationAt)
-                .build();
+		String tokenHash = hashToken(token);
 
-        tokenBlacklistRepository.save(tokenBlacklist);
+		TokenBlacklist tokenBlacklist = TokenBlacklist.builder()
+			.tokenHash(tokenHash)
+			.username(username)
+			.expirationAt(expirationAt)
+			.build();
 
-        return AuthResponse.builder()
-                .message("로그아웃이 성공했습니다.")
-                .success(true)
-                .build();
-    }
+		tokenBlacklistRepository.save(tokenBlacklist);
 
-    private String hashToken(String token) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest(token.getBytes());
-            return HexFormat.of().formatHex(hash);
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("SHA-256 알고리즘을 찾을 수 없습니다.", e);
-        }
-    }
+		return AuthResponse.builder()
+			.message("로그아웃이 성공했습니다.")
+			.success(true)
+			.build();
+	}
+
+	private String hashToken(String token) {
+		try {
+			MessageDigest digest = MessageDigest.getInstance("SHA-256");
+			byte[] hash = digest.digest(token.getBytes());
+			return HexFormat.of().formatHex(hash);
+		} catch (NoSuchAlgorithmException e) {
+			throw new RuntimeException("SHA-256 알고리즘을 찾을 수 없습니다.", e);
+		}
+	}
 }
