@@ -2,17 +2,21 @@ package com.ijaes.jeogiyo.orders.dto.request;
 
 import java.util.UUID;
 
+import com.ijaes.jeogiyo.payments.entity.CancelReason;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Data
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class OrderEvent {
+public class OrderOwnerCancelRequest {
 	private UUID orderId;
-	private int amount;
+	private String paymentKey;
+	private CancelReason canCelReason;
+	private UUID userId;
 
 }

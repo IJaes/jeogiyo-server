@@ -14,12 +14,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.ijaes.jeogiyo.common.exception.CustomException;
 import com.ijaes.jeogiyo.orders.dto.request.OrderCreateRequest;
-import com.ijaes.jeogiyo.orders.dto.request.OrderEvent;
+import com.ijaes.jeogiyo.orders.dto.request.OrderOwnerCancelRequest;
+import com.ijaes.jeogiyo.orders.dto.request.OrderRequest;
+import com.ijaes.jeogiyo.orders.dto.request.OrderUserCancelRequest;
 import com.ijaes.jeogiyo.orders.dto.response.OrderDetailResponse;
 import com.ijaes.jeogiyo.orders.dto.response.OrderSummaryResponse;
 import com.ijaes.jeogiyo.orders.entity.Order;
 import com.ijaes.jeogiyo.orders.entity.OrderStatus;
 import com.ijaes.jeogiyo.orders.repository.OrderRepository;
+import com.ijaes.jeogiyo.payments.entity.CancelReason;
 import com.ijaes.jeogiyo.store.entity.Store;
 import com.ijaes.jeogiyo.store.repository.StoreRepository;
 import com.ijaes.jeogiyo.user.entity.User;
@@ -36,10 +39,35 @@ public class OrderService {
 	private final StoreRepository storeRepository;
 	private final ApplicationEventPublisher eventPublisher;
 
-	// ====== 이벤트 테스트(옵션) ======
-	public void orderProcess(UUID orderId, int amount) {
-		eventPublisher.publishEvent(new OrderEvent(orderId, amount));
+	// 결제 승인 요청
+	public void orderProcess(UUID orderId, int amount, UUID userId) {
+		orderId = UUID.fromString("82671ED9-B61A-11F0-97EA-EED0BD4D46");
+		amount = 100;
+		userId = UUID.fromString("08100bf7-58ea-4cc6-851e-fe48a7813654");
+		eventPublisher.publishEvent(new OrderRequest(orderId, amount, userId));
 	}
+
+	//	사용자 결제 취소 요청
+	public void orderCancel(UUID orderId, String paymentKey, CancelReason canCelReason, UUID userId) {
+		orderId = UUID.fromString("82671ED9-B61A-11F0-97EA-EED0BD4D080");
+		paymentKey = "tviva20251105105118NaR73";
+		CancelReason cancelReason = CancelReason.USERCANCEL;
+		userId = UUID.fromString("08100bf7-58ea-4cc6-851e-fe48a7813654");
+		eventPublisher.publishEvent(new OrderUserCancelRequest(orderId, paymentKey, cancelReason, userId));
+	}
+
+	public void orderOwnerCancel(UUID orderId, String paymentKey, CancelReason canCelReason, UUID userId) {
+		orderId = UUID.fromString("82671ED9-B61A-11F0-97EA-EED0BD4D35");
+		paymentKey = "tviva20251106155446TxWp3";
+		CancelReason cancelReason = CancelReason.STORECANCEL;
+		userId = UUID.fromString("08100bf7-58ea-4cc6-851e-fe48a7813654");
+		eventPublisher.publishEvent(new OrderOwnerCancelRequest(orderId, paymentKey, canCelReason, userId));
+	}
+
+	// ====== 이벤트 테스트(옵션) ======
+	// public void orderProcess(UUID orderId, int amount) {
+	// 	eventPublisher.publishEvent(new OrderEvent(orderId, amount));
+	// }
 
 	// ========== 생성 ==========
 	@Transactional
@@ -166,7 +194,7 @@ public class OrderService {
 	// 결제 관련 이벤트
 	private void publishOrderEvent(UUID orderId, int amount) {
 		try {
-			eventPublisher.publishEvent(new OrderEvent(orderId, amount));
+			// eventPublisher.publishEvent(new OrderEvexnt(orderId, amount));
 		} catch (Exception e) {
 			log.error("OrderEvent publish failed. orderId={}, amount={}", orderId, amount, e);
 			throw new CustomException(ORDER_EVENT_FAILED);
