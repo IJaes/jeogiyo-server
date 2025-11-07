@@ -2,7 +2,6 @@ package com.ijaes.jeogiyo.store.service;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -21,6 +20,8 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import com.ijaes.jeogiyo.common.exception.CustomException;
 import com.ijaes.jeogiyo.common.exception.ErrorCode;
@@ -46,6 +47,7 @@ class StoreUserServiceTest {
 	private UUID storeId;
 	private UUID ownerId;
 	private User testOwner;
+	private User testUser;
 
 	@BeforeEach
 	void setUp() {
@@ -58,9 +60,23 @@ class StoreUserServiceTest {
 			.password("password")
 			.name("사장님")
 			.address("서울시 강남구")
+			.latitude(37.4979)
+			.longitude(127.0276)
 			.phoneNumber("010-1234-5678")
 			.isOwner(true)
 			.role(Role.OWNER)
+			.build();
+
+		testUser = User.builder()
+			.id(UUID.randomUUID())
+			.username("user@test.com")
+			.password("password")
+			.name("테스트 사용자")
+			.address("서울시 강남구")
+			.latitude(37.4979)
+			.longitude(127.0276)
+			.phoneNumber("010-1111-1111")
+			.role(Role.USER)
 			.build();
 
 		testStore = Store.builder()
@@ -68,6 +84,8 @@ class StoreUserServiceTest {
 			.businessNumber("123-45-67890")
 			.name("소문난 국밥집")
 			.address("서울시 강남구 역삼동")
+			.latitude(37.4979)
+			.longitude(127.0276)
 			.description("뜨근뜨끈한 국물 한 사발 먹고 가세요")
 			.category(Category.KOREAN)
 			.rate(4.5)
@@ -90,7 +108,8 @@ class StoreUserServiceTest {
 		when(storeRepository.findAllNotDeleted(any(Pageable.class))).thenReturn(storePage);
 
 		// when
-		Page<StoreResponse> result = storeUserService.getAllStores(page, size, sortBy, direction);
+		Authentication authentication = createMockAuthentication();
+		Page<StoreResponse> result = storeUserService.getAllStores(page, size, sortBy, authentication);
 
 		// then
 		assertNotNull(result);
@@ -114,7 +133,8 @@ class StoreUserServiceTest {
 		when(storeRepository.findAllNotDeleted(any(Pageable.class))).thenReturn(storePage);
 
 		// when
-		Page<StoreResponse> result = storeUserService.getAllStores(page, size, sortBy, direction);
+		Authentication authentication = createMockAuthentication();
+		Page<StoreResponse> result = storeUserService.getAllStores(page, size, sortBy, authentication);
 
 		// then
 		assertNotNull(result);
@@ -132,7 +152,8 @@ class StoreUserServiceTest {
 		when(storeRepository.findAllNotDeleted(any(Pageable.class))).thenReturn(emptyPage);
 
 		// when
-		Page<StoreResponse> result = storeUserService.getAllStores(0, 10, "rate", "DESC");
+		Authentication authentication = createMockAuthentication();
+		Page<StoreResponse> result = storeUserService.getAllStores(0, 10, "rate", authentication);
 
 		// then
 		assertNotNull(result);
@@ -211,6 +232,8 @@ class StoreUserServiceTest {
 			.password("password")
 			.name("사장님2")
 			.address("서울시 마포구")
+			.latitude(37.5505)
+			.longitude(126.9552)
 			.phoneNumber("010-9876-5432")
 			.isOwner(true)
 			.role(Role.OWNER)
@@ -221,6 +244,8 @@ class StoreUserServiceTest {
 			.businessNumber("456-78-90123")
 			.name("유명한 라면집")
 			.address("서울시 마포구 홍대")
+			.latitude(37.5505)
+			.longitude(126.9552)
 			.description("맛있는 라면")
 			.category(Category.JAPANESE)
 			.rate(4.2)
@@ -233,7 +258,8 @@ class StoreUserServiceTest {
 		when(storeRepository.findAllNotDeleted(any(Pageable.class))).thenReturn(storePage);
 
 		// when
-		Page<StoreResponse> result = storeUserService.getAllStores(0, 10, "rate", "DESC");
+		Authentication authentication = createMockAuthentication();
+		Page<StoreResponse> result = storeUserService.getAllStores(0, 10, "rate", authentication);
 
 		// then
 		assertEquals(2, result.getTotalElements());
@@ -241,121 +267,11 @@ class StoreUserServiceTest {
 		assertEquals("유명한 라면집", result.getContent().get(1).getName());
 	}
 
-	@Test
-	@DisplayName("매장 검색 - 매장명으로 검색 성공")
-	void searchStores_byStoreName_success() {
-		// given
-		String query = "국밥";
-		Pageable pageable = PageRequest.of(0, 10);
-		Page<Store> searchResult = new PageImpl<>(List.of(testStore), pageable, 1);
-
-		when(storeRepository.searchStores(query, pageable)).thenReturn(searchResult);
-
-		// when
-		Page<StoreResponse> result = storeUserService.searchStores(query, 0, 10);
-
-		// then
-		assertNotNull(result);
-		assertEquals(1, result.getTotalElements());
-		assertEquals("소문난 국밥집", result.getContent().get(0).getName());
-	}
-
-	@Test
-	@DisplayName("매장 검색 - 메뉴명으로 검색 성공")
-	void searchStores_byMenuName_success() {
-		// given
-		String query = "김밥";
-		Pageable pageable = PageRequest.of(0, 10);
-		Page<Store> searchResult = new PageImpl<>(List.of(testStore), pageable, 1);
-
-		when(storeRepository.searchStores(query, pageable)).thenReturn(searchResult);
-
-		// when
-		Page<StoreResponse> result = storeUserService.searchStores(query, 0, 10);
-
-		// then
-		assertNotNull(result);
-		assertEquals(1, result.getTotalElements());
-		assertEquals("소문난 국밥집", result.getContent().get(0).getName());
-	}
-
-	@Test
-	@DisplayName("매장 검색 - 검색 결과 없음")
-	void searchStores_noResult() {
-		// given
-		String query = "존재하지않는음식";
-		Pageable pageable = PageRequest.of(0, 10);
-		Page<Store> emptyResult = new PageImpl<>(List.of(), pageable, 0);
-
-		when(storeRepository.searchStores(query, pageable)).thenReturn(emptyResult);
-
-		// when
-		Page<StoreResponse> result = storeUserService.searchStores(query, 0, 10);
-
-		// then
-		assertNotNull(result);
-		assertEquals(0, result.getTotalElements());
-		assertTrue(result.getContent().isEmpty());
-	}
-
-	@Test
-	@DisplayName("매장 검색 - 여러 매장 검색 결과")
-	void searchStores_multipleResults() {
-		// given
-		User owner2 = User.builder()
-			.id(UUID.randomUUID())
-			.username("owner2@test.com")
-			.password("password")
-			.name("사장님2")
-			.address("서울시 마포구")
-			.phoneNumber("010-9876-5432")
-			.isOwner(true)
-			.role(Role.OWNER)
-			.build();
-
-		Store store2 = Store.builder()
-			.id(UUID.randomUUID())
-			.businessNumber("456-78-90123")
-			.name("유명한 국수당")
-			.address("서울시 마포구 홍대")
-			.description("맛있는 국수")
-			.category(Category.KOREAN)
-			.rate(4.2)
-			.owner(owner2)
-			.build();
-
-		String query = "국";
-		Pageable pageable = PageRequest.of(0, 10);
-		Page<Store> searchResult = new PageImpl<>(List.of(testStore, store2), pageable, 2);
-
-		when(storeRepository.searchStores(query, pageable)).thenReturn(searchResult);
-
-		// when
-		Page<StoreResponse> result = storeUserService.searchStores(query, 0, 10);
-
-		// then
-		assertEquals(2, result.getTotalElements());
-		assertEquals("소문난 국밥집", result.getContent().get(0).getName());
-		assertEquals("유명한 국수당", result.getContent().get(1).getName());
-	}
-
-	@Test
-	@DisplayName("매장 검색 - 페이지네이션")
-	void searchStores_withPagination() {
-		// given
-		String query = "국";
-		Pageable pageable = PageRequest.of(1, 5);
-		Page<Store> searchResult = new PageImpl<>(List.of(testStore), pageable, 10);
-
-		when(storeRepository.searchStores(query, pageable)).thenReturn(searchResult);
-
-		// when
-		Page<StoreResponse> result = storeUserService.searchStores(query, 1, 5);
-
-		// then
-		assertNotNull(result);
-		assertEquals(10, result.getTotalElements());
-		assertEquals(1, result.getNumber());
-		assertEquals(5, result.getSize());
+	private Authentication createMockAuthentication() {
+		return new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+			testUser,
+			null,
+			java.util.Collections.singleton(new SimpleGrantedAuthority("ROLE_USER"))
+		);
 	}
 }

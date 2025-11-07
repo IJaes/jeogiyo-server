@@ -37,6 +37,12 @@ public class User extends BaseEntity implements UserDetails {
     @Column(nullable = false)
     private String address;
 
+    @Column(nullable = true)
+    private Double latitude;
+
+    @Column(nullable = true)
+    private Double longitude;
+
     @Column(nullable = false)
     private String phoneNumber;
 
@@ -74,6 +80,11 @@ public class User extends BaseEntity implements UserDetails {
 
     public void updateAddress(String newAddress) {
         this.address = newAddress;
+    }
+
+    public void updateCoordinates(Double latitude, Double longitude) {
+        this.latitude = latitude;
+        this.longitude = longitude;
     }
 
     public void updatePhoneNumber(String newPhoneNumber) {

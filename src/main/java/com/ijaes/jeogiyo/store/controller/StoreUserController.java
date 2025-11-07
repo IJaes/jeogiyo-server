@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -29,14 +30,14 @@ public class StoreUserController {
 	private final StoreUserService storeUserService;
 
 	@GetMapping("")
-	@Operation(summary = "전체 매장 조회", description = "모든 매장을 페이지네이션으로 조회합니다", security = @SecurityRequirement(name = "bearer-jwt"))
+	@Operation(summary = "전체 매장 조회", description = "모든 매장을 조회합니다", security = @SecurityRequirement(name = "bearer-jwt"))
 	public ResponseEntity<Page<StoreResponse>> getAllStores(
 		@Parameter(description = "페이지 번호 (0부터 시작)") @RequestParam(defaultValue = "0") int page,
 		@Parameter(description = "페이지 크기") @RequestParam(defaultValue = "10") int size,
-		@Parameter(description = "정렬 기준 (예: name, rate)") @RequestParam(defaultValue = "rate") String sortBy,
-		@Parameter(description = "정렬 방향 (ASC 또는 DESC)") @RequestParam(defaultValue = "DESC") String direction
+		@Parameter(description = "정렬 기준 (distance: 거리순, rate: 평점순)") @RequestParam(defaultValue = "distance") String sortBy,
+		Authentication authentication
 	) {
-		Page<StoreResponse> stores = storeUserService.getAllStores(page, size, sortBy, direction);
+		Page<StoreResponse> stores = storeUserService.getAllStores(page, size, sortBy, authentication);
 		return ResponseEntity.ok(stores);
 	}
 
