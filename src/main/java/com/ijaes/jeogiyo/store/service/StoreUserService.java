@@ -91,6 +91,13 @@ public class StoreUserService {
 		return new PageImpl<>(storesWithDistance, pageable, stores.getTotalElements());
 	}
 
+	@Transactional(readOnly = true)
+	public Page<StoreResponse> searchStores(String query, int page, int size) {
+		Pageable pageable = PageRequest.of(page, size);
+		Page<Store> stores = storeRepository.searchStores(query, pageable);
+		return stores.map(StoreResponse::fromEntity);
+	}
+
 	private double calculateDistance(Double lat1, Double lon1, Double lat2, Double lon2) {
 		if (lat1 == null || lon1 == null || lat2 == null || lon2 == null) {
 			return Double.MAX_VALUE;
