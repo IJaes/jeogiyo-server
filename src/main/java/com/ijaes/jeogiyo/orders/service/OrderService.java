@@ -64,12 +64,10 @@ public class OrderService {
 		eventPublisher.publishEvent(new OrderOwnerCancelRequest(orderId, paymentKey, canCelReason, userId));
 	}
 
-}
-
 	// ====== 이벤트 테스트(옵션) ======
-	public void orderProcess(UUID orderId, int amount) {
-		eventPublisher.publishEvent(new OrderEvent(orderId, amount));
-	}
+	// public void orderProcess(UUID orderId, int amount) {
+	// 	eventPublisher.publishEvent(new OrderEvent(orderId, amount));
+	// }
 
 	// ========== 생성 ==========
 	@Transactional
@@ -108,7 +106,6 @@ public class OrderService {
 		return orderRepository.findAllByUserId(userId, pageable)
 			.map(OrderSummaryResponse::from);
 	}
-
 
 	// ========== 가게 단위 목록 조회 ==========
 	@Transactional(readOnly = true)
@@ -197,7 +194,7 @@ public class OrderService {
 	// 결제 관련 이벤트
 	private void publishOrderEvent(UUID orderId, int amount) {
 		try {
-			eventPublisher.publishEvent(new OrderEvent(orderId, amount));
+			// eventPublisher.publishEvent(new OrderEvexnt(orderId, amount));
 		} catch (Exception e) {
 			log.error("OrderEvent publish failed. orderId={}, amount={}", orderId, amount, e);
 			throw new CustomException(ORDER_EVENT_FAILED);
