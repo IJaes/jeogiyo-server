@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
@@ -22,6 +23,8 @@ import com.ijaes.jeogiyo.orders.dto.response.OrderSummaryResponse;
 import com.ijaes.jeogiyo.orders.entity.Order;
 import com.ijaes.jeogiyo.orders.entity.OrderStatus;
 import com.ijaes.jeogiyo.orders.repository.OrderRepository;
+import com.ijaes.jeogiyo.payments.dto.response.PaymentApproveResponse;
+import com.ijaes.jeogiyo.payments.dto.response.PaymentCancelResponse;
 import com.ijaes.jeogiyo.payments.entity.CancelReason;
 import com.ijaes.jeogiyo.store.entity.Store;
 import com.ijaes.jeogiyo.store.repository.StoreRepository;
@@ -39,17 +42,6 @@ public class OrderService {
 	private final StoreRepository storeRepository;
 	private final ApplicationEventPublisher eventPublisher;
 
-	// ====== 이벤트 테스트(옵션) ======
-	// 결제 승인 요청
-	public void orderProcess(UUID orderId, int amount, UUID userId) {
-
-		orderId = UUID.fromString("82671ED9-B61A-11F0-97EA-EED0BD4D47");
-		amount = 100;
-		userId = UUID.fromString("08100bf7-58ea-4cc6-851e-fe48a7813654");
-		eventPublisher.publishEvent(new OrderRequest(orderId, amount, userId));
-
-	}
-
 	//	사용자 결제 취소 요청
 	// public void orderCancel(UUID orderId, String paymentKey, CancelReason canCelReason, UUID userId) {
 	// 	orderId = UUID.fromString("82671ED9-B61A-11F0-97EA-EED0BD4D080");
@@ -59,13 +51,14 @@ public class OrderService {
 	// 	eventPublisher.publishEvent(new OrderUserCancelRequest(orderId, paymentKey, cancelReason, userId));
 	// }
 
-	public void orderOwnerCancel(UUID orderId, String paymentKey, CancelReason canCelReason, UUID userId) {
-		orderId = UUID.fromString("82671ED9-B61A-11F0-97EA-EED0BD4D35");
-		paymentKey = "tviva20251106155446TxWp3";
-		CancelReason cancelReason = CancelReason.STORECANCEL;
-		userId = UUID.fromString("08100bf7-58ea-4cc6-851e-fe48a7813654");
-		eventPublisher.publishEvent(new OrderOwnerCancelRequest(orderId, paymentKey, canCelReason, userId));
-	}
+	// public void orderOwnerCancel(UUID orderId, String paymentKey, CancelReason canCelReason, UUID userId) {
+	// 	orderId = UUID.fromString("82671ED9-B61A-11F0-97EA-EED0BD4D35");
+	// 	paymentKey = "tviva20251106155446TxWp3";
+	// 	CancelReason cancelReason = CancelReason.STORECANCEL;
+	// 	userId = UUID.fromString("08100bf7-58ea-4cc6-851e-fe48a7813654");
+	// 	eventPublisher.publishEvent(new OrderOwnerCancelRequest(orderId, paymentKey, canCelReason, userId));
+	//
+	// }
 
 	// ========== 생성 ==========
 	@Transactional
@@ -85,6 +78,21 @@ public class OrderService {
 
 		eventPublisher.publishEvent(new OrderRequest(order.getId(), order.getTotalPrice(), userId));
 		return OrderDetailResponse.from(order);
+	}
+
+	@EventListener
+	// 결제 후 주문 상태 업데이트
+	// 확인 후 주석 지우시면 됩니다!
+	// 결제 상태에 따라 주문 상태 업데이트, 결제 실패시 paymentKey발급 안 됨(null 값)
+	// 일단 db에 잘 반영되는지 아래 코드를 넣어는데 결제 조건에 따라 상태가 달라지기 떄문에 아래 코드는 지우시고 수정하시면 됩니다!
+	// 결제 상태는 SUCCESS 또는 FAIL 두가지로만  반환됩니다
+	public void createOrderStatusUpdate(PaymentApproveResponse paymentResponse) {
+
+		Order order = getAlive(paymentResponse.getOrderId());
+		order.updateOrderStatus(paymentResponse.getPaymentKey());
+		orderRepository.save(order);
+		// 값 넘어오는지 확인
+		System.out.println(paymentResponse.getStatus() + "  ");
 	}
 
 	/** 조회 **/
@@ -131,9 +139,13 @@ public class OrderService {
 	}
 
 	// ========== 사용자 취소 ==========
+
+	//사용자가 주문 생성 시 결제 성공하게 되면 상태값이 PAID이기 떄문에 결제 취소하려고 하면
+	//"해당 작업은 주문 대기 상태에서만 가능합니다. " 이런 에러가 나오는데
+	// 사용자 결제 취소 조건은 주문 후 5분이내이고 주문조리시작 전에는 취소 가능하도록 설정해야할 거 같습니다..!
 	@Transactional
-	public void cancelByUser(UUID orderId, Authentication auth, String paymentKey, CancelReason canCelReason,
-		UUID userId) {
+	public void cancelByUser(UUID orderId, Authentication auth, String paymentKey,
+		CancelReason cancelReason, UUID userId) {
 		UUID currentUserId = currentUserId(auth);
 		Order order = getAlive(orderId);
 
@@ -141,19 +153,30 @@ public class OrderService {
 			throw new CustomException(ORDER_USER_MISMATCH);
 		}
 		order.cancelByUser(LocalDateTime.now());
-		CancelReason cancelReason = CancelReason.USERCANCEL;
+		cancelReason = CancelReason.USERCANCEL;
 		eventPublisher.publishEvent(new OrderUserCancelRequest(orderId, paymentKey, cancelReason, userId));
 	}
 
+	@EventListener
+	// 결제 취소 후 주문 상태 업데이트
+	public void cancelOrderStatusUpdate(PaymentCancelResponse paymentResponse) {
+		// 값 넘어오는지 확인
+		// System.out.println(paymentResponse.getStatus());
+		Order order = getAlive(paymentResponse.getOrderId());
+		// order.updateOrderStatus();
+	}
+
 	// ========== 점주 거절 ==========
+	// 일단 REJECTED로 해두었는데 재료소진,조기마감 등으로 수정하시면 될 거 같습니다!
 	@Transactional
-	public void rejectByOwner(UUID orderId, Authentication auth/*, RejectReasonCode reason */) {
+	public void rejectByOwner(UUID orderId, Authentication auth/*, RejectReasonCode reason */, String paymentKey) {
 		Order order = getAlive(orderId);
 		requireOwner(auth, order);
 
 		// order.rejectByOwner(reason);
 		order.rejectByOwner(order.getRejectReasonCode()); // 현재 구조 유지
-		publishOrderEvent(order.getId(), 0);
+
+		eventPublisher.publishEvent(new OrderOwnerCancelRequest(orderId, OrderStatus.REJECTED, paymentKey));
 		order.changeStatus(OrderStatus.REFUND); // 환불로 변경
 	}
 

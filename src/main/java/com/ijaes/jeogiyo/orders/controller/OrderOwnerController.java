@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ijaes.jeogiyo.orders.dto.request.OrderOwnerCancelRequest;
 import com.ijaes.jeogiyo.orders.dto.response.OrderDetailResponse;
 import com.ijaes.jeogiyo.orders.dto.response.OrderSummaryResponse;
 import com.ijaes.jeogiyo.orders.entity.OrderStatus;
@@ -106,9 +107,9 @@ public class OrderOwnerController {
 	public ResponseEntity<Void> rejectByOwner(
 		@Parameter(description = "주문 ID", required = true)
 		@PathVariable UUID orderId,
-		@Parameter(hidden = true) Authentication auth
+		@Parameter(hidden = true) Authentication auth, OrderOwnerCancelRequest event
 	) {
-		orderService.rejectByOwner(orderId, auth);
+		orderService.rejectByOwner(orderId, auth, event.getPaymentKey());
 		return ResponseEntity.noContent().build();
 	}
 }

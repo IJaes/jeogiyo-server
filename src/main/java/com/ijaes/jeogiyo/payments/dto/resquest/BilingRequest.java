@@ -1,4 +1,4 @@
-package com.ijaes.jeogiyo.payments.dto;
+package com.ijaes.jeogiyo.payments.dto.resquest;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;

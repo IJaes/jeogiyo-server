@@ -8,6 +8,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -21,6 +22,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ijaes.jeogiyo.common.exception.CustomException;
 import com.ijaes.jeogiyo.common.exception.ErrorCode;
 import com.ijaes.jeogiyo.orders.dto.request.OrderOwnerCancelRequest;
+import com.ijaes.jeogiyo.payments.dto.response.PaymentCancelResponse;
 import com.ijaes.jeogiyo.payments.entity.Payment;
 import com.ijaes.jeogiyo.payments.repository.PaymentRepository;
 import com.ijaes.jeogiyo.user.entity.Role;
@@ -39,6 +41,7 @@ public class PaymentOwnerService {
 	private String secretKey;
 
 	private final ObjectMapper objectMapper;
+	private final ApplicationEventPublisher eventPublisher;
 
 	// 결제취소처리
 	@Async
@@ -83,6 +86,8 @@ public class PaymentOwnerService {
 			payment.updateCancelPaymentFail(e.getMessage());
 			paymentRepository.save(payment);
 			throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
+		} finally {
+			eventPublisher.publishEvent(new PaymentCancelResponse(payment.getOrderId(), payment.getStatus()));
 		}
 	}
 

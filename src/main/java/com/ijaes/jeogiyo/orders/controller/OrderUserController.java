@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ijaes.jeogiyo.orders.dto.request.OrderCreateRequest;
-import com.ijaes.jeogiyo.orders.dto.request.OrderRequest;
 import com.ijaes.jeogiyo.orders.dto.request.OrderUserCancelRequest;
 import com.ijaes.jeogiyo.orders.dto.response.OrderDetailResponse;
 import com.ijaes.jeogiyo.orders.dto.response.OrderSummaryResponse;
@@ -43,7 +42,7 @@ public class OrderUserController {
 	@PostMapping
 	public ResponseEntity<OrderDetailResponse> create(
 		Authentication authentication,
-		@Valid @RequestBody OrderCreateRequest req, OrderRequest event) {
+		@Valid @RequestBody OrderCreateRequest req) {
 		return ResponseEntity.ok(orderService.create(req, authentication));
 	}
 
@@ -71,7 +70,7 @@ public class OrderUserController {
 	public ResponseEntity<Void> reject(
 		@Parameter(description = "주문ID", required = true)
 		@PathVariable UUID orderId, Authentication auth, OrderUserCancelRequest event) {
-		orderService.cancelByUser(orderId, auth, event.getPaymentKey(), event.getCanCelReason(),
+		orderService.cancelByUser(orderId, auth, event.getPaymentKey(), event.getCancelReason(),
 			event.getUserId());
 		return ResponseEntity.ok().build();
 	}
