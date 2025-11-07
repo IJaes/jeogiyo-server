@@ -71,10 +71,10 @@ public enum ErrorCode {
 	ORDER_CANCEL_OVERTIME(HttpStatus.BAD_REQUEST, "O-004", "주문 후 5분이 지나 취소할 수 없습니다."),
 	ORDER_USER_MISMATCH(HttpStatus.FORBIDDEN, "O-005", "본인 주문만 취소할 수 있습니다."),
 	ORDER_OWNER_MISMATCH(HttpStatus.FORBIDDEN, "O-006", "해당 매장 주문만 처리할 수 있습니다."),
-	ORDER_TOTAL_PRICE_INVALID(HttpStatus.BAD_REQUEST, "0-007", "합계 금액은 0원 이상이어야 합니다."),
-	ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "O-002", "주문을 찾을 수 없습니다."),
+	ORDER_TOTAL_PRICE_INVALID(HttpStatus.BAD_REQUEST, "O-007", "합계 금액은 0원 이상이어야 합니다."),
 	ORDER_ALREADY_DELETED(HttpStatus.BAD_REQUEST, "O-008", "이미 삭제된 주문입니다."), // 소프트 삭제된 주문에 대한 방어
 	ORDER_EVENT_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "O-009", "주문 이벤트 발행 중 오류가 발생했습니다."), // 메세지 수정
+	ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "O-0010", "주문을 찾을 수 없습니다."),
 
 	// 결제 관련 (P-xxx)
 	PAYMENT_KEY_GENERATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "P-001", "결제 키 발급 중 오류가 발생했습니다."),

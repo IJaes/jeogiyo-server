@@ -28,6 +28,8 @@ import com.ijaes.jeogiyo.common.exception.CustomException;
 import com.ijaes.jeogiyo.common.exception.ErrorCode;
 import com.ijaes.jeogiyo.orders.dto.request.OrderRequest;
 import com.ijaes.jeogiyo.orders.dto.request.OrderUserCancelRequest;
+import com.ijaes.jeogiyo.orders.entity.Order;
+import com.ijaes.jeogiyo.orders.repository.OrderRepository;
 import com.ijaes.jeogiyo.payments.entity.Payment;
 import com.ijaes.jeogiyo.payments.entity.PaymentStatus;
 import com.ijaes.jeogiyo.payments.repository.PaymentRepository;
@@ -41,6 +43,7 @@ import lombok.RequiredArgsConstructor;
 public class PaymentUserService {
 
 	private final PaymentRepository paymentRepository;
+	private final OrderRepository orderRepository;
 	private final ObjectMapper objectMapper;
 	private final TaskScheduler taskScheduler;
 
@@ -59,15 +62,16 @@ public class PaymentUserService {
 
 		// 로그인, 권한 확인
 		getValidatedUser();
+		UUID orderId = event.getOrderId();
 
-		// 오더 관련 기능과 합쳐서 완료 시 주석 해제
-		// Order order = orderRepository.findById(event.getOrderId())
-		// 	.orElseThrow(() -> new CustomException(ErrorCode.ORDER_NOT_FOUND));
+		if (orderId == null) {
+			throw new CustomException(ErrorCode.ORDER_NOT_FOUND);  // 바로 예외 던지기
+		}
 
-		// int orderAmount = order.getTotalPrice();
+		Order order = orderRepository.findById(event.getOrderId())
+			.orElseThrow(() -> new CustomException(ErrorCode.ORDER_NOT_FOUND));
 
-		// 테스트
-		int orderAmount = 100;
+		int orderAmount = order.getTotalPrice();
 
 		if (orderAmount != event.getAmount()) {
 			throw new CustomException(ErrorCode.PAYMENT_AMOUNT_MISMATCH);
@@ -154,12 +158,10 @@ public class PaymentUserService {
 			.send(request, HttpResponse.BodyHandlers.ofString());
 
 		JsonNode jsonNode = objectMapper.readTree(response.body());
-		System.out.println(jsonNode + " 162");
 
 		String log = jsonNode.path("message").asText(null);
 		String logMessage = (log != null) ? log : ErrorCode.PAYMENT_CONFIRMATION_FAILED.getMessage();
 		String paymentKey = jsonNode.path("paymentKey").asText();
-		System.out.println("171 log " + log);
 
 		try {
 			if (response.statusCode() == 200 && "DONE".equals(jsonNode.path("status").asText())) {
@@ -167,6 +169,13 @@ public class PaymentUserService {
 					// 결제 성공 시 DB 저장
 					payment.updatePaymentSuccess(paymentKey);
 					paymentRepository.save(payment);
+
+					Order order = orderRepository.findById(orderId)
+						.orElseThrow(() -> new CustomException(ErrorCode.ORDER_NOT_FOUND));
+
+					order.updateOrderStatus(paymentKey);
+					orderRepository.save(order);
+
 				} catch (Exception e) {
 					// 결제는 완료되었으나 DB 저장 실패 시
 					payment.updateLog("DB 저장 실패: " + e.getMessage());

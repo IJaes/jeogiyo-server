@@ -3,7 +3,6 @@ package com.ijaes.jeogiyo.orders.dto.request;
 import java.util.UUID;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Builder;
@@ -24,8 +23,8 @@ public class OrderCreateRequest {
 	@Schema(description = "총 결제금액(원)", example = "27000", minimum = "0", requiredMode = Schema.RequiredMode.REQUIRED)
 	private final int totalPrice;
 
-	@NotBlank(message = "PG 거래 ID는 필수입니다.")
-	@Schema(description = "PG 거래 ID", example = "pg-2025-11-05-00001", requiredMode = Schema.RequiredMode.REQUIRED)
-	private final String transactionId;
+	// @NotBlank(message = "PG 거래 ID는 필수입니다.")
+	// @Schema(description = "PG 거래 ID", example = "pg-2025-11-05-00001", requiredMode = Schema.RequiredMode.REQUIRED)
+	// private final String transactionId;
 
 }
