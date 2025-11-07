@@ -55,20 +55,24 @@ public class ReviewController {
 	public ResponseEntity<Page<ReviewResponse>> getUserReviews(Authentication authentication,
 		@PathVariable UUID userId,
 		@RequestParam(defaultValue = "0") int page,
-		@RequestParam(defaultValue = "10") int size
+		@RequestParam(defaultValue = "10") int size,
+		@RequestParam(required = false) String filterType,
+		@RequestParam(defaultValue = "LATEST") String sortType
 	) {
-		Page<ReviewResponse> response = reviewService.getUserReviews(authentication, userId, page, size);
+		Page<ReviewResponse> response = reviewService.getUserReviews(authentication, userId, page, size, filterType,
+			sortType);
 		return ResponseEntity.ok(response);
 	}
 
 	@GetMapping("/stores/{storeId}")
 	@Operation(summary = "가게별 리뷰 목록 조회", description = "특정 store에 작성된 전체 리뷰 목록을 조회합니다.", security = @SecurityRequirement(name = "bearer-jwt"))
-	public ResponseEntity<Page<ReviewResponse>> getStoreReviews(Authentication authentication,
+	public ResponseEntity<Page<ReviewResponse>> getStoreReviews(
 		@PathVariable UUID storeId,
 		@RequestParam(defaultValue = "0") int page,
-		@RequestParam(defaultValue = "10") int size
+		@RequestParam(defaultValue = "10") int size,
+		@RequestParam(defaultValue = "LATEST") String sortType
 	) {
-		Page<ReviewResponse> response = reviewService.getStoreReviews(authentication, storeId, page, size);
+		Page<ReviewResponse> response = reviewService.getStoreReviews(storeId, page, size, sortType);
 		return ResponseEntity.ok(response);
 	}
 

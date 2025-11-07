@@ -34,9 +34,10 @@ public class ReviewAdminController {
 	@PreAuthorize("hasRole('MANAGER')")
 	public ResponseEntity<Page<ReviewResponse>> getAllReviews(
 		@RequestParam(defaultValue = "0") int page,
-		@RequestParam(defaultValue = "10") int size
+		@RequestParam(defaultValue = "10") int size,
+		@RequestParam(required = false) String filterType
 	) {
-		Page<ReviewResponse> response = reviewAdminService.getAllReviewsForAdmin(page, size);
+		Page<ReviewResponse> response = reviewAdminService.getAllReviewsForAdmin(page, size, filterType);
 		return ResponseEntity.ok(response);
 	}
 

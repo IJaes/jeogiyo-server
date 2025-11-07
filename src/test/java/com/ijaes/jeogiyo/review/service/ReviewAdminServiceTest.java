@@ -68,12 +68,12 @@ public class ReviewAdminServiceTest {
 	@DisplayName("관리자 전체 리뷰 조회 성공")
 	void getAllReviewsForAdmin_success() {
 		Page<ReviewResponse> mockPage = new PageImpl<>(List.of(new ReviewResponse()));
-		when(reviewRepositoryCustomImpl.findAllReviewsForAdmin(0, 10)).thenReturn(mockPage);
+		when(reviewRepositoryCustomImpl.findAllReviewsForAdmin(0, 10, "")).thenReturn(mockPage);
 
-		Page<ReviewResponse> result = reviewAdminService.getAllReviewsForAdmin(0, 10);
+		Page<ReviewResponse> result = reviewAdminService.getAllReviewsForAdmin(0, 10, "");
 
 		assertThat(result.getTotalElements()).isEqualTo(1);
-		verify(reviewRepositoryCustomImpl).findAllReviewsForAdmin(0, 10);
+		verify(reviewRepositoryCustomImpl).findAllReviewsForAdmin(0, 10, "");
 	}
 
 	// 2-1. 특정 리뷰 조회 성공

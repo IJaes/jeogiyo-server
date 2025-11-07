@@ -27,11 +27,12 @@ public class ReviewOwnerController {
 	@GetMapping
 	@Operation(summary = "리뷰 조회", description = "본인 매장에 등록된 리뷰를 조회합니다", security = @SecurityRequirement(name = "bearer-jwt"))
 	public ResponseEntity<Page<ReviewResponse>> getMyStoreReviews(
+		Authentication authentication,
 		@RequestParam(defaultValue = "0") int page,
 		@RequestParam(defaultValue = "10") int size,
-		Authentication authentication
+		@RequestParam(defaultValue = "LATEST") String sortType
 	) {
-		Page<ReviewResponse> response = reviewOwnerService.getMyStoreReviews(page, size, authentication);
+		Page<ReviewResponse> response = reviewOwnerService.getMyStoreReviews(authentication, page, size, sortType);
 		return ResponseEntity.ok(response);
 	}
 }

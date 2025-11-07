@@ -133,43 +133,44 @@ class ReviewControllerTest {
 	@DisplayName("사용자별 리뷰 목록 조회 성공")
 	void getUserReviews_success() {
 		Page<ReviewResponse> mockPage = new PageImpl<>(List.of(new ReviewResponse()));
-		when(reviewService.getUserReviews(authentication, userId, 0, 10)).thenReturn(mockPage);
+		when(reviewService.getUserReviews(authentication, userId, 0, 10, "ALL", "LATEST")).thenReturn(mockPage);
 
-		ResponseEntity<Page<ReviewResponse>> response = reviewController.getUserReviews(authentication, userId, 0, 10);
+		ResponseEntity<Page<ReviewResponse>> response = reviewController.getUserReviews(authentication, userId, 0, 10,
+			"ALL", "LATEST");
 
 		assertNotNull(response);
 		assertEquals(200, response.getStatusCodeValue());
 		assertEquals(1, response.getBody().getTotalElements());
-		verify(reviewService, times(1)).getUserReviews(authentication, userId, 0, 10);
+		verify(reviewService, times(1)).getUserReviews(authentication, userId, 0, 10, "ALL", "LATEST");
 	}
 
 	@Test
 	@DisplayName("사용자별 리뷰 조회 실패 - 본인이 아닐 경우")
 	void getUserReviews_fail_accessDenied() {
 		UUID anotherUserId = UUID.randomUUID();
-		when(reviewService.getUserReviews(authentication, anotherUserId, 0, 10))
+		when(reviewService.getUserReviews(authentication, anotherUserId, 0, 10, "ALL", "LATEST"))
 			.thenThrow(new CustomException(ErrorCode.ACCESS_DENIED));
 
-		assertThatThrownBy(() -> reviewController.getUserReviews(authentication, anotherUserId, 0, 10))
+		assertThatThrownBy(() -> reviewController.getUserReviews(authentication, anotherUserId, 0, 10, "ALL", "LATEST"))
 			.isInstanceOf(CustomException.class)
 			.hasMessageContaining(ErrorCode.ACCESS_DENIED.getMessage());
 
-		verify(reviewService, times(1)).getUserReviews(authentication, anotherUserId, 0, 10);
+		verify(reviewService, times(1)).getUserReviews(authentication, anotherUserId, 0, 10, "ALL", "LATEST");
 	}
 
 	@Test
 	@DisplayName("가게별 리뷰 목록 조회 성공")
 	void getStoreReviews_success() {
 		Page<ReviewResponse> mockPage = new PageImpl<>(List.of(new ReviewResponse()));
-		when(reviewService.getStoreReviews(authentication, storeId, 0, 10)).thenReturn(mockPage);
+		when(reviewService.getStoreReviews(storeId, 0, 10, "")).thenReturn(mockPage);
 
-		ResponseEntity<Page<ReviewResponse>> response = reviewController.getStoreReviews(authentication, storeId, 0,
-			10);
+		ResponseEntity<Page<ReviewResponse>> response = reviewController.getStoreReviews(storeId, 0,
+			10, "");
 
 		assertNotNull(response);
 		assertEquals(200, response.getStatusCodeValue());
 		assertEquals(1, response.getBody().getTotalElements());
-		verify(reviewService, times(1)).getStoreReviews(authentication, storeId, 0, 10);
+		verify(reviewService, times(1)).getStoreReviews(storeId, 0, 10, "");
 	}
 
 	@Test

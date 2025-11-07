@@ -179,12 +179,12 @@ public class ReviewServiceTest {
 	@DisplayName("자신의 리뷰 목록을 조회할 수 있다")
 	void getUserReviews_success() {
 		Page<ReviewResponse> mockPage = new PageImpl<>(List.of(new ReviewResponse()));
-		when(reviewRepositoryCustomImpl.findReviewsByUserId(userId, 0, 10)).thenReturn(mockPage);
+		when(reviewRepositoryCustomImpl.findReviewsByUserId(userId, 0, 10, "ALL", "LATEST")).thenReturn(mockPage);
 
-		Page<ReviewResponse> result = reviewService.getUserReviews(authentication, userId, 0, 10);
+		Page<ReviewResponse> result = reviewService.getUserReviews(authentication, userId, 0, 10, "ALL", "LATEST");
 
 		assertThat(result.getTotalElements()).isEqualTo(1);
-		verify(reviewRepositoryCustomImpl).findReviewsByUserId(userId, 0, 10);
+		verify(reviewRepositoryCustomImpl).findReviewsByUserId(userId, 0, 10, "ALL", "LATEST");
 	}
 
 	//3-2. 사용자별 리뷰 목록 조회 실패
@@ -193,7 +193,7 @@ public class ReviewServiceTest {
 	void getUserReviews_fail_accessDenied() {
 		UUID anotherUserId = UUID.randomUUID();
 
-		assertThatThrownBy(() -> reviewService.getUserReviews(authentication, anotherUserId, 0, 10))
+		assertThatThrownBy(() -> reviewService.getUserReviews(authentication, anotherUserId, 0, 10, "ALL", "LATEST"))
 			.isInstanceOf(CustomException.class)
 			.hasMessageContaining(ErrorCode.ACCESS_DENIED.getMessage());
 	}

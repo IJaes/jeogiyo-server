@@ -144,7 +144,8 @@ public class ReviewService {
 
 	//3. 사용자별 리뷰 전체 목록 조회(사용자가 자신이 작성한 리뷰 목록 조회)
 	@Transactional(readOnly = true)
-	public Page<ReviewResponse> getUserReviews(Authentication authentication, UUID userId, int page, int size) {
+	public Page<ReviewResponse> getUserReviews(Authentication authentication, UUID userId, int page, int size,
+		String filterType, String sortType) {
 		UUID currentUserId = ((User)authentication.getPrincipal()).getId();
 
 		//자신이 작성한 리뷰 목록만 조회 가능
@@ -152,19 +153,22 @@ public class ReviewService {
 			throw new CustomException(ErrorCode.ACCESS_DENIED);
 		}
 
-		Page<ReviewResponse> reviewPage = reviewRepositoryCustomImpl.findReviewsByUserId(userId, page, size);
+		Page<ReviewResponse> reviewPage = reviewRepositoryCustomImpl.findReviewsByUserId(userId, page, size, filterType,
+			sortType);
 
 		return reviewPage;
 	}
 
 	//4. 가게별 리뷰 전체 목록 조회
 	@Transactional(readOnly = true)
-	public Page<ReviewResponse> getStoreReviews(Authentication authentication, UUID storeId, int page, int size) {
+	public Page<ReviewResponse> getStoreReviews(UUID storeId, int page, int size,
+		String sortType) {
 		storeRepository.findById(storeId)
 			.orElseThrow(() -> new CustomException(ErrorCode.STORE_NOT_FOUND));
 
 		//db에서 페이지 데이터 조회
-		Page<ReviewResponse> reviewPage = reviewRepositoryCustomImpl.findReviewsByStoreID(storeId, page, size);
+		Page<ReviewResponse> reviewPage = reviewRepositoryCustomImpl.findReviewsByStoreID(storeId, page, size,
+			sortType);
 
 		return reviewPage;
 	}
