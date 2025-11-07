@@ -19,9 +19,13 @@ import com.ijaes.jeogiyo.review.dto.request.CreateReviewRequest;
 import com.ijaes.jeogiyo.review.dto.request.UpdateReviewRequest;
 import com.ijaes.jeogiyo.review.dto.response.CreateReviewResponse;
 import com.ijaes.jeogiyo.review.dto.response.ReviewResponse;
+import com.ijaes.jeogiyo.review.entity.ReviewSortType;
+import com.ijaes.jeogiyo.review.entity.ReviewStatus;
 import com.ijaes.jeogiyo.review.service.ReviewService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -56,7 +60,16 @@ public class ReviewController {
 		@PathVariable UUID userId,
 		@RequestParam(defaultValue = "0") int page,
 		@RequestParam(defaultValue = "10") int size,
+		@Parameter(
+			description = "리뷰 상태 필터. 입력하지 않으면 모든 상태 조회",
+			schema = @Schema(implementation = ReviewStatus.class),
+			required = false
+		)
 		@RequestParam(required = false) String filterType,
+		@Parameter(
+			description = "정렬 기준 타입. 입력하지 않으면 최신순",
+			schema = @Schema(implementation = ReviewSortType.class)
+		)
 		@RequestParam(defaultValue = "LATEST") String sortType
 	) {
 		Page<ReviewResponse> response = reviewService.getUserReviews(authentication, userId, page, size, filterType,
@@ -70,6 +83,10 @@ public class ReviewController {
 		@PathVariable UUID storeId,
 		@RequestParam(defaultValue = "0") int page,
 		@RequestParam(defaultValue = "10") int size,
+		@Parameter(
+			description = "정렬 기준 타입. 입력하지 않으면 최신순",
+			schema = @Schema(implementation = ReviewSortType.class)
+		)
 		@RequestParam(defaultValue = "LATEST") String sortType
 	) {
 		Page<ReviewResponse> response = reviewService.getStoreReviews(storeId, page, size, sortType);

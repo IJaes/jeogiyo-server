@@ -14,9 +14,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ijaes.jeogiyo.review.dto.response.ReviewResponse;
+import com.ijaes.jeogiyo.review.entity.ReviewStatus;
 import com.ijaes.jeogiyo.review.service.ReviewAdminService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +38,11 @@ public class ReviewAdminController {
 	public ResponseEntity<Page<ReviewResponse>> getAllReviews(
 		@RequestParam(defaultValue = "0") int page,
 		@RequestParam(defaultValue = "10") int size,
+		@Parameter(
+			description = "리뷰 상태 필터. 입력하지 않으면 모든 상태 조회",
+			schema = @Schema(implementation = ReviewStatus.class),
+			required = false
+		)
 		@RequestParam(required = false) String filterType
 	) {
 		Page<ReviewResponse> response = reviewAdminService.getAllReviewsForAdmin(page, size, filterType);
