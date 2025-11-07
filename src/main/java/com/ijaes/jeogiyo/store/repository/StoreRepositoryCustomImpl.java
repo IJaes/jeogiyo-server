@@ -1,5 +1,7 @@
 package com.ijaes.jeogiyo.store.repository;
 
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -7,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
+import com.ijaes.jeogiyo.menu.entity.QMenu;
 import com.ijaes.jeogiyo.review.entity.QReview;
 import com.ijaes.jeogiyo.store.dto.response.StoreDetailResponse;
 import com.ijaes.jeogiyo.store.entity.QStore;
@@ -150,5 +153,41 @@ public class StoreRepositoryCustomImpl implements StoreRepositoryCustom {
 			.fetch();
 
 		return new PageImpl<>(content, pageable, total == null ? 0 : total);
+	}
+
+	@Override
+	public Page<Store> searchStores(String query, Pageable pageable) {
+		QStore store = QStore.store;
+		QMenu menu = QMenu.menu;
+
+		var storesByMenu = queryFactory
+			.select(store)
+			.from(menu)
+			.innerJoin(store).on(menu.store.id.eq(store.id))
+			.where(
+				menu.name.containsIgnoreCase(query),
+				menu.deletedAt.isNull(),
+				store.deletedAt.isNull()
+			)
+			.distinct()
+			.fetch();
+
+		var storesByName = queryFactory
+			.selectFrom(store)
+			.where(
+				store.name.containsIgnoreCase(query),
+				store.deletedAt.isNull()
+			)
+			.fetch();
+
+		var allStores = new LinkedHashSet<>(storesByMenu);
+		allStores.addAll(storesByName);
+		var uniqueStores = new ArrayList<>(allStores);
+
+		int start = (int)pageable.getOffset();
+		int end = Math.min(start + pageable.getPageSize(), uniqueStores.size());
+		var paginatedStores = uniqueStores.subList(start, end);
+
+		return new PageImpl<>(paginatedStores, pageable, uniqueStores.size());
 	}
 }

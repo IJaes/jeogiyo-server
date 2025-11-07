@@ -126,7 +126,6 @@ public class ReviewAdminServiceTest {
 		reviewAdminService.deleteReviewForAdmin(reviewId);
 
 		assertThat(review.isDeleted()).isTrue(); // soft delete
-		verify(reviewRepository).save(review);
 	}
 
 	// 3-2. 관리자 리뷰 삭제 실패
@@ -153,7 +152,6 @@ public class ReviewAdminServiceTest {
 		reviewAdminService.toggleReviewHidden(reviewId, true);
 
 		assertThat(review.isHidden()).isTrue();
-		verify(reviewRepository).save(review);
 	}
 
 	// 4-2. 리뷰 숨김 해제
@@ -169,7 +167,6 @@ public class ReviewAdminServiceTest {
 		reviewAdminService.toggleReviewHidden(reviewId, false);
 
 		assertThat(review.isHidden()).isFalse();
-		verify(reviewRepository).save(review);
 	}
 
 	// 4-3. 리뷰 숨김 처리 실패

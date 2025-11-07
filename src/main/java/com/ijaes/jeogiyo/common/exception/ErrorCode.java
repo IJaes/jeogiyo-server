@@ -38,6 +38,7 @@ public enum ErrorCode {
 	// 비즈니스 로직 관련 (B-xxx)
 	BUSINESS_ERROR(HttpStatus.BAD_REQUEST, "B-001", "비즈니스 로직 오류가 발생했습니다."),
 	INVALID_REQUEST(HttpStatus.BAD_REQUEST, "B-002", "잘못된 요청입니다."),
+	INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "B-003", "잘못된 입력값입니다."), // 범용 입력값 검증 실패
 
 	// 사용자 정보 수정 관련 (U-xxx)
 	INVALID_ADDRESS(HttpStatus.BAD_REQUEST, "U-001", "주소는 100자 이내여야 합니다."),
@@ -57,19 +58,22 @@ public enum ErrorCode {
 	// 리뷰 관련 (W-xxx)
 	REVIEW_ALREADY_EXISTS(HttpStatus.CONFLICT, "W-001", "이미 해당 주문에 대한 리뷰가 작성되었습니다."),
 	REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "W-002", "리뷰를 찾을 수 없습니다. 먼저 리뷰를 등록해주세요."),
+	REVIEW_ALREADY_DELETED(HttpStatus.BAD_REQUEST, "W-003", "이미 삭제된 리뷰입니다."),
 
 	// 메뉴 관련 (M-xxx)
 	MENU_NOT_FOUND(HttpStatus.NOT_FOUND, "M-001", "메뉴를 찾을 수 없습니다."),
 	MENU_ALREADY_DELETED(HttpStatus.BAD_REQUEST, "M-002", "이미 삭제된 메뉴입니다."),
 
 	// 주문 관련 (O-xxx)
-	ORDER_NOT_WAITING(HttpStatus.BAD_REQUEST, "O-001", "해당 작업은 주문 대기 상태에서만 가능합니다."),
+	ORDER_NOT_ACCEPTED(HttpStatus.BAD_REQUEST, "O-001", "해당 작업은 주문 대기 상태에서만 가능합니다."),
 	ORDER_ALREADY_SAME_STATUS(HttpStatus.BAD_REQUEST, "O-002", "이미 해당 상태입니다."),
 	ORDER_INVALID_TRANSITION(HttpStatus.BAD_REQUEST, "O-003", "허용되지 않은 상태 전이입니다."),
 	ORDER_CANCEL_OVERTIME(HttpStatus.BAD_REQUEST, "O-004", "주문 후 5분이 지나 취소할 수 없습니다."),
 	ORDER_USER_MISMATCH(HttpStatus.FORBIDDEN, "O-005", "본인 주문만 취소할 수 있습니다."),
 	ORDER_OWNER_MISMATCH(HttpStatus.FORBIDDEN, "O-006", "해당 매장 주문만 처리할 수 있습니다."),
-	ORDER_TOTAL_PRICE_INVALID(HttpStatus.BAD_REQUEST, "0-007", "합계 금액은 0원 이상이어야 합니다."),
+	ORDER_TOTAL_PRICE_INVALID(HttpStatus.BAD_REQUEST, "O-007", "합계 금액은 0원 이상이어야 합니다."),
+	ORDER_ALREADY_DELETED(HttpStatus.BAD_REQUEST, "O-008", "이미 삭제된 주문입니다."), // 소프트 삭제된 주문에 대한 방어
+	ORDER_EVENT_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "O-009", "주문 이벤트 발행 중 오류가 발생했습니다."), // 메세지 수정
 
 	// 결제 관련 (P-xxx)
 	PAYMENT_KEY_GENERATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "P-001", "결제 키 발급 중 오류가 발생했습니다."),

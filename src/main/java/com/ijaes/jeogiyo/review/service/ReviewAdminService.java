@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.ijaes.jeogiyo.common.exception.CustomException;
 import com.ijaes.jeogiyo.common.exception.ErrorCode;
@@ -16,7 +17,6 @@ import com.ijaes.jeogiyo.store.repository.StoreRepository;
 import com.ijaes.jeogiyo.user.entity.User;
 import com.ijaes.jeogiyo.user.repository.UserRepository;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -29,6 +29,7 @@ public class ReviewAdminService {
 	private final ReviewRepositoryCustomImpl reviewRepositoryCustomImpl;
 
 	//1. 전체 리뷰 조회(삭제된 리뷰, 숨겨진 리뷰 등 전체 포함)
+	@Transactional(readOnly = true)
 	public Page<ReviewResponse> getAllReviewsForAdmin(int page, int size) {
 
 		Page<ReviewResponse> response = reviewRepositoryCustomImpl.findAllReviewsForAdmin(page, size);
@@ -37,6 +38,7 @@ public class ReviewAdminService {
 	}
 
 	//2. 특정 리뷰 조회
+	@Transactional(readOnly = true)
 	public ReviewResponse getReviewForAdmin(UUID reviewId) {
 
 		//리뷰 존재 여부 확인
@@ -63,7 +65,6 @@ public class ReviewAdminService {
 			.orElseThrow(() -> new CustomException(ErrorCode.REVIEW_NOT_FOUND));
 
 		review.softDelete();
-		reviewRepository.save(review);
 	}
 
 	//4. 리뷰 숨김 처리
@@ -77,7 +78,5 @@ public class ReviewAdminService {
 		} else {
 			review.show();
 		}
-
-		reviewRepository.save(review);
 	}
 }
