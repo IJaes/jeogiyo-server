@@ -31,8 +31,14 @@ public class GeminiService {
 		}
 
 		try {
-			String prompt = "너는 식당의 특정 메뉴에 대한 설명을 작성하는 역할이야. 손님이 메뉴를 고르고 싶은 마음이 들게끔 메뉴의 매력이 잘 드러나게 작성해주면 돼." + menuName
-				+ "라는 메뉴에 대한 간단한 설명을 한 문장으로 작성해줘.";
+			String prompt = menuName + " 메뉴에 대한 설명을 다음 형식으로 작성해줘.\n\n"
+				+ "- 반드시 한 문장으로만 작성\n"
+				+ "- 번호, 제목, 여러 제안 등 불필요한 내용 제외\n"
+				+ "- 설명 문장 하나만 반환\n"
+				+ "- 손님이 주문하고 싶게 메뉴의 매력 표현\n\n"
+				+ "좋은 예: '진한 육수에 쫄깃한 순대가 어우러진 따뜻하고 든든한 한 그릇'\n"
+				+ "나쁜 예: '여기 몇 가지 제안이 있습니다: 1. ..., 2. ...'\n\n"
+				+ "설명:";
 			String requestBody = buildRequestBody(prompt);
 
 			String url = GEMINI_API_URL.replace("{model}", GEMINI_MODEL) + "?key=" + apiKey;
