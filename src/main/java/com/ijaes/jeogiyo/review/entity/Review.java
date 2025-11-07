@@ -59,6 +59,10 @@ public class Review extends BaseEntity {
 	@Column(nullable = false)
 	private boolean isHidden = false;
 
+	//리뷰 삭제 여부
+	@Column(nullable = false)
+	private boolean isDeleted = false;
+
 	//제목 업데이트
 	public void updateTitle(String title) {
 		this.title = title;
@@ -86,5 +90,6 @@ public class Review extends BaseEntity {
 
 	public void softDelete() {
 		this.setDeletedAt(LocalDateTime.now());
+		this.isDeleted = true;
 	}
 }

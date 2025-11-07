@@ -47,4 +47,15 @@ public class StoreUserController {
 		StoreDetailResponse storeDetail = storeUserService.getStoreDetail(storeId);
 		return ResponseEntity.ok(storeDetail);
 	}
+
+	@GetMapping("/search")
+	@Operation(summary = "매장 검색", description = "검색어로 메뉴 또는 매장을 검색합니다", security = @SecurityRequirement(name = "bearer-jwt"))
+	public ResponseEntity<Page<StoreResponse>> searchStores(
+		@Parameter(description = "검색어 (메뉴명 또는 매장명)") @RequestParam String query,
+		@Parameter(description = "페이지 번호 (0부터 시작)") @RequestParam(defaultValue = "0") int page,
+		@Parameter(description = "페이지 크기") @RequestParam(defaultValue = "10") int size
+		) {
+		Page<StoreResponse> stores = storeUserService.searchStores(query, page, size);
+		return ResponseEntity.ok(stores);
+	}
 }

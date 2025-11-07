@@ -105,28 +105,28 @@ class ReviewControllerTest {
 			.storeName("테스트 가게")
 			.build();
 
-		when(reviewService.getReview(authentication, reviewId)).thenReturn(responseMock);
+		when(reviewService.getReview(reviewId)).thenReturn(responseMock);
 
-		ResponseEntity<ReviewResponse> response = reviewController.getReview(authentication, reviewId);
+		ResponseEntity<ReviewResponse> response = reviewController.getReview(reviewId);
 
 		assertNotNull(response);
 		assertEquals(200, response.getStatusCodeValue());
 		assertEquals("테스트 제목", response.getBody().getTitle());
-		verify(reviewService, times(1)).getReview(authentication, reviewId);
+		verify(reviewService, times(1)).getReview(reviewId);
 	}
 
 	@Test
 	@DisplayName("리뷰 단건 조회 실패 - 리뷰가 존재하지 않을 때")
 	void getReview_fail_notFound() {
-		when(reviewService.getReview(authentication, reviewId))
+		when(reviewService.getReview(reviewId))
 			.thenThrow(new CustomException(ErrorCode.RESOURCE_NOT_FOUND));
 
 		CustomException exception = assertThrows(CustomException.class, () ->
-			reviewController.getReview(authentication, reviewId)
+			reviewController.getReview(reviewId)
 		);
 
 		assertEquals(ErrorCode.RESOURCE_NOT_FOUND, exception.getErrorCode());
-		verify(reviewService, times(1)).getReview(authentication, reviewId);
+		verify(reviewService, times(1)).getReview(reviewId);
 	}
 
 	@Test
