@@ -14,11 +14,13 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ijaes.jeogiyo.orders.dto.request.OrderCreateRequest;
 import com.ijaes.jeogiyo.orders.dto.response.OrderDetailResponse;
 import com.ijaes.jeogiyo.orders.dto.response.OrderSummaryResponse;
+import com.ijaes.jeogiyo.orders.entity.OrderStatus;
 import com.ijaes.jeogiyo.orders.service.OrderService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -29,7 +31,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/v1/orders")
+@RequestMapping("/v1/user/orders")
 @RequiredArgsConstructor
 @SecurityRequirement(name = "bearer-jwt")
 @Tag(name = "주문", description = "일반 사용자 전용 API ")
@@ -56,6 +58,18 @@ public class OrderUserController {
 		return ResponseEntity.ok(orderService.getUserOrders(auth, pageable));
 	}
 
+	@Operation(summary = "주문 상태별 조회", description = "로그인 된 회원의 주문 목록을 상태별로 조회합니다.")
+	@GetMapping("/status")
+	public ResponseEntity<Page<OrderSummaryResponse>> getUserOrdersByStatus(
+		@ParameterObject
+		@PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC)
+		@RequestParam OrderStatus status,
+		Pageable pageable,
+		@Parameter(hidden = true) Authentication auth
+	) {
+		return ResponseEntity.ok(orderService.getUserOrdersByStatus(auth, status, pageable));
+	}
+
 	@Operation(summary = "주문 상세 조회", description = "주문 ID로 상세 정보를 조회합니다.")
 	@GetMapping("/{orderId}")
 	public ResponseEntity<OrderDetailResponse> getDetail(
@@ -64,12 +78,21 @@ public class OrderUserController {
 		return ResponseEntity.ok(orderService.getDetail(orderId, auth));
 	}
 
-	@Operation(summary = "주문 취소", description = "일반 회원이 ACCEPTED 상태의 주문을 5분이내에는 취소 가능합니다.")
-	@PostMapping("/{orderId}/reject")
-	public ResponseEntity<Void> reject(
+	@Operation(summary = "주문 취소", description = "일반 회원이 환불이 필요없는 주문을 취소할 경우 5분이내 취소 가능합니다.")
+	@PostMapping("/{orderId}/cancel")
+	public ResponseEntity<Void> cancelByUser(
 		@Parameter(description = "주문ID", required = true)
 		@PathVariable UUID orderId, Authentication auth) {
-		orderService.cancelByUser(orderId, auth);
+		orderService.cancel(orderId, auth);
+		return ResponseEntity.ok().build();
+	}
+
+	@Operation(summary = "주문 취소(환불)", description = "일반 회원이 주문 취소 했을 때 환불이 필요한 경우")
+	@PostMapping("/{orderId}/refund")
+	public ResponseEntity<Void> refundByUser(
+		@Parameter(description = "주문ID", required = true)
+		@PathVariable UUID orderId, Authentication auth) {
+		orderService.refund(orderId, auth);
 		return ResponseEntity.ok().build();
 	}
 
