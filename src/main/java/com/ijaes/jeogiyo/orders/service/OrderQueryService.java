@@ -12,7 +12,6 @@ import com.ijaes.jeogiyo.common.exception.CustomException;
 import com.ijaes.jeogiyo.orders.dto.response.OrderSummaryResponse;
 import com.ijaes.jeogiyo.orders.repository.OrderRepositoryCustom;
 import com.ijaes.jeogiyo.orders.repository.OrderSearchCondition;
-import com.ijaes.jeogiyo.store.repository.StoreRepository;
 import com.ijaes.jeogiyo.user.entity.User;
 
 import lombok.RequiredArgsConstructor;
@@ -22,7 +21,6 @@ import lombok.RequiredArgsConstructor;
 public class OrderQueryService {
 
 	private final OrderRepositoryCustom orderRepositoryCustom;
-	private final StoreRepository storeRepository;
 
 	/**
 	 * [실행부] 동적 검색 (권한 필터링 없음)

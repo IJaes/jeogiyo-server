@@ -4,8 +4,6 @@ import java.util.UUID;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort.Direction;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -16,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ijaes.jeogiyo.orders.dto.request.OrderOwnerCancelRequest;
 import com.ijaes.jeogiyo.orders.dto.response.OrderDetailResponse;
 import com.ijaes.jeogiyo.orders.dto.response.OrderSummaryResponse;
 import com.ijaes.jeogiyo.orders.entity.OrderStatus;
@@ -37,17 +36,15 @@ public class OrderOwnerController {
 
 	private final OrderService orderService;
 
-	@Operation(summary = "가게 단위 상세 주문 목록", description = "본인 매장의 주문을 상세 응답으로 페이징 조회합니다.")
-	@GetMapping("/stores/{storeId}") // 최종 경로: /v1/owner/orders/stores/{storeId}
+	@Operation(summary = "가게 단위 주문 목록", description = "본인 매장의 주문을 상세 응답으로 페이징 조회합니다.")
+	@GetMapping("/stores/{storeId}")
 	public ResponseEntity<Page<OrderSummaryResponse>> getStoreOrdersDetail(
 		@Parameter(description = "가게 ID", required = true)
 		@PathVariable UUID storeId,
-		@PageableDefault(size = 20, sort = "createdAt", direction = Direction.DESC)
-		Pageable pageable,
+		@Parameter(hidden = true) Pageable pageable, // ✅ Swagger에 sort 안 노출
 		@Parameter(hidden = true) Authentication auth
 	) {
-		Page<OrderSummaryResponse> result = orderService.getStoreOrders(storeId, auth, pageable);
-		return ResponseEntity.ok(result);
+		return ResponseEntity.ok(orderService.getStoreOrders(storeId, auth, pageable));
 	}
 
 	@Operation(summary = "주문 상태별 조회", description = "가게의 주문상태를 페이징 조회합니다.")
@@ -57,8 +54,7 @@ public class OrderOwnerController {
 		@RequestParam UUID storeId,
 		@Parameter(description = "주문 상태(단건)", required = true, example = "ACCEPTED")
 		@RequestParam OrderStatus status,
-		@PageableDefault(size = 20, sort = "createdAt", direction = Direction.DESC)
-		Pageable pageable,
+		@Parameter(hidden = true) Pageable pageable,
 		@Parameter(hidden = true) Authentication auth
 	) {
 		Page<OrderSummaryResponse> result = orderService.getStoreOrdersByStatus(storeId, auth, status, pageable);
@@ -72,7 +68,6 @@ public class OrderOwnerController {
 		@PathVariable UUID orderId,
 		@Parameter(hidden = true) Authentication auth
 	) {
-		// 서비스가 requireReadable/requireOwner 등을 통해 권한 검증
 		return ResponseEntity.ok(orderService.getDetail(orderId, auth));
 	}
 
@@ -94,7 +89,7 @@ public class OrderOwnerController {
 	public ResponseEntity<Void> cancelByOwner(
 		@Parameter(description = "주문 ID", required = true)
 		@PathVariable UUID orderId,
-		@Parameter(hidden = true) Authentication auth
+		@Parameter(hidden = true) Authentication auth, OrderOwnerCancelRequest event
 	) {
 		orderService.cancel(orderId, auth);
 		return ResponseEntity.noContent().build();

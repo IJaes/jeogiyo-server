@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ijaes.jeogiyo.orders.dto.request.OrderCreateRequest;
+import com.ijaes.jeogiyo.orders.dto.request.OrderUserCancelRequest;
 import com.ijaes.jeogiyo.orders.dto.response.OrderDetailResponse;
 import com.ijaes.jeogiyo.orders.dto.response.OrderSummaryResponse;
 import com.ijaes.jeogiyo.orders.entity.OrderStatus;
@@ -52,7 +53,7 @@ public class OrderUserController {
 	public ResponseEntity<Page<OrderSummaryResponse>> getAllOrders(
 		@ParameterObject
 		@PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC)
-		Pageable pageable,
+		@Parameter(hidden = true) Pageable pageable,
 		@Parameter(hidden = true) Authentication auth
 	) {
 		return ResponseEntity.ok(orderService.getUserOrders(auth, pageable));
@@ -64,7 +65,7 @@ public class OrderUserController {
 		@ParameterObject
 		@PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC)
 		@RequestParam OrderStatus status,
-		Pageable pageable,
+		@Parameter(hidden = true) Pageable pageable,
 		@Parameter(hidden = true) Authentication auth
 	) {
 		return ResponseEntity.ok(orderService.getUserOrdersByStatus(auth, status, pageable));
@@ -91,7 +92,8 @@ public class OrderUserController {
 	@PostMapping("/{orderId}/refund")
 	public ResponseEntity<Void> refundByUser(
 		@Parameter(description = "주문ID", required = true)
-		@PathVariable UUID orderId, Authentication auth) {
+		@PathVariable UUID orderId, Authentication auth, OrderUserCancelRequest event) {
+
 		orderService.refund(orderId, auth);
 		return ResponseEntity.ok().build();
 	}
