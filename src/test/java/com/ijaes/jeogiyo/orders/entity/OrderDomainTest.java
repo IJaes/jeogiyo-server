@@ -51,7 +51,7 @@ class OrderDomainTest {
 		// now - 5분 0초 → 경계 OK (isBefore 사용 로직상 허용)
 		setCreatedAtAgo(order, 5, 0, FIXED_NOW);
 
-		order.cancelByUser(FIXED_NOW);
+		order.cancelOrder(FIXED_NOW);
 
 		assertThat(order.getOrderStatus()).isEqualTo(CANCELED);
 	}
@@ -61,7 +61,7 @@ class OrderDomainTest {
 		// now - 4분 0초 → 성공
 		setCreatedAtAgo(order, 4, 0, FIXED_NOW);
 
-		order.cancelByUser(FIXED_NOW);
+		order.cancelOrder(FIXED_NOW);
 
 		assertThat(order.getOrderStatus()).isEqualTo(CANCELED);
 	}
@@ -75,13 +75,13 @@ class OrderDomainTest {
 		// now 시점에 cancelByUser(now)를 실행하면 예외 발생
 		// 벌생한 예외가 CustomException인지 확인
 		// 발생한 예외 타입이 ORDER_CANCEL_WINDOW_EXPIRED와 같은지 검증
-		assertThatThrownBy(() -> order.cancelByUser(FIXED_NOW))
+		assertThatThrownBy(() -> order.cancelOrder(FIXED_NOW))
 			.isInstanceOf(CustomException.class)
 			.extracting("errorCode") // getter를 우선적으로 값을 가져오고 없으면 필드 반사(reflection) 접근한다.
 			.isEqualTo(ORDER_CANCEL_OVERTIME);
 
 		// 메세지 확인용
-		Throwable t = catchThrowable(() -> order.cancelByUser(FIXED_NOW));
+		Throwable t = catchThrowable(() -> order.cancelOrder(FIXED_NOW));
 		System.out.println(t.getMessage());
 
 		// 예외가 발생한 이후에도 상태값이 그대로 WAITING인지 확인
@@ -96,7 +96,7 @@ class OrderDomainTest {
 
 		// 상태가 원인으로 에러가 터져야 하는 로직
 		// WAITING상태가 아니기 때문에 ORDER_NOT_WAITING 에러 발생
-		assertThatThrownBy(() -> order.cancelByUser(FIXED_NOW))
+		assertThatThrownBy(() -> order.cancelOrder(FIXED_NOW))
 			.isInstanceOf(CustomException.class)
 			.extracting("errorCode")
 			.isEqualTo(ORDER_NOT_ACCEPTED);
@@ -112,10 +112,10 @@ class OrderDomainTest {
 		assertThat(order.getOrderStatus()).isEqualTo(ACCEPTED);
 
 		// when
-		order.rejectByOwner(RejectReasonCode.CLOSED_EARLY);
+		order.refundOrder(RejectReasonCode.CLOSED_EARLY);
 
 		// then
-		assertThat(order.getOrderStatus()).isEqualTo(REJECTED);
+		assertThat(order.getOrderStatus()).isEqualTo(CANCELED);
 	}
 
 	@Test
@@ -124,7 +124,7 @@ class OrderDomainTest {
 		ReflectionTestUtils.setField(order, "orderStatus", PAID);
 
 		// when & then: ACCEPTED이 아니므로 예외 발생 + 상태 불변
-		assertThatThrownBy(() -> order.rejectByOwner(RejectReasonCode.OUT_OF_STOCK))
+		assertThatThrownBy(() -> order.refundOrder(RejectReasonCode.OUT_OF_STOCK))
 			.isInstanceOf(CustomException.class)
 			.extracting("errorCode")
 			.isEqualTo(ORDER_NOT_ACCEPTED);
@@ -152,9 +152,8 @@ class OrderDomainTest {
 	@Test
 	void 전이_가능성_체크() {
 		// 규칙: WAITING -> ACCEPTED만 허용, 그 외 전이는 금지
-		assertThat(ACCEPTED.canTransitTo(PAID)).isTrue(); // 수락 - 사장님
-		assertThat(ACCEPTED.canTransitTo(REJECTED)).isTrue(); // 거절 - 사장님
-		assertThat(ACCEPTED.canTransitTo(CANCELED)).isTrue(); // 취소 - 일반 회원
+		assertThat(ACCEPTED.canTransitTo(PAID)).isTrue(); // 결제 완료
+		assertThat(ACCEPTED.canTransitTo(CANCELED)).isTrue(); // 거절
 
 		assertThat(ACCEPTED.canTransitTo(COOKING)).isFalse();
 		assertThat(ACCEPTED.canTransitTo(COOKED)).isFalse();
