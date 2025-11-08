@@ -64,7 +64,7 @@ public class PaymentOwnerService {
 				.header("Authorization", "Basic " + encodedAuth)
 				.header("Content-Type", "application/json")
 				.POST(HttpRequest.BodyPublishers.ofString(
-					"{\"cancelReason\":\"" + orderCancelEvent.getCanCelReason() + "\"}"))
+					"{\"cancelReason\":\"" + orderCancelEvent.getCancelReason() + "\"}"))
 				.build();
 
 			HttpResponse<String> response = HttpClient.newHttpClient()

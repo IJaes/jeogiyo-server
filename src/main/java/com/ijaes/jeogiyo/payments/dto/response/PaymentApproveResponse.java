@@ -18,5 +18,5 @@ public class PaymentApproveResponse {
 	private UUID orderId;
 	private PaymentStatus status;
 	private String paymentKey;
-	
+
 }

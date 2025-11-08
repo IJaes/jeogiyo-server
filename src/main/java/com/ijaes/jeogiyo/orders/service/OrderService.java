@@ -23,13 +23,12 @@ import com.ijaes.jeogiyo.orders.dto.response.OrderSummaryResponse;
 import com.ijaes.jeogiyo.orders.entity.Order;
 import com.ijaes.jeogiyo.orders.entity.OrderStatus;
 import com.ijaes.jeogiyo.orders.repository.OrderRepository;
-
 import com.ijaes.jeogiyo.payments.dto.response.PaymentApproveResponse;
 import com.ijaes.jeogiyo.payments.dto.response.PaymentCancelResponse;
-
 import com.ijaes.jeogiyo.payments.entity.CancelReason;
 import com.ijaes.jeogiyo.store.entity.Store;
 import com.ijaes.jeogiyo.store.repository.StoreRepository;
+import com.ijaes.jeogiyo.user.entity.Role;
 import com.ijaes.jeogiyo.user.entity.User;
 
 import lombok.RequiredArgsConstructor;
@@ -44,7 +43,20 @@ public class OrderService {
 	private final StoreRepository storeRepository;
 	private final ApplicationEventPublisher eventPublisher;
 
+	@EventListener
+	// 결제 후 주문 상태 업데이트
+	// 확인 후 주석 지우시면 됩니다!
+	// 결제 상태에 따라 주문 상태 업데이트, 결제 실패시 paymentKey발급 안 됨(null 값)
+	// 일단 db에 잘 반영되는지 아래 코드를 넣어는데 결제 조건에 따라 상태가 달라지기 떄문에 아래 코드는 지우시고 수정하시면 됩니다!
+	// 결제 상태는 SUCCESS 또는 FAIL 두가지로만  반환됩니다
+	public void createOrderStatusUpdate(PaymentApproveResponse paymentResponse) {
 
+		Order order = getAlive(paymentResponse.getOrderId());
+		order.updateOrderStatus(paymentResponse.getPaymentKey());
+		orderRepository.save(order);
+		// 값 넘어오는지 확인
+		System.out.println(paymentResponse.getStatus() + "  ");
+	}
 
 	// ========== 생성 ==========
 	@Transactional
@@ -66,21 +78,6 @@ public class OrderService {
 		return OrderDetailResponse.from(order);
 	}
 
-	@EventListener
-	// 결제 후 주문 상태 업데이트
-	// 확인 후 주석 지우시면 됩니다!
-	// 결제 상태에 따라 주문 상태 업데이트, 결제 실패시 paymentKey발급 안 됨(null 값)
-	// 일단 db에 잘 반영되는지 아래 코드를 넣어는데 결제 조건에 따라 상태가 달라지기 떄문에 아래 코드는 지우시고 수정하시면 됩니다!
-	// 결제 상태는 SUCCESS 또는 FAIL 두가지로만  반환됩니다
-	public void createOrderStatusUpdate(PaymentApproveResponse paymentResponse) {
-
-		Order order = getAlive(paymentResponse.getOrderId());
-		order.updateOrderStatus(paymentResponse.getPaymentKey());
-		orderRepository.save(order);
-		// 값 넘어오는지 확인
-		System.out.println(paymentResponse.getStatus() + "  ");
-	}
-
 	/** 조회 **/
 
 	// ========== 아이디 단위 상세 조회 ==========
@@ -91,7 +88,7 @@ public class OrderService {
 		return OrderDetailResponse.from(order);
 	}
 
-	// ========== 아이디 단위 목록 조회 ==========
+	// ========== 아이디 단위 목록 조회(일반 사용자) ==========
 	@Transactional(readOnly = true)
 	public Page<OrderSummaryResponse> getUserOrders(Authentication auth, Pageable pageable) {
 		UUID userId = currentUserId(auth);
@@ -99,30 +96,33 @@ public class OrderService {
 			.map(OrderSummaryResponse::from);
 	}
 
-	// ========== 가게 단위 목록 조회 ==========
+	// ========== 로그인한 회원의 주문 상태 목록 조회(일반 사용자) ==========
 	@Transactional(readOnly = true)
-	public Page<OrderDetailResponse> getStoreOrders(UUID storeId, Authentication auth, Pageable pageable) {
-		requireOwnerOfStore(auth, storeId);
-		return orderRepository.findAllByStoreId(storeId, pageable)
-			.map(OrderDetailResponse::from);
-	}
-
-	// ========== 로그인한 회원의 주문 상태 목록 조회 ==========
-	@Transactional(readOnly = true)
-	public Page<OrderDetailResponse> getUserOrdersByStatus(Authentication auth, OrderStatus status, Pageable pageable) {
+	public Page<OrderSummaryResponse> getUserOrdersByStatus(Authentication auth, OrderStatus status,
+		Pageable pageable) {
 		UUID userId = currentUserId(auth);
 		return orderRepository.findByOrderStatusAndUserId(status, userId, pageable)
-			.map(OrderDetailResponse::from);
+			.map(OrderSummaryResponse::from);
 	}
 
-	// ========== 로그인한 점주의 가게 단위 목록 조회 ==========
+	// ========== 가게 단위 목록 조회(점주) ==========
 	@Transactional(readOnly = true)
-	public Page<OrderDetailResponse> getStoreOrdersByStatus(UUID storeId, Authentication auth, OrderStatus status,
+	public Page<OrderSummaryResponse> getStoreOrders(UUID storeId, Authentication auth, Pageable pageable) {
+		requireOwnerOfStore(auth, storeId);
+		return orderRepository.findAllByStoreId(storeId, pageable)
+			.map(OrderSummaryResponse::from);
+	}
+
+	// ========== 로그인한 점주의 가게 단위 목록 조회(점주) ==========
+	@Transactional(readOnly = true)
+	public Page<OrderSummaryResponse> getStoreOrdersByStatus(UUID storeId, Authentication auth, OrderStatus status,
 		Pageable pageable) {
 		requireOwnerOfStore(auth, storeId);
 		return orderRepository.findByOrderStatusAndStoreId(status, storeId, pageable)
-			.map(OrderDetailResponse::from);
+			.map(OrderSummaryResponse::from);
 	}
+
+	/** 취소 **/
 
 	// ========== 사용자 취소 ==========
 
@@ -130,40 +130,68 @@ public class OrderService {
 	//"해당 작업은 주문 대기 상태에서만 가능합니다. " 이런 에러가 나오는데
 	// 사용자 결제 취소 조건은 주문 후 5분이내이고 주문조리시작 전에는 취소 가능하도록 설정해야할 거 같습니다..!
 	@Transactional
-	public void cancelByUser(UUID orderId, Authentication auth, String paymentKey,
-		CancelReason cancelReason, UUID userId) {
-		UUID currentUserId = currentUserId(auth);
-		Order order = getAlive(orderId);
+	public void cancel(UUID orderId, Authentication auth) {
+		// ✅ 환불 없는 취소: 주문자 확인 + 취소만 수행
+		Order order = getOrder(orderId, auth);
+		order.cancelOrder(LocalDateTime.now());
 
-		if (!order.getUserId().equals(currentUserId)) {
+	}
+
+	@Transactional
+	public void refund(UUID orderId, Authentication auth) {
+		// 주문 조회 + 접근자 검증(당사자/점주)까지 내부에서 처리한다고 가정
+		Order order = getOrder(orderId, auth);
+
+		User user = (User)auth.getPrincipal();
+		Role role = user.getRole();
+
+		// 결제사 키
+		String paymentKey = order.getTransactionId(); // 혹은 req/paymentGateway 응답 등
+
+		switch (role) {
+			case OWNER -> {
+				// 1) 점주 환불 도메인 처리 (거절사유 포함)
+				order.refundOrder(order.getRejectReasonCode());
+				// 2) 점주 이벤트 발행
+				eventPublisher.publishEvent(
+					new OrderOwnerCancelRequest(orderId, CancelReason.STORECANCEL, paymentKey)
+				);
+			}
+
+			case USER -> {
+				// 1) 사용자 환불 도메인 처리 (거절사유 없음)-> 이후 필요하면 추가
+				order.refundOrder(null); //
+				// 2) 사용자 이벤트 발행
+				eventPublisher.publishEvent(
+					new OrderUserCancelRequest(orderId, paymentKey, CancelReason.USERCANCEL, user.getId())
+				);
+				// 3) 상태 변경이 도메인 메서드(refundOrder)에서 안 된다면 여기서 한 번만!
+				// order.changeStatus(OrderStatus.REFUND);
+			}
+
+			default -> throw new CustomException(ACCESS_DENIED);
+		}
+	}
+
+	// UUID 를 확인하고 아닐 경우 에러 발생시키는 메서드
+	private Order getOrder(UUID orderId, Authentication auth) {
+		UUID uuid = currentUserId(auth);
+		// 소프트 삭제인지 확인하는 메서드
+		Order order = getAlive(orderId);
+		if (!order.getUserId().equals(uuid)) {
 			throw new CustomException(ORDER_USER_MISMATCH);
 		}
-		order.cancelByUser(LocalDateTime.now());
-		cancelReason = CancelReason.USERCANCEL;
-		eventPublisher.publishEvent(new OrderUserCancelRequest(orderId, paymentKey, cancelReason, userId));
+		return order;
 	}
 
 	@EventListener
 	// 결제 취소 후 주문 상태 업데이트
-	public void cancelOrderStatusUpdate(PaymentCancelResponse paymentResponse) {
+	public void cancelOrderStatusUpdate(PaymentCancelResponse
+		paymentResponse) {
 		// 값 넘어오는지 확인
 		// System.out.println(paymentResponse.getStatus());
 		Order order = getAlive(paymentResponse.getOrderId());
 		// order.updateOrderStatus();
-	}
-
-	// ========== 점주 거절 ==========
-	// 일단 REJECTED로 해두었는데 재료소진,조기마감 등으로 수정하시면 될 거 같습니다!
-	@Transactional
-	public void rejectByOwner(UUID orderId, Authentication auth/*, RejectReasonCode reason */, String paymentKey) {
-		Order order = getAlive(orderId);
-		requireOwner(auth, order);
-
-		// order.rejectByOwner(reason);
-		order.rejectByOwner(order.getRejectReasonCode()); // 현재 구조 유지
-
-		eventPublisher.publishEvent(new OrderOwnerCancelRequest(orderId, OrderStatus.REJECTED, paymentKey));
-		order.changeStatus(OrderStatus.REFUND); // 환불로 변경
 	}
 
 	// ========== 점주 상태 변경 ==========
@@ -177,6 +205,7 @@ public class OrderService {
 		// publishOrderEvent(order.getId(), 0);
 	}
 
+	/** 소프트 삭제 */
 	// ========== 소프트 삭제 ==========
 	@Transactional
 	public void softDelete(UUID orderId, Authentication auth) {
@@ -189,24 +218,14 @@ public class OrderService {
 		orderRepository.save(order);
 	}
 
-	// ====== 공통 유틸 ======
-	// 소프트 되지 않은 주문을 ID로 조회
+	/** 공통 유틸 */
+	// 소프트 삭제 되지 않은 주문을 ID로 조회
 	private Order getAlive(UUID orderId) {
 		Order order = orderRepository.findById(orderId)
 			.orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
 		if (order.isDeleted())
 			throw new CustomException(ORDER_ALREADY_DELETED);
 		return order;
-	}
-
-	// 결제 관련 이벤트
-	private void publishOrderEvent(UUID orderId, int amount) {
-		try {
-			// eventPublisher.publishEvent(new OrderEvent(orderId, amount));
-		} catch (Exception e) {
-			log.error("OrderEvent publish failed. orderId={}, amount={}", orderId, amount, e);
-			throw new CustomException(ORDER_EVENT_FAILED);
-		}
 	}
 
 	// 회원인지 아닌지 체크
@@ -225,6 +244,23 @@ public class OrderService {
 		if (!isOwner(auth, order)) {
 			throw new CustomException(ORDER_OWNER_MISMATCH);
 		}
+	}
+
+	// 사장인지 검증
+	private boolean isOwner(Authentication auth, Order order) {
+		UUID uuid = currentUserId(auth);
+
+		Store store = storeRepository.findById(order.getStoreId())
+			.orElseThrow(() -> new CustomException(STORE_NOT_FOUND));
+
+		// (옵션) 삭제된 가게 방어
+		if (store.isDeleted())
+			throw new CustomException(STORE_NOT_FOUND);
+		User owner = store.getOwner(); // LAZY 주의: 트랜잭션 안에서 접근
+		if (owner == null)
+			return false;
+
+		return uuid.equals(owner.getId());
 	}
 
 	// 점주의 가게인지 검증
@@ -249,23 +285,6 @@ public class OrderService {
 		return order.getUserId().equals(uuid);
 	}
 
-	// 사장인지 검증
-	private boolean isOwner(Authentication auth, Order order) {
-		UUID uuid = currentUserId(auth);
-
-		Store store = storeRepository.findById(order.getStoreId())
-			.orElseThrow(() -> new CustomException(STORE_NOT_FOUND));
-
-		// (옵션) 삭제된 가게 방어
-		if (store.isDeleted())
-			throw new CustomException(STORE_NOT_FOUND);
-		User owner = store.getOwner(); // LAZY 주의: 트랜잭션 안에서 접근
-		if (owner == null)
-			return false;
-
-		return uuid.equals(owner.getId());
-	}
-
 	// 현재 로그인한 사용자의 UUID를 안전하게 꺼내기 위한 공통 헬퍼
 	private static UUID currentUserId(Authentication auth) {
 		// 지금 유저의 uuid를 조회
@@ -279,9 +298,9 @@ public class OrderService {
 		}
 	}
 
+	// 관리자 인지 체크
 	private boolean hasAdmin(Authentication auth) {
 		return auth.getAuthorities().stream()
-			.anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+			.anyMatch(a -> a.getAuthority().equals("ROLE_MANAGER"));
 	}
 }
-

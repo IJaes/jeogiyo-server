@@ -44,7 +44,7 @@ public class OrderAdminController {
 	@GetMapping("/search")
 	public ResponseEntity<Page<OrderSummaryResponse>> search(
 		@ParameterObject OrderSearchCondition condition,
-		@ParameterObject Pageable pageable,
+		@Parameter(hidden = true) Pageable pageable,
 		@Parameter(hidden = true) Authentication auth
 	) {
 		// OrderQueryService.search는 ADMIN이면 조건 그대로 허용하는 로직이 있어야 함
