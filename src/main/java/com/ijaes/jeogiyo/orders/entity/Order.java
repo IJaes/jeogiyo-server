@@ -11,7 +11,6 @@ import org.springframework.data.annotation.CreatedDate;
 
 import com.ijaes.jeogiyo.common.entity.BaseEntity;
 import com.ijaes.jeogiyo.common.exception.CustomException;
-import com.ijaes.jeogiyo.common.exception.ErrorCode;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -76,24 +75,27 @@ public class Order extends BaseEntity {
 	}
 
 	/** == 도메인 규칙 == */
-	// 일반 사용자가 취소하는 로직
-	public void cancelByUser(LocalDateTime now) {
-		// ACCEPTED 상태가 아닌데 변경하려고 하는 경우
-		requireACCEPTED(ORDER_NOT_ACCEPTED);
+	// 주문 취소 - 환불이 필요 없는 경우
+	public void cancelOrder(LocalDateTime now) {
 		// 5분이 지나기 전에만 취소가 가능하게 설정
 		if (this.getCreatedAt().plusMinutes(5).isBefore(now))
 			throw new CustomException(ORDER_CANCEL_OVERTIME);
-
+		//
+		if (!this.orderStatus.isBeforeCooking()) {
+			throw new CustomException(ORDER_NOT_ACCEPTED);
+		}
 		this.orderStatus = CANCELED;
 	}
 
-	// 사장님이 주문 거절을 원할 때(REJECTED)
-	public void rejectByOwner(RejectReasonCode reasonCode) {
+	// 주문 취소 - 환불이 필요한 경우
+	public void refundOrder(RejectReasonCode reasonCode) {
 		// 주문 상태가 ACCEPTED 아닌 경우
-		requireACCEPTED(ORDER_NOT_ACCEPTED);
+		if (!this.orderStatus.isBeforeCooking()) {
+			throw new CustomException(ORDER_NOT_ACCEPTED);
+		}
 		this.rejectReasonCode = reasonCode;
 		this.rejectedDate = LocalDateTime.now();
-		this.orderStatus = REJECTED;
+		this.orderStatus = REFUND;
 	}
 
 	// 강제로 주문 상태가 넘어가는 부분 막기
@@ -109,21 +111,18 @@ public class Order extends BaseEntity {
 	}
 
 	/** === 공통 가드(헬퍼) === */
-	// 주문 상태가 WAITING(주문 대기) 인지 검사
-	private void requireACCEPTED(ErrorCode code) {
-		requireStatus(ACCEPTED, code);
-	}
-
-	// 현재 주문 상태와 예상한값(excepted)가 다를 경우 - 확장성 있게 설계하기 위해 requireWaiting 메서드와 분리.
-	private void requireStatus(OrderStatus expected, ErrorCode code) {
-		if (this.orderStatus != expected) {
-			throw new CustomException(code); // ErrorCode의 message 사용
-		}
-	}
-
 	// 전이 차단(주문거절 또는 주문완료 일 경우엔 전이를 차단한다)
 	public boolean isTerminal() {
 		return orderStatus.isTerminal();
+	}
+
+	// 결제 성공 시 주문 상태 업데이트
+	public void updateOrderStatus(String paymentKey) {
+		if (orderStatus.equals(ACCEPTED)) {
+			this.orderStatus = PAID;
+			this.transactionId = paymentKey;
+		}
+		throw new CustomException(ORDER_NOT_ACCEPTED);
 	}
 }
 
