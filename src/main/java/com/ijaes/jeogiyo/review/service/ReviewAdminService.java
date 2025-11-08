@@ -30,9 +30,9 @@ public class ReviewAdminService {
 
 	//1. 전체 리뷰 조회(삭제된 리뷰, 숨겨진 리뷰 등 전체 포함)
 	@Transactional(readOnly = true)
-	public Page<ReviewResponse> getAllReviewsForAdmin(int page, int size) {
+	public Page<ReviewResponse> getAllReviewsForAdmin(int page, int size, String filterType) {
 
-		Page<ReviewResponse> response = reviewRepositoryCustomImpl.findAllReviewsForAdmin(page, size);
+		Page<ReviewResponse> response = reviewRepositoryCustomImpl.findAllReviewsForAdmin(page, size, filterType);
 
 		return response;
 	}

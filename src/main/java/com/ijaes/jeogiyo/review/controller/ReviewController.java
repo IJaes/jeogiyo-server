@@ -19,9 +19,13 @@ import com.ijaes.jeogiyo.review.dto.request.CreateReviewRequest;
 import com.ijaes.jeogiyo.review.dto.request.UpdateReviewRequest;
 import com.ijaes.jeogiyo.review.dto.response.CreateReviewResponse;
 import com.ijaes.jeogiyo.review.dto.response.ReviewResponse;
+import com.ijaes.jeogiyo.review.entity.ReviewSortType;
+import com.ijaes.jeogiyo.review.entity.ReviewStatus;
 import com.ijaes.jeogiyo.review.service.ReviewService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -55,20 +59,37 @@ public class ReviewController {
 	public ResponseEntity<Page<ReviewResponse>> getUserReviews(Authentication authentication,
 		@PathVariable UUID userId,
 		@RequestParam(defaultValue = "0") int page,
-		@RequestParam(defaultValue = "10") int size
+		@RequestParam(defaultValue = "10") int size,
+		@Parameter(
+			description = "리뷰 상태 필터. 입력하지 않으면 모든 상태 조회",
+			schema = @Schema(implementation = ReviewStatus.class),
+			required = false
+		)
+		@RequestParam(required = false) String filterType,
+		@Parameter(
+			description = "정렬 기준 타입. 입력하지 않으면 최신순",
+			schema = @Schema(implementation = ReviewSortType.class)
+		)
+		@RequestParam(defaultValue = "LATEST") String sortType
 	) {
-		Page<ReviewResponse> response = reviewService.getUserReviews(authentication, userId, page, size);
+		Page<ReviewResponse> response = reviewService.getUserReviews(authentication, userId, page, size, filterType,
+			sortType);
 		return ResponseEntity.ok(response);
 	}
 
 	@GetMapping("/stores/{storeId}")
 	@Operation(summary = "가게별 리뷰 목록 조회", description = "특정 store에 작성된 전체 리뷰 목록을 조회합니다.", security = @SecurityRequirement(name = "bearer-jwt"))
-	public ResponseEntity<Page<ReviewResponse>> getStoreReviews(Authentication authentication,
+	public ResponseEntity<Page<ReviewResponse>> getStoreReviews(
 		@PathVariable UUID storeId,
 		@RequestParam(defaultValue = "0") int page,
-		@RequestParam(defaultValue = "10") int size
+		@RequestParam(defaultValue = "10") int size,
+		@Parameter(
+			description = "정렬 기준 타입. 입력하지 않으면 최신순",
+			schema = @Schema(implementation = ReviewSortType.class)
+		)
+		@RequestParam(defaultValue = "LATEST") String sortType
 	) {
-		Page<ReviewResponse> response = reviewService.getStoreReviews(authentication, storeId, page, size);
+		Page<ReviewResponse> response = reviewService.getStoreReviews(storeId, page, size, sortType);
 		return ResponseEntity.ok(response);
 	}
 

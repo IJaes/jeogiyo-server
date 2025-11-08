@@ -184,7 +184,7 @@ class ReviewRepositoryCustomImplTest {
 	@DisplayName("관리자는 전체 리뷰를 최신순으로 조회할 수 있다")
 	void findAllReviewsForAdmin() {
 		// when
-		Page<ReviewResponse> result = reviewRepositoryCustom.findAllReviewsForAdmin(0, 10);
+		Page<ReviewResponse> result = reviewRepositoryCustom.findAllReviewsForAdmin(0, 10, "");
 
 		printReviews("관리자 전체 리뷰 조회 결과", result);
 
@@ -197,8 +197,8 @@ class ReviewRepositoryCustomImplTest {
 	@Test
 	@DisplayName("사용자가 자신의 리뷰를 최신순으로 조회할 수 있다 - 숨김 리뷰 포함")
 	void findReviewsByUserId() {
-		Page<ReviewResponse> result = reviewRepositoryCustom.findReviewsByUserId(user1Id, 0, 10);
-		Page<ReviewResponse> result2 = reviewRepositoryCustom.findReviewsByUserId(user2Id, 0, 10);
+		Page<ReviewResponse> result = reviewRepositoryCustom.findReviewsByUserId(user1Id, 0, 10, "ALL", "LATEST");
+		Page<ReviewResponse> result2 = reviewRepositoryCustom.findReviewsByUserId(user2Id, 0, 10, "ALL", "LATEST");
 
 		printReviews("유저별 리뷰 조회 결과 (user1)", result);
 		printReviews("유저별 리뷰 조회 결과 (user2)", result2);
@@ -211,8 +211,8 @@ class ReviewRepositoryCustomImplTest {
 	@Test
 	@DisplayName("가게별 리뷰 조회 시 숨김, 삭제, 차단된 사용자의 리뷰는 제외된다")
 	void findReviewsByStoreID() {
-		Page<ReviewResponse> result1 = reviewRepositoryCustom.findReviewsByStoreID(store1Id, 0, 10);
-		Page<ReviewResponse> result2 = reviewRepositoryCustom.findReviewsByStoreID(store2Id, 0, 10);
+		Page<ReviewResponse> result1 = reviewRepositoryCustom.findReviewsByStoreID(store1Id, 0, 10, "");
+		Page<ReviewResponse> result2 = reviewRepositoryCustom.findReviewsByStoreID(store2Id, 0, 10, "");
 
 		printReviews("가게1 리뷰 조회 결과", result1);
 		printReviews("가게2 리뷰 조회 결과", result2);

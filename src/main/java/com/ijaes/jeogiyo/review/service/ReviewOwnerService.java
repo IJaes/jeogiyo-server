@@ -22,10 +22,10 @@ public class ReviewOwnerService {
 	private final StoreRepository storeRepository;
 
 	@Transactional(readOnly = true)
-	public Page<ReviewResponse> getMyStoreReviews(int page, int size, Authentication authentication) {
+	public Page<ReviewResponse> getMyStoreReviews(Authentication authentication, int page, int size, String sortType) {
 		User owner = (User)authentication.getPrincipal();
 		Store store = storeRepository.findByOwnerId(owner.getId())
 			.orElseThrow(() -> new CustomException(ErrorCode.STORE_NOT_FOUND));
-		return reviewService.getStoreReviews(authentication, store.getId(), page, size);
+		return reviewService.getStoreReviews(store.getId(), page, size, sortType);
 	}
 }

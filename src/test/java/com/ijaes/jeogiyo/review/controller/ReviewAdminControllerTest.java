@@ -43,12 +43,12 @@ class ReviewAdminControllerTest {
 	@DisplayName("전체 리뷰 조회 성공")
 	void getAllReviews_success() {
 		Page<ReviewResponse> pageMock = new PageImpl<>(List.of(new ReviewResponse()));
-		when(reviewAdminService.getAllReviewsForAdmin(0, 10)).thenReturn(pageMock);
+		when(reviewAdminService.getAllReviewsForAdmin(0, 10, "")).thenReturn(pageMock);
 
-		ResponseEntity<Page<ReviewResponse>> response = reviewAdminController.getAllReviews(0, 10);
+		ResponseEntity<Page<ReviewResponse>> response = reviewAdminController.getAllReviews(0, 10, "");
 
 		assertThat(response.getBody()).isEqualTo(pageMock);
-		verify(reviewAdminService, times(1)).getAllReviewsForAdmin(0, 10);
+		verify(reviewAdminService, times(1)).getAllReviewsForAdmin(0, 10, "");
 	}
 
 	@Test
