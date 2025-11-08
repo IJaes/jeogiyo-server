@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 public class OrderUserCancelRequest {
 	private UUID orderId;
 	private String paymentKey;
-	private CancelReason canCelReason;
+	private CancelReason cancelReason;
 	private UUID userId;
 
 }

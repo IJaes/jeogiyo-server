@@ -61,14 +61,12 @@ public class Payment extends BaseEntity {
 	private CancelReason cancelReason;
 
 	@Column
-	private int retryCount;
+	private int retryCount = 0;
 
 	public void updateApprovePaymentFail(String log, String paymentKey) {
 		this.status = PaymentStatus.FAIL;
 		this.log = log;
 		this.paymentKey = paymentKey;
-
-		System.out.println(log + " 71 " + paymentKey);
 	}
 
 	public void updateCancelPaymentFail(String log) {

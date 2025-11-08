@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.core.Authentication;
@@ -28,6 +29,10 @@ import com.ijaes.jeogiyo.common.exception.CustomException;
 import com.ijaes.jeogiyo.common.exception.ErrorCode;
 import com.ijaes.jeogiyo.orders.dto.request.OrderRequest;
 import com.ijaes.jeogiyo.orders.dto.request.OrderUserCancelRequest;
+import com.ijaes.jeogiyo.orders.entity.Order;
+import com.ijaes.jeogiyo.orders.repository.OrderRepository;
+import com.ijaes.jeogiyo.payments.dto.response.PaymentApproveResponse;
+import com.ijaes.jeogiyo.payments.dto.response.PaymentCancelResponse;
 import com.ijaes.jeogiyo.payments.entity.Payment;
 import com.ijaes.jeogiyo.payments.entity.PaymentStatus;
 import com.ijaes.jeogiyo.payments.repository.PaymentRepository;
@@ -41,11 +46,13 @@ import lombok.RequiredArgsConstructor;
 public class PaymentUserService {
 
 	private final PaymentRepository paymentRepository;
+	private final OrderRepository orderRepository;
 	private final ObjectMapper objectMapper;
 	private final TaskScheduler taskScheduler;
+	private final ApplicationEventPublisher eventPublisher;
 
 	// 결제시도 횟수
-	private final int MAX_RETRIES = 2;
+	private final int MAX_RETRIES = 3;
 	// 20초마다 시도
 	private final long RETRY_DELAY_MS = 5 * 1000;
 
@@ -59,15 +66,16 @@ public class PaymentUserService {
 
 		// 로그인, 권한 확인
 		getValidatedUser();
+		UUID orderId = event.getOrderId();
 
-		// 오더 관련 기능과 합쳐서 완료 시 주석 해제
-		// Order order = orderRepository.findById(event.getOrderId())
-		// 	.orElseThrow(() -> new CustomException(ErrorCode.ORDER_NOT_FOUND));
+		if (orderId == null) {
+			throw new CustomException(ErrorCode.ORDER_NOT_FOUND);  // 바로 예외 던지기
+		}
 
-		// int orderAmount = order.getTotalPrice();
+		Order order = orderRepository.findById(event.getOrderId())
+			.orElseThrow(() -> new CustomException(ErrorCode.ORDER_NOT_FOUND));
 
-		// 테스트
-		int orderAmount = 100;
+		int orderAmount = order.getTotalPrice();
 
 		if (orderAmount != event.getAmount()) {
 			throw new CustomException(ErrorCode.PAYMENT_AMOUNT_MISMATCH);
@@ -154,12 +162,10 @@ public class PaymentUserService {
 			.send(request, HttpResponse.BodyHandlers.ofString());
 
 		JsonNode jsonNode = objectMapper.readTree(response.body());
-		System.out.println(jsonNode + " 162");
 
 		String log = jsonNode.path("message").asText(null);
 		String logMessage = (log != null) ? log : ErrorCode.PAYMENT_CONFIRMATION_FAILED.getMessage();
 		String paymentKey = jsonNode.path("paymentKey").asText();
-		System.out.println("171 log " + log);
 
 		try {
 			if (response.statusCode() == 200 && "DONE".equals(jsonNode.path("status").asText())) {
@@ -167,15 +173,15 @@ public class PaymentUserService {
 					// 결제 성공 시 DB 저장
 					payment.updatePaymentSuccess(paymentKey);
 					paymentRepository.save(payment);
+
 				} catch (Exception e) {
 					// 결제는 완료되었으나 DB 저장 실패 시
 					payment.updateLog("DB 저장 실패: " + e.getMessage());
-					// processPaymentWithRetry(billingKey, amount, userId, orderId);
+					processPaymentWithRetry(billingKey, amount, userId, orderId, log);
 					throw new CustomException(ErrorCode.PAYMENT_DB_SAVE_FAILED);
 				}
 
 			} else {
-				// String failMsg = jsonNode.path("message").asText(null);
 				payment.updateApprovePaymentFail(log, paymentKey);
 				paymentRepository.save(payment);
 				processPaymentWithRetry(billingKey, amount, userId, orderId, log);
@@ -185,9 +191,12 @@ public class PaymentUserService {
 		} catch (Exception e) {
 			payment.updateApprovePaymentFail(logMessage, paymentKey);
 			paymentRepository.save(payment);
-			// processPaymentWithRetry(billingKey, amount, userId, orderId, logMessage);
+			processPaymentWithRetry(billingKey, amount, userId, orderId, logMessage);
 
 			throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
+		} finally {
+			eventPublisher.publishEvent(
+				new PaymentApproveResponse(payment.getOrderId(), payment.getStatus(), paymentKey));
 		}
 
 	}
@@ -268,7 +277,7 @@ public class PaymentUserService {
 					.header("Authorization", "Basic " + encodedAuth)
 					.header("Content-Type", "application/json")
 					.method("POST", HttpRequest.BodyPublishers.ofString(
-						"{\"cancelReason\":\"" + orderCancelEvent.getCanCelReason() + "\"}"))
+						"{\"cancelReason\":\"" + orderCancelEvent.getCancelReason() + "\"}"))
 					.build();
 
 				HttpResponse<String> response = HttpClient.newHttpClient()
@@ -291,6 +300,8 @@ public class PaymentUserService {
 			payment.updateCancelPaymentFail(e.getMessage());
 			paymentRepository.save(payment);
 			throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
+		} finally {
+			eventPublisher.publishEvent(new PaymentCancelResponse(payment.getOrderId(), payment.getStatus()));
 		}
 
 	}

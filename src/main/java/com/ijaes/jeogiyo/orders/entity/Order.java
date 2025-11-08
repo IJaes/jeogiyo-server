@@ -121,6 +121,12 @@ public class Order extends BaseEntity {
 		}
 	}
 
+	// 결제 성공 시 주문 상태 업데이트
+	public void updateOrderStatus(String paymentKey) {
+		this.orderStatus = PAID;
+		this.transactionId = paymentKey;
+	}
+
 	// 전이 차단(주문거절 또는 주문완료 일 경우엔 전이를 차단한다)
 	public boolean isTerminal() {
 		return orderStatus.isTerminal();
