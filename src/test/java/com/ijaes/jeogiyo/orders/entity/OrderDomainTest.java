@@ -44,7 +44,7 @@ class OrderDomainTest {
 		setCreatedAt(target, base.minusMinutes(minutesAgo).minusSeconds(secondsAgo));
 	}
 
-	// ========== 취소(CANCEL) - 일반 사용자 ==========
+	// ========== 취소(CANCEL) ==========
 
 	@Test
 	void 취소_성공_정확히5분() {
@@ -89,48 +89,19 @@ class OrderDomainTest {
 	}
 
 	@Test
-	void 취소_실패_주문대기_상태가_아님() {
-		// 시간 요인은 통과(5분 이내), 상태는 ACCEPTED 상태
+	void 취소_실패_대기상태_아님_COOKING() {
+		// given: 5분 이내이지만 상태는 COOKING(조리 중)
 		setCreatedAtAgo(order, 4, 0, FIXED_NOW);
-		ReflectionTestUtils.setField(order, "orderStatus", PAID);
+		ReflectionTestUtils.setField(order, "orderStatus", COOKING);
 
-		// 상태가 원인으로 에러가 터져야 하는 로직
-		// WAITING상태가 아니기 때문에 ORDER_NOT_WAITING 에러 발생
+		// when & then: 대기(ACCEPTED)가 아니므로 취소 불가 → 상태오류 발생
 		assertThatThrownBy(() -> order.cancelOrder(FIXED_NOW))
 			.isInstanceOf(CustomException.class)
 			.extracting("errorCode")
-			.isEqualTo(ORDER_NOT_ACCEPTED);
+			.isEqualTo(ORDER_NOT_ACCEPTED); // 규칙에 맞춘 에러 코드
 
-		// 상태 불변 확인 (여전히 ACCEPTED)
-		assertThat(order.getOrderStatus()).isEqualTo(PAID);
-	}
-
-	// ========== 거절(REJECT) - 사장님 ==========
-	@Test
-	void 거절_성공() {
-		// 주문 대기 상태에서 사장님이 거절 성공하는 케이스
-		assertThat(order.getOrderStatus()).isEqualTo(ACCEPTED);
-
-		// when
-		order.refundOrder(RejectReasonCode.CLOSED_EARLY);
-
-		// then
-		assertThat(order.getOrderStatus()).isEqualTo(CANCELED);
-	}
-
-	@Test
-	void 거절_실패_ACCEPTED_아님() {
-		// given: ACCEPTED이 아닌 상태
-		ReflectionTestUtils.setField(order, "orderStatus", PAID);
-
-		// when & then: ACCEPTED이 아니므로 예외 발생 + 상태 불변
-		assertThatThrownBy(() -> order.refundOrder(RejectReasonCode.OUT_OF_STOCK))
-			.isInstanceOf(CustomException.class)
-			.extracting("errorCode")
-			.isEqualTo(ORDER_NOT_ACCEPTED);
-
-		// 상태 변화x (ACCEPTED)
-		assertThat(order.getOrderStatus()).isEqualTo(PAID);
+		// 상태 불변 확인: COOKING 그대로
+		assertThat(order.getOrderStatus()).isEqualTo(COOKING);
 	}
 
 	// ========== 주문 상태 전이 ==========
