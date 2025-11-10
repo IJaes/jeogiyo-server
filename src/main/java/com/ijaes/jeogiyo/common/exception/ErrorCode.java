@@ -76,6 +76,7 @@ public enum ErrorCode {
 	ORDER_ALREADY_DELETED(HttpStatus.BAD_REQUEST, "O-008", "이미 삭제된 주문입니다."), // 소프트 삭제된 주문에 대한 방어
 	ORDER_EVENT_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "O-009", "주문 이벤트 발행 중 오류가 발생했습니다."), // 메세지 수정
 	ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "O-0010", "주문을 찾을 수 없습니다."),
+	ORDER_REFUND_INVALID_STATE(HttpStatus.CONFLICT, "O-0011", "환불을 진행할 수 없는 주문 상태입니다."),
 
 	// 결제 관련 (P-xxx)
 	PAYMENT_KEY_GENERATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "P-001", "결제 키 발급 중 오류가 발생했습니다."),

@@ -50,7 +50,7 @@ public class Payment extends BaseEntity {
 	@Column
 	private int paymentAmount;
 
-	@Column(nullable = false)
+	@Column(name = "payment_key", length = 191)
 	private String paymentKey;
 
 	@Column(nullable = false)
