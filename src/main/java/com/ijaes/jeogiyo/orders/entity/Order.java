@@ -11,7 +11,6 @@ import org.springframework.data.annotation.CreatedDate;
 
 import com.ijaes.jeogiyo.common.entity.BaseEntity;
 import com.ijaes.jeogiyo.common.exception.CustomException;
-import com.ijaes.jeogiyo.common.exception.ErrorCode;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -76,54 +75,71 @@ public class Order extends BaseEntity {
 	}
 
 	/** == 도메인 규칙 == */
-	// 주문 취소 - 환불이 필요 없는 경우
+	// 1) 결제 전 취소(환불 불필요) — 5분 제한 + 조리 전만
 	public void cancelOrder(LocalDateTime now) {
-		// 5분이 지나기 전에만 취소가 가능하게 설정
-		if (this.getCreatedAt().plusMinutes(5).isBefore(now))
+		if (this.getCreatedAt().plusMinutes(5).isBefore(now)) {
 			throw new CustomException(ORDER_CANCEL_OVERTIME);
-		//
+		}
 		if (!this.orderStatus.isBeforeCooking()) {
 			throw new CustomException(ORDER_NOT_ACCEPTED);
 		}
 		this.orderStatus = CANCELED;
 	}
 
-	// 주문 취소 - 환불이 필요한 경우
-	public void refundOrder(RejectReasonCode reasonCode) {
-		// 주문 상태가 ACCEPTED 아닌 경우
-		if (!this.orderStatus.isBeforeCooking()) {
-			throw new CustomException(ORDER_NOT_ACCEPTED);
+	// 2) 환불 "요청" (최종 REFUND 확정은 결제 이벤트 수신 시)
+	public void requestRefund(RejectReasonCode reasonCode) {
+		if (isTerminal())
+			throw new CustomException(ORDER_INVALID_TRANSITION);
+		if (!this.orderStatus.canTransitTo(REFUND_PENDING)) {
+			throw new CustomException(ORDER_REFUND_INVALID_STATE);
 		}
 		this.rejectReasonCode = reasonCode;
 		this.rejectedDate = LocalDateTime.now();
+		this.orderStatus = REFUND_PENDING; // ★ 중간 상태로만 전이
+	}
+
+	// 3) 환불 "완료" (결제/PG에서 REFUNDED 이벤트 수신 시에만)
+	public void markRefundCompleted() {
+		if (this.orderStatus != REFUND_PENDING) {
+			throw new CustomException(ORDER_REFUND_INVALID_STATE);
+		}
 		this.orderStatus = REFUND;
 	}
 
-	// 강제로 주문 상태가 넘어가는 부분 막기
+	// 4) 결제 승인(결제 이벤트 수신 시만 호출)
+	public void markPaid(String paymentKey) {
+		// 정책: ACCEPTED → PAID (이미 ACCEPTED가 초기상태)
+		if (this.orderStatus != ACCEPTED) {
+			throw new CustomException(ORDER_NOT_ACCEPTED);
+		}
+		this.transactionId = paymentKey;
+		this.orderStatus = PAID;
+	}
+
+	// 5) 결제 실패(결제 이벤트 수신 시만 호출)
+	public void cancelByPaymentFailure() {
+		// 결제 실패는 조리 전(ACCEPTED/PAID)에서만 취소 가능
+		if (!this.orderStatus.isBeforeCooking()) {
+			throw new CustomException(ORDER_NOT_ACCEPTED);
+		}
+		this.orderStatus = CANCELED;
+	}
+
+	// 강제 전이 차단(서비스에서 임의 상태 변경 방지)
 	public void changeStatus(OrderStatus target) {
-		// 강제 전이 차단
 		if (isTerminal()) {
 			throw new CustomException(ORDER_INVALID_TRANSITION);
 		}
-		// orderStatus에 있는 검증로직
-		if (!orderStatus.canTransitTo(target))
+		if (!orderStatus.canTransitTo(target)) {
 			throw new CustomException(ORDER_INVALID_TRANSITION);
+		}
 		this.orderStatus = target;
 	}
 
-	/** === 공통 가드(헬퍼) === */
-	// 전이 차단(주문거절 또는 주문완료 일 경우엔 전이를 차단한다)
+	/** === 공통 가드 === */
 	public boolean isTerminal() {
 		return orderStatus.isTerminal();
 	}
 
-	// 결제 성공 시 주문 상태 업데이트
-	public void updateOrderStatus(String paymentKey) {
-		if (orderStatus.equals(ACCEPTED)) {
-			this.orderStatus = PAID;
-			this.transactionId = paymentKey;
-		}
-		throw new CustomException(ORDER_NOT_ACCEPTED);
-	}
 }
 

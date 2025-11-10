@@ -12,18 +12,20 @@ public enum OrderStatus {
 	DELIVERED,
 	COMPLETED,
 	CANCELED,  // 최종(미결제 취소)
+	REFUND_PENDING, // ★ 추가: 환불 진행 중(비동기 대기)
 	REFUND;    // 최종(결제 취소-환불)
 
 	// 정상 진행 전이 (취소/환불 특례는 도메인 메서드에서 직접 처리)
 	private static final Map<OrderStatus, Set<OrderStatus>> ALLOWED_NEXT = Map.of(
-		ACCEPTED, Set.of(PAID, CANCELED, REFUND),         // 결제 후에만 진행
-		PAID, Set.of(COOKING, CANCELED, REFUND),
+		ACCEPTED, Set.of(PAID, CANCELED, REFUND_PENDING),
+		PAID, Set.of(COOKING, CANCELED, REFUND_PENDING),
 		COOKING, Set.of(COOKED),
 		COOKED, Set.of(DELIVERING),
 		DELIVERING, Set.of(DELIVERED),
 		DELIVERED, Set.of(COMPLETED),
 		COMPLETED, Set.of(),
 		CANCELED, Set.of(),
+		REFUND_PENDING, Set.of(REFUND), // ★ 추가: 대기 → 완료
 		REFUND, Set.of()
 	);
 
