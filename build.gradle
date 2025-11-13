@@ -14,6 +14,18 @@ java {
     }
 }
 
+sourceSets {
+    main {
+        resources {
+            srcDirs 'src/main/resources', 'jeogiyo-submodule'
+        }
+    }
+}
+
+tasks.withType(ProcessResources) {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+}
+
 configurations {
     compileOnly {
         extendsFrom annotationProcessor
@@ -22,6 +34,7 @@ configurations {
 
 repositories {
     mavenCentral()
+    google()
 }
 
 dependencies {
@@ -34,14 +47,36 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'com.h2database:h2'
     runtimeOnly 'com.mysql:mysql-connector-j'
+
+    //QueryDSL
+    implementation 'com.querydsl:querydsl-jpa:5.1.0:jakarta'
+    annotationProcessor 'com.querydsl:querydsl-apt:5.1.0:jakarta'
+
+    annotationProcessor 'jakarta.annotation:jakarta.annotation-api'
+    annotationProcessor 'jakarta.persistence:jakarta.persistence-api'
+
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     // JWT
     implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.3'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.3'
+    // SwaggerUI
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.13'
+    // QueryDSL
+    implementation 'com.querydsl:querydsl-jpa:5.1.0:jakarta'
+    annotationProcessor 'com.querydsl:querydsl-apt:5.1.0:jakarta'
+    annotationProcessor 'jakarta.persistence:jakarta.persistence-api'
+    annotationProcessor 'jakarta.annotation:jakarta.annotation-api'
+
+    // Gemini API REST
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
 }
 
 tasks.named('test') {
     useJUnitPlatform()
+    systemProperties = [
+            'spring.profiles.active': System.getenv('SPRING_PROFILES_ACTIVE') ?: System.getProperty('spring.profiles.active') ?: 'test'
+    ]
 }

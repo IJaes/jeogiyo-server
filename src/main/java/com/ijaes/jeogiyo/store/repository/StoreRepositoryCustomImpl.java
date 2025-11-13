@@ -1,0 +1,193 @@
+package com.ijaes.jeogiyo.store.repository;
+
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.Optional;
+import java.util.UUID;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+
+import com.ijaes.jeogiyo.menu.entity.QMenu;
+import com.ijaes.jeogiyo.review.entity.QReview;
+import com.ijaes.jeogiyo.store.dto.response.StoreDetailResponse;
+import com.ijaes.jeogiyo.store.entity.QStore;
+import com.ijaes.jeogiyo.store.entity.Store;
+import com.ijaes.jeogiyo.user.entity.QUser;
+import com.querydsl.core.types.Projections;
+import com.querydsl.jpa.impl.JPAQueryFactory;
+
+import lombok.RequiredArgsConstructor;
+
+@RequiredArgsConstructor
+public class StoreRepositoryCustomImpl implements StoreRepositoryCustom {
+
+	private final JPAQueryFactory queryFactory;
+
+	@Override
+	public Optional<StoreDetailResponse> findStoreDetailById(UUID storeId) {
+		QStore store = QStore.store;
+		QUser user = QUser.user;
+
+		StoreDetailResponse result = queryFactory
+			.select(Projections.constructor(
+				StoreDetailResponse.class,
+				store.id,
+				store.businessNumber,
+				store.name,
+				store.address,
+				store.description,
+				store.category.stringValue(),
+				store.rate,
+				Projections.constructor(
+					StoreDetailResponse.OwnerInfo.class,
+					user.id,
+					user.name,
+					user.username,
+					user.phoneNumber,
+					user.address
+				)
+			))
+			.from(store)
+			.innerJoin(user).on(store.owner.id.eq(user.id))
+			.where(store.id.eq(storeId), store.deletedAt.isNull())
+			.fetchOne();
+
+		return Optional.ofNullable(result);
+	}
+
+	@Override
+	public Optional<Store> findByOwnerId(UUID ownerId) {
+		QStore store = QStore.store;
+
+		Store result = queryFactory
+			.selectFrom(store)
+			.where(
+				store.owner.id.eq(ownerId),
+				store.deletedAt.isNull()
+			)
+			.limit(1)
+			.fetchFirst();
+
+		return Optional.ofNullable(result);
+	}
+
+	@Override
+	public boolean existsByOwnerId(UUID ownerId) {
+		QStore store = QStore.store;
+
+		UUID firstId = queryFactory
+			.select(store.id)
+			.from(store)
+			.where(
+				store.owner.id.eq(ownerId),
+				store.deletedAt.isNull()
+			)
+			.limit(1)
+			.fetchFirst();
+
+		return firstId != null;
+	}
+
+	@Override
+	public Optional<Store> findByIdNotDeleted(UUID id) {
+		QStore store = QStore.store;
+
+		Store result = queryFactory
+			.selectFrom(store)
+			.where(
+				store.id.eq(id),
+				store.deletedAt.isNull()
+			)
+			.fetchOne();
+
+		return Optional.ofNullable(result);
+	}
+
+	@Override
+	public Page<Store> findAllNotDeleted(Pageable pageable) {
+		QStore store = QStore.store;
+
+		Long total = queryFactory
+			.select(store.count())
+			.from(store)
+			.where(store.deletedAt.isNull())
+			.fetchOne();
+
+		var query = queryFactory
+			.selectFrom(store)
+			.where(store.deletedAt.isNull())
+			.offset(pageable.getOffset())
+			.limit(pageable.getPageSize());
+
+		if (pageable.getSort().isSorted()) {
+			pageable.getSort().forEach(order -> {
+				if ("rate".equals(order.getProperty())) {
+					query.orderBy(order.isAscending() ? store.rate.asc() : store.rate.desc());
+				}
+			});
+		} else {
+			query.orderBy(store.createdAt.desc());
+		}
+
+		var content = query.fetch();
+
+		return new PageImpl<>(content, pageable, total == null ? 0 : total);
+	}
+
+	@Override
+	public Page<Store> findAllIncludingDeleted(Pageable pageable) {
+		QStore store = QStore.store;
+
+		Long total = queryFactory
+			.select(store.count())
+			.from(store)
+			.fetchOne();
+
+		var content = queryFactory
+			.selectFrom(store)
+			.orderBy(store.createdAt.desc())
+			.offset(pageable.getOffset())
+			.limit(pageable.getPageSize())
+			.fetch();
+
+		return new PageImpl<>(content, pageable, total == null ? 0 : total);
+	}
+
+	@Override
+	public Page<Store> searchStores(String query, Pageable pageable) {
+		QStore store = QStore.store;
+		QMenu menu = QMenu.menu;
+
+		var storesByMenu = queryFactory
+			.select(store)
+			.from(menu)
+			.innerJoin(store).on(menu.store.id.eq(store.id))
+			.where(
+				menu.name.containsIgnoreCase(query),
+				menu.deletedAt.isNull(),
+				store.deletedAt.isNull()
+			)
+			.distinct()
+			.fetch();
+
+		var storesByName = queryFactory
+			.selectFrom(store)
+			.where(
+				store.name.containsIgnoreCase(query),
+				store.deletedAt.isNull()
+			)
+			.fetch();
+
+		var allStores = new LinkedHashSet<>(storesByMenu);
+		allStores.addAll(storesByName);
+		var uniqueStores = new ArrayList<>(allStores);
+
+		int start = (int)pageable.getOffset();
+		int end = Math.min(start + pageable.getPageSize(), uniqueStores.size());
+		var paginatedStores = uniqueStores.subList(start, end);
+
+		return new PageImpl<>(paginatedStores, pageable, uniqueStores.size());
+	}
+}

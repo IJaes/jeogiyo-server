@@ -15,10 +15,10 @@ import java.util.Date;
 @Component
 public class JwtUtil {
 
-    @Value("${jwt.secret:jeogiyo-secret-key-for-jwt-token-encryption-security-2025}")
+    @Value("${jwt.secret}")
     private String secret;
 
-    @Value("${jwt.expiration:86400000}")
+    @Value("${jwt.expiration}")
     private long expiration;
 
     private SecretKey getSigningKey() {
@@ -90,6 +90,14 @@ public class JwtUtil {
             return getClaims(token).getExpiration().before(new Date());
         } catch (CustomException ex) {
             return true;
+        }
+    }
+
+    public long getTokenExpirationTime(String token) {
+        try {
+            return getClaims(token).getExpiration().getTime();
+        } catch (CustomException ex) {
+            throw ex;
         }
     }
 }

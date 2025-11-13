@@ -1,6 +1,7 @@
 package com.ijaes.jeogiyo.user.entity;
 
 import com.ijaes.jeogiyo.common.entity.BaseEntity;
+
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
@@ -9,10 +10,11 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.UUID;
 
 @Entity
-@Table(name = "users")
-@Data
+@Table(name = "j_user")
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -20,8 +22,8 @@ import java.util.Collections;
 public class User extends BaseEntity implements UserDetails {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
     @Column(nullable = false, unique = true)
     private String username;
@@ -35,16 +37,25 @@ public class User extends BaseEntity implements UserDetails {
     @Column(nullable = false)
     private String address;
 
+    @Column(nullable = true)
+    private Double latitude;
+
+    @Column(nullable = true)
+    private Double longitude;
+
     @Column(nullable = false)
     private String phoneNumber;
 
     @Column(nullable = false)
-    private boolean enabled = true;
+    private boolean isOwner;
 
-    // UserDetails 구현
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role = Role.USER;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"));
+        return Collections.singletonList(new SimpleGrantedAuthority(role.getAuthority()));
     }
 
     @Override
@@ -64,6 +75,27 @@ public class User extends BaseEntity implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return enabled;
+        return !role.equals(Role.BLOCK);
+    }
+
+    public void updateAddress(String newAddress) {
+        this.address = newAddress;
+    }
+
+    public void updateCoordinates(Double latitude, Double longitude) {
+        this.latitude = latitude;
+        this.longitude = longitude;
+    }
+
+    public void updatePhoneNumber(String newPhoneNumber) {
+        this.phoneNumber = newPhoneNumber;
+    }
+
+    public void updatePassword(String newPassword) {
+        this.password = newPassword;
+    }
+
+    public void updateRole(Role newRole) {
+        this.role = newRole;
     }
 }

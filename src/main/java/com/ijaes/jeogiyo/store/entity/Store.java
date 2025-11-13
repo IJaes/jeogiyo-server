@@ -1,0 +1,96 @@
+package com.ijaes.jeogiyo.store.entity;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+import com.ijaes.jeogiyo.common.entity.BaseEntity;
+import com.ijaes.jeogiyo.user.entity.User;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+@Entity
+@Table(name = "j_store")
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@EqualsAndHashCode(callSuper = false)
+public class Store extends BaseEntity {
+
+	@Id
+	@GeneratedValue(strategy = GenerationType.UUID)
+	private UUID id;
+
+	@Column(nullable = false)
+	private String businessNumber;
+
+	@Column(nullable = false)
+	private String name;
+
+	@Column(nullable = false)
+	private String address;
+
+	@Column(nullable = true)
+	private Double latitude;
+
+	@Column(nullable = true)
+	private Double longitude;
+
+	@Column(nullable = false)
+	private String description;
+
+	@Enumerated(EnumType.STRING)
+	@Column(nullable = false)
+	private Category category;
+
+	@Column(nullable = false)
+	private Double rate;
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "owner_id", nullable = false)
+	private User owner;
+
+	public void updateName(String newName) {
+		this.name = newName;
+	}
+
+	public void updateAddress(String newAddress) {
+		this.address = newAddress;
+	}
+
+	public void updateCoordinates(Double latitude, Double longitude) {
+		this.latitude = latitude;
+		this.longitude = longitude;
+	}
+
+	public void updateDescription(String newDescription) {
+		this.description = newDescription;
+	}
+
+	public void updateCategory(Category newCategory) {
+		this.category = newCategory;
+	}
+
+	public void updateRate(Double newRate) {
+		this.rate = newRate;
+	}
+
+	public void softDelete() {
+		this.setDeletedAt(LocalDateTime.now());
+	}
+}

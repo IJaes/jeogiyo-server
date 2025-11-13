@@ -1,0 +1,93 @@
+package com.ijaes.jeogiyo.menu.repository;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+
+import com.ijaes.jeogiyo.menu.entity.Menu;
+import com.ijaes.jeogiyo.menu.entity.QMenu;
+import com.querydsl.jpa.impl.JPAQueryFactory;
+
+import lombok.RequiredArgsConstructor;
+
+@RequiredArgsConstructor
+public class MenuRepositoryCustomImpl implements MenuRepositoryCustom {
+
+	private final JPAQueryFactory queryFactory;
+
+	@Override
+	public List<Menu> findByOwnerId(UUID ownerId) {
+		QMenu menu = QMenu.menu;
+
+		return queryFactory
+			.selectFrom(menu)
+			.where(menu.store.owner.id.eq(ownerId))
+			.fetch();
+	}
+
+	@Override
+	public Optional<Menu> findByIdAndOwnerId(UUID menuId, UUID ownerId) {
+		QMenu menu = QMenu.menu;
+
+		Menu result = queryFactory
+			.selectFrom(menu)
+			.where(
+				menu.id.eq(menuId),
+				menu.store.owner.id.eq(ownerId)
+			)
+			.fetchOne();
+
+		return Optional.ofNullable(result);
+	}
+
+	@Override
+	public List<Menu> findAllNotDeleted(UUID storeId) {
+		QMenu menu = QMenu.menu;
+
+		return queryFactory
+			.selectFrom(menu)
+			.where(
+				menu.store.id.eq(storeId),
+				menu.deletedAt.isNull()
+			)
+			.fetch();
+	}
+
+	@Override
+	public Optional<Menu> findByIdNotDeleted(UUID menuId) {
+		QMenu menu = QMenu.menu;
+
+		Menu result = queryFactory
+			.selectFrom(menu)
+			.where(
+				menu.id.eq(menuId),
+				menu.deletedAt.isNull()
+			)
+			.fetchOne();
+
+		return Optional.ofNullable(result);
+	}
+
+	@Override
+	public Page<Menu> findAllIncludingDeleted(Pageable pageable) {
+		QMenu menu = QMenu.menu;
+
+		Long total = queryFactory
+			.select(menu.count())
+			.from(menu)
+			.fetchOne();
+
+		var content = queryFactory
+			.selectFrom(menu)
+			.orderBy(menu.createdAt.desc())
+			.offset(pageable.getOffset())
+			.limit(pageable.getPageSize())
+			.fetch();
+
+		return new PageImpl<>(content, pageable, total == null ? 0 : total);
+	}
+}
